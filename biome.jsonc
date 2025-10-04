@@ -1,0 +1,40 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
+	"linter": {
+		"rules": {
+			"a11y": "on",
+			"complexity": "on",
+			"correctness": {
+				"useImportExtensions": "off",
+				"noUnusedFunctionParameters": {
+					"options": {
+						"ignoreRestSiblings": true,
+					},
+				},
+			},
+			"nursery": {
+				"recommended": true,
+			},
+			"performance": "on",
+			"security": "on",
+			"style": {
+				"noParameterProperties": "off",
+				"useImportType": "off",
+			},
+			"suspicious": "on",
+		},
+	},
+	"javascript": {
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true,
+		},
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"recommended": true,
+				"organizeImports": "off",
+			},
+		},
+	},
+}
