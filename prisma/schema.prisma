@@ -1,0 +1,113 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- ENUMS ---
+
+enum Role {
+  admin
+  member
+}
+
+enum AccessType {
+  OWNER
+  ALLOWED
+}
+
+// --- MODELS ---
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  password     String
+  role         Role     @default(member)
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // --- Relations ---
+  teamMemberships TeamMembership[]
+  createdProjects Project[]           @relation("CreatedBy")
+  updatedProjects Project[]           @relation("UpdatedBy")
+  projectAccesses UserProjectAccess[]
+  deniedProjects  Project[]           @relation("DeniedProjectAccess")
+}
+
+model Team {
+  id        String   @id @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Relations ---
+  userMemberships TeamMembership[]
+  projectAccesses TeamProjectAccess[]
+}
+
+model TeamMembership {
+  userId String
+  teamId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  serverUrl   String?
+  openApiSpec Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // --- Relations ---
+  creatorId String
+  creator   User   @relation("CreatedBy", fields: [creatorId], references: [id])
+
+  updatedById String
+  updatedBy   User   @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  links          ProjectLink[]
+  userAccessList UserProjectAccess[]
+  teamAccessList TeamProjectAccess[]
+  deniedUsers    User[]              @relation("DeniedProjectAccess")
+}
+
+model ProjectLink {
+  id        Int     @id @default(autoincrement())
+  name      String
+  url       String
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, url])
+}
+
+model UserProjectAccess {
+  userId    String
+  projectId String
+  type      AccessType
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+}
+
+model TeamProjectAccess {
+  teamId    String
+  projectId String
+  type      AccessType
+
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, projectId])
+}
