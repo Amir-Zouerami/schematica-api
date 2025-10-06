@@ -1,0 +1,26 @@
+[
+	{
+		"id": "1",
+		"username": "amir.zouerami",
+		"password": "password123",
+		"role": "admin",
+		"teams": ["backend", "leadership"],
+		"profileImage": "/profile-pictures/amir.zouerami.png"
+	},
+	{
+		"id": "2",
+		"username": "brooklyn.lee",
+		"password": "password456",
+		"role": "member",
+		"teams": ["UI"],
+		"profileImage": "/profile-pictures/brooklyn.lee.png"
+	},
+	{
+		"id": "3",
+		"username": "charlie.davis",
+		"password": "password789",
+		"role": "member",
+		"teams": ["UI"],
+		"profileImage": "/profile-pictures/charlie.davis.png"
+	}
+]
