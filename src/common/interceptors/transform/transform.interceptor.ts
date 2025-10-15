@@ -10,22 +10,23 @@ import { Reflector } from '@nestjs/core';
 import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+
+import {
+	ApiResponse,
+	isPaginatedServiceResponse,
+	PaginatedApiResponse,
+	PaginatedServiceResponse,
+	RequestMeta,
+} from 'src/common/interfaces/api-response.interface';
 import { AllConfigTypes } from 'src/config/config.type';
-
-export interface Meta {
-	requestId: string;
-	apiVersion: string;
-	timestamp: string;
-}
-
-export interface EnvelopedResponse<T> {
-	data: T;
-	meta: Meta;
-}
 
 @Injectable()
 export class TransformInterceptor<T>
-	implements NestInterceptor<T, EnvelopedResponse<T>>
+	implements
+		NestInterceptor<
+			T | PaginatedServiceResponse<T>,
+			ApiResponse<T> | PaginatedApiResponse<T>
+		>
 {
 	constructor(
 		private readonly reflector: Reflector,
@@ -34,12 +35,10 @@ export class TransformInterceptor<T>
 
 	intercept(
 		context: ExecutionContext,
-		next: CallHandler,
-	): Observable<EnvelopedResponse<T>> {
+		next: CallHandler<T | PaginatedServiceResponse<T>>,
+	): Observable<ApiResponse<T> | PaginatedApiResponse<T>> {
 		const request = context.switchToHttp().getRequest<FastifyRequest>();
-		const requestId = request.id;
-
-		const defaultVersionWithoutDecimal = this.configService
+		const defaultVersion = this.configService
 			.get('app.version', { infer: true })
 			.split('.')[0];
 
@@ -47,17 +46,31 @@ export class TransformInterceptor<T>
 			this.reflector.getAllAndOverride<string>('__version__', [
 				context.getHandler(),
 				context.getClass(),
-			]) ?? defaultVersionWithoutDecimal;
+			]) ?? defaultVersion;
 
 		return next.handle().pipe(
-			map((data: T) => ({
-				meta: {
-					requestId: requestId,
+			map((data): ApiResponse<T> | PaginatedApiResponse<T> => {
+				const requestMeta: RequestMeta = {
+					requestId: request.id,
 					apiVersion: apiVersion,
 					timestamp: new Date().toISOString(),
-				},
-				data: data,
-			})),
+				};
+
+				if (isPaginatedServiceResponse<T>(data)) {
+					return {
+						meta: {
+							...requestMeta,
+							...data.meta,
+						},
+						data: data.data,
+					};
+				}
+
+				return {
+					meta: requestMeta,
+					data: data,
+				};
+			}),
 		);
 	}
 }
