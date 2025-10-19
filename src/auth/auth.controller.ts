@@ -1,6 +1,5 @@
 import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
-import type { User } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
@@ -16,14 +15,14 @@ export class AuthController {
 	@ApiBody({ type: LoginDto })
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
-	login(@CurrentUser() user: Omit<User, 'password'>) {
+	login(@CurrentUser() user: UserDto) {
 		return this.authService.login(user);
 	}
 
 	@ApiBearerAuth()
 	@UseGuards(JwtAuthGuard)
 	@Get('me')
-	getProfile(@CurrentUser() user: User): UserDto {
-		return new UserDto(user);
+	getProfile(@CurrentUser() user: UserDto): UserDto {
+		return user;
 	}
 }

@@ -14,6 +14,8 @@ export class UserDto {
 	@ApiProperty({ required: false, nullable: true })
 	profileImage: string | null;
 
+	tokenVersion: number;
+
 	@ApiProperty()
 	createdAt: Date;
 
