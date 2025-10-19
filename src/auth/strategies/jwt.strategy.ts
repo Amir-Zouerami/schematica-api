@@ -11,6 +11,7 @@ export type JwtPayload = {
 	sub: string;
 	username: string;
 	role: string;
+	tokenVersion: number;
 };
 
 @Injectable()
@@ -40,6 +41,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
 		if (!user) {
 			throw new UnauthorizedException('User not found.');
+		}
+
+		if (user.tokenVersion !== payload.tokenVersion) {
+			throw new UnauthorizedException('Token is no longer valid.');
 		}
 
 		const { password: _, ...result } = user;
