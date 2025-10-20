@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
 import appConfig from './config/app.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
 	imports: [
@@ -38,11 +42,10 @@ import { PrismaModule } from './prisma/prisma.module';
 									},
 								}
 							: undefined,
-
-						customProps: () => ({
-							context: 'HTTP',
-						}),
 						level: isProduction ? 'info' : 'debug',
+						customProps: (_req, res: ServerResponse) => {
+							return res.customProps || {};
+						},
 					},
 				};
 			},
@@ -50,12 +53,21 @@ import { PrismaModule } from './prisma/prisma.module';
 
 		PrismaModule,
 		AuthModule,
+		UsersModule,
 	],
 	controllers: [],
 	providers: [
 		{
 			provide: APP_INTERCEPTOR,
+			useClass: InjectUserInterceptor,
+		},
+		{
+			provide: APP_INTERCEPTOR,
 			useClass: TransformInterceptor,
+		},
+		{
+			provide: APP_FILTER,
+			useClass: AllExceptionsFilter,
 		},
 	],
 })
