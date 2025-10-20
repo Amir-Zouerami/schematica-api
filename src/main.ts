@@ -1,4 +1,8 @@
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+	INestApplication,
+	ValidationPipe,
+	VersioningType,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import {
@@ -13,34 +17,33 @@ import { AppModule } from './app.module';
 import type { AllConfigTypes } from './config/config.type';
 import { setupSwagger } from './swagger';
 
-async function bootstrap() {
-	const adapter = new FastifyAdapter();
-
-	adapter.getInstance().addHook('onRequest', (request, reply, done) => {
-		const requestId = uuidv4();
-		request.id = requestId;
-		reply.header('X-Request-Id', requestId);
-		done();
-	});
-
-	const app = await NestFactory.create<NestFastifyApplication>(
-		AppModule,
-		adapter,
-		{ bufferLogs: true },
+function setupPipes(app: INestApplication): void {
+	app.useGlobalPipes(
+		new ValidationPipe({
+			whitelist: true,
+			forbidNonWhitelisted: true,
+			forbidUnknownValues: true,
+			transform: true,
+			transformOptions: {
+				enableImplicitConversion: true,
+			},
+		}),
 	);
+}
 
-	const configService = app.get(ConfigService<AllConfigTypes, true>);
-
+function configureApp(
+	app: NestFastifyApplication,
+	configService: ConfigService<AllConfigTypes, true>,
+): void {
 	const globalPrefix = configService.get('app.globalPrefix', { infer: true });
 	const corsOrigin = configService.get('app.corsOrigin', { infer: true });
 	const appVersion = configService.get('app.version', { infer: true });
-	const port = configService.get('app.port', { infer: true });
 	const nodeEnv = configService.get('app.nodeEnv', { infer: true });
 	const version = appVersion.split('.')[0];
 
 	app.useStaticAssets({
 		root: join(__dirname, '..', 'public'),
-		prefix: '/', // serve static files from root
+		prefix: '/',
 		setHeaders: (res, path) => {
 			if (path.endsWith('.wasm')) {
 				res.setHeader('Content-Type', 'application/wasm');
@@ -48,7 +51,6 @@ async function bootstrap() {
 		},
 	});
 
-	app.useGlobalPipes(new ValidationPipe());
 	app.setGlobalPrefix(globalPrefix);
 	app.useLogger(app.get(Logger));
 	app.enableVersioning({
@@ -66,6 +68,24 @@ async function bootstrap() {
 	if (nodeEnv !== 'production') {
 		setupSwagger(app);
 	}
+}
+
+async function bootstrap() {
+	const adapter = new FastifyAdapter({
+		genReqId: () => uuidv4(),
+	});
+
+	const app = await NestFactory.create<NestFastifyApplication>(
+		AppModule,
+		adapter,
+		{ bufferLogs: true },
+	);
+
+	const configService = app.get(ConfigService<AllConfigTypes, true>);
+	const port = configService.get('app.port', { infer: true });
+
+	setupPipes(app);
+	configureApp(app, configService);
 
 	await app.listen(port, '0.0.0.0');
 }
