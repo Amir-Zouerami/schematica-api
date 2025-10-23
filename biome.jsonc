@@ -3,7 +3,11 @@
 	"linter": {
 		"rules": {
 			"a11y": "on",
-			"complexity": "on",
+			"complexity": {
+				"noExcessiveLinesPerFunction": {
+					"options": { "skipBlankLines": true, "maxLines": 80 },
+				},
+			},
 			"correctness": {
 				"useImportExtensions": "off",
 				"noUnusedFunctionParameters": {
