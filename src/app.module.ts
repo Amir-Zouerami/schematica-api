@@ -13,6 +13,7 @@ import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
+import { TeamsModule } from './teams/teams.module';
 
 @Module({
 	imports: [
@@ -54,6 +55,7 @@ import { UsersModule } from './users/users.module';
 		PrismaModule,
 		AuthModule,
 		UsersModule,
+		TeamsModule,
 	],
 	controllers: [],
 	providers: [
