@@ -11,13 +11,13 @@ export interface PaginationMeta {
 	lastPage: number;
 }
 
-// The final response structure for a standard (non-paginated) request
+// The response structure for a standard (non-paginated) request
 export interface ApiResponse<T> {
 	data: T;
 	meta: RequestMeta;
 }
 
-// The final response structure for a paginated request
+// The response structure for a paginated request
 export interface PaginatedApiResponse<T> {
 	data: T[];
 	meta: RequestMeta & PaginationMeta;
