@@ -75,10 +75,10 @@ model Project {
   updatedById String
   updatedBy   User   @relation("UpdatedBy", fields: [updatedById], references: [id])
 
-  links          ProjectLink[]
-  userAccessList UserProjectAccess[]
-  teamAccessList TeamProjectAccess[]
-  deniedUsers    User[]              @relation("DeniedProjectAccess")
+  links        ProjectLink[]
+  userAccesses UserProjectAccess[]
+  teamAccesses TeamProjectAccess[]
+  deniedUsers  User[]              @relation("DeniedProjectAccess")
 }
 
 model ProjectLink {
