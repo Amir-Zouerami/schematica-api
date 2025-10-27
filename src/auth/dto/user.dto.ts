@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Role, type User } from '@prisma/client';
+import { Role, Team } from '@prisma/client';
+import { TeamDto } from 'src/teams/dto/team.dto';
+import { UserWithTeams } from 'src/users/users.types';
 
 export class UserDto {
 	@ApiProperty()
@@ -14,6 +16,9 @@ export class UserDto {
 	@ApiProperty({ required: false, nullable: true })
 	profileImage: string | null;
 
+	@ApiProperty({ required: false, type: () => [TeamDto] })
+	teams?: Team[];
+
 	tokenVersion: number;
 
 	@ApiProperty()
@@ -22,12 +27,13 @@ export class UserDto {
 	@ApiProperty()
 	updatedAt: Date;
 
-	constructor(user: User) {
+	constructor(user: UserWithTeams) {
 		this.id = user.id;
 		this.username = user.username;
 		this.role = user.role;
 		this.profileImage = user.profileImage;
 		this.createdAt = user.createdAt;
 		this.updatedAt = user.updatedAt;
+		this.teams = user.teams;
 	}
 }

@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import type { User } from '@prisma/client';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { AllConfigTypes } from 'src/config/config.type';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserWithTeams } from 'src/users/users.types';
 
 export type JwtPayload = {
 	sub: string;
@@ -34,9 +34,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 	 * @param payload The decoded payload from the JWT.
 	 * @returns The user object that will be attached to the request.
 	 */
-	async validate(payload: JwtPayload): Promise<Omit<User, 'password'>> {
+	async validate(payload: JwtPayload): Promise<UserWithTeams> {
 		const user = await this.prismaService.user.findUnique({
 			where: { id: payload.sub },
+			include: {
+				teamMemberships: { select: { team: true } },
+			},
 		});
 
 		if (!user) {
@@ -47,7 +50,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			throw new UnauthorizedException('Token is no longer valid.');
 		}
 
-		const { password: _, ...result } = user;
-		return result;
+		const { password: _, teamMemberships, ...result } = user;
+		return {
+			...result,
+			teams: teamMemberships.map((m) => m.team),
+		};
 	}
 }
