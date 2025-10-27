@@ -103,38 +103,13 @@ export class ProjectsService {
 		}
 	}
 
-	/**
-	 * Finds all projects a given user is allowed to see.
-	 *
-	 * - Admins can see all projects.
-	 * - Other users can see projects based on ownership, allowed access,
-	 *   or team membership, excluding any projects they are explicitly denied from.
-	 */
 	async findAllForUser(
 		user: UserDto,
 		paginationQuery: PaginationQueryDto,
 	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
 		const { skip, limit } = paginationQuery;
 
-		let where: Prisma.ProjectWhereInput = {};
-
-		if (user.role !== Role.admin) {
-			where = {
-				deniedUsers: { none: { id: user.id } },
-				OR: [
-					{ userAccesses: { some: { userId: user.id } } },
-					{
-						teamAccesses: {
-							some: {
-								teamId: {
-									in: user.teams?.map((t) => t.id),
-								},
-							},
-						},
-					},
-				],
-			};
-		}
+		const where = this._createAccessControlWhereClause(user);
 
 		const [projects, total] = await this.prisma.$transaction([
 			this.prisma.project.findMany({
@@ -182,27 +157,7 @@ export class ProjectsService {
 		projectId: string,
 		user: UserDto,
 	): Promise<ProjectDetailDto> {
-		let accessControlWhere: Prisma.ProjectWhereInput = {};
-
-		if (user.role !== Role.admin) {
-			accessControlWhere = {
-				deniedUsers: { none: { id: user.id } },
-				OR: [
-					{
-						userAccesses: {
-							some: { userId: user.id },
-						},
-					},
-					{
-						teamAccesses: {
-							some: {
-								teamId: { in: user.teams?.map((t) => t.id) },
-							},
-						},
-					},
-				],
-			};
-		}
+		const where = this._createAccessControlWhereClause(user);
 
 		const project = await this.prisma.project.findFirst({
 			select: {
@@ -220,7 +175,7 @@ export class ProjectsService {
 				},
 				links: true,
 			},
-			where: { id: projectId, ...accessControlWhere },
+			where: { id: projectId, ...where },
 		});
 
 		if (!project) {
@@ -228,5 +183,48 @@ export class ProjectsService {
 		}
 
 		return project;
+	}
+
+	async findSpecByIdForUser(
+		projectId: string,
+		user: UserDto,
+	): Promise<{ openApiSpec: Prisma.JsonValue }> {
+		const where = this._createAccessControlWhereClause(user);
+
+		const openApiSpec = await this.prisma.project.findFirst({
+			select: {
+				openApiSpec: true,
+			},
+			where: {
+				id: projectId,
+				...where,
+			},
+		});
+
+		if (!openApiSpec) {
+			throw new ProjectNotFoundException(projectId);
+		}
+
+		return openApiSpec;
+	}
+
+	private _createAccessControlWhereClause(
+		user: UserDto,
+	): Prisma.ProjectWhereInput {
+		if (user.role === Role.admin) {
+			return {};
+		}
+
+		return {
+			deniedUsers: { none: { id: user.id } },
+			OR: [
+				{ userAccesses: { some: { userId: user.id } } },
+				{
+					teamAccesses: {
+						some: { teamId: { in: user.teams?.map((t) => t.id) } },
+					},
+				},
+			],
+		};
 	}
 }

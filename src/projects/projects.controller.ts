@@ -14,7 +14,7 @@ import {
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import { Project } from '@prisma/client';
+import { Prisma, Project } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -68,5 +68,19 @@ export class ProjectsController {
 		@CurrentUser() user: UserDto,
 	) {
 		return await this.projectsService.findOneByIdForUser(projectId, user);
+	}
+
+	@Get(':projectId/openapi')
+	@ApiOkResponse({
+		description: 'The OpenAPI specification for the project.',
+	})
+	@ApiNotFoundResponse({
+		description: 'Project not found or user lacks access.',
+	})
+	async findSpec(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	): Promise<{ openApiSpec: Prisma.JsonValue }> {
+		return await this.projectsService.findSpecByIdForUser(projectId, user);
 	}
 }
