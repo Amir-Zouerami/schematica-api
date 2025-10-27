@@ -6,9 +6,12 @@ import { UserDto } from 'src/auth/dto/user.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
 import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
+import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectDetailDto } from './dto/project-detail.dto';
+import { ProjectSummaryDto } from './dto/project-summary.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -110,7 +113,7 @@ export class ProjectsService {
 	async findAllForUser(
 		user: UserDto,
 		paginationQuery: PaginationQueryDto,
-	): Promise<PaginatedServiceResponse<Omit<Project, 'openApiSpec'>>> {
+	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
 		const { skip, limit } = paginationQuery;
 
 		let where: Prisma.ProjectWhereInput = {};
@@ -139,11 +142,8 @@ export class ProjectsService {
 					id: true,
 					name: true,
 					description: true,
-					serverUrl: true,
 					createdAt: true,
 					updatedAt: true,
-					creatorId: true,
-					updatedById: true,
 					creator: {
 						select: {
 							id: true,
@@ -176,5 +176,57 @@ export class ProjectsService {
 			},
 			data: projects,
 		};
+	}
+
+	async findOneByIdForUser(
+		projectId: string,
+		user: UserDto,
+	): Promise<ProjectDetailDto> {
+		let accessControlWhere: Prisma.ProjectWhereInput = {};
+
+		if (user.role !== Role.admin) {
+			accessControlWhere = {
+				deniedUsers: { none: { id: user.id } },
+				OR: [
+					{
+						userAccesses: {
+							some: { userId: user.id },
+						},
+					},
+					{
+						teamAccesses: {
+							some: {
+								teamId: { in: user.teams?.map((t) => t.id) },
+							},
+						},
+					},
+				],
+			};
+		}
+
+		const project = await this.prisma.project.findFirst({
+			select: {
+				id: true,
+				name: true,
+				description: true,
+				serverUrl: true,
+				createdAt: true,
+				updatedAt: true,
+				creator: {
+					select: { id: true, username: true, profileImage: true },
+				},
+				updatedBy: {
+					select: { id: true, username: true, profileImage: true },
+				},
+				links: true,
+			},
+			where: { id: projectId, ...accessControlWhere },
+		});
+
+		if (!project) {
+			throw new ProjectNotFoundException(projectId);
+		}
+
+		return project;
 	}
 }
