@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Project } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 
-export class ProjectSummaryDto implements Omit<Project, 'openApiSpec'> {
+export class ProjectSummaryDto
+	implements
+		Omit<Project, 'openApiSpec' | 'serverUrl' | 'creatorId' | 'updatedById'>
+{
 	@ApiProperty()
 	id: string;
 
@@ -12,20 +15,11 @@ export class ProjectSummaryDto implements Omit<Project, 'openApiSpec'> {
 	@ApiProperty({ nullable: true })
 	description: string | null;
 
-	@ApiProperty({ nullable: true })
-	serverUrl: string | null;
-
 	@ApiProperty()
 	createdAt: Date;
 
 	@ApiProperty()
 	updatedAt: Date;
-
-	@ApiProperty()
-	creatorId: string;
-
-	@ApiProperty()
-	updatedById: string;
 
 	@ApiProperty({ type: SanitizedUserDto })
 	creator: SanitizedUserDto;
