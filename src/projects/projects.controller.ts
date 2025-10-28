@@ -1,7 +1,10 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
+	HttpCode,
+	HttpStatus,
 	Param,
 	Post,
 	Put,
@@ -12,6 +15,7 @@ import {
 	ApiBearerAuth,
 	ApiCreatedResponse,
 	ApiForbiddenResponse,
+	ApiNoContentResponse,
 	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiTags,
@@ -107,5 +111,17 @@ export class ProjectsController {
 			updateProjectDto,
 			user,
 		);
+	}
+
+	@Delete(':projectId')
+	@UseGuards(ProjectOwnerGuard)
+	@HttpCode(HttpStatus.NO_CONTENT)
+	@ApiNoContentResponse({ description: 'Project deleted successfully.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+	})
+	@ApiNotFoundResponse({ description: 'Project not found.' })
+	async delete(@Param('projectId') projectId: string): Promise<void> {
+		return await this.projectsService.delete(projectId);
 	}
 }

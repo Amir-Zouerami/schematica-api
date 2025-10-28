@@ -4,7 +4,11 @@ import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 import { ProjectLinkDto } from './project-link.dto';
 
 export class ProjectDetailDto
-	implements Omit<Project, 'openApiSpec' | 'creatorId' | 'updatedById'>
+	implements
+		Omit<
+			Project,
+			'openApiSpec' | 'creatorId' | 'updatedById' | 'nameNormalized'
+		>
 {
 	@ApiProperty()
 	id: string;
