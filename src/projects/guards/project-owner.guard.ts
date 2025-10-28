@@ -13,12 +13,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProjectOwnerGuard implements CanActivate {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async canActivate(context: ExecutionContext): Promise<boolean> {
-		const request = context.switchToHttp().getRequest<FastifyRequest>();
-		const user = request.user as UserDto;
+import { FastifyRequest } from 'fastify';
+import { ForbiddenException } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
-		if (user.role === 'admin') return true;
+async canActivate(context: ExecutionContext): Promise<boolean> {
+	const request = context.switchToHttp().getRequest<FastifyRequest>();
+	const user = request.user as UserDto;
 
+	if (!user) {
+		throw new ForbiddenException('Authentication credentials were not provided.');
+	}
+	if (user.role === Role.admin) return true;
 		const projectId = (request.params as { projectId?: string }).projectId;
 		if (!projectId) {
 			throw new NotFoundException(
