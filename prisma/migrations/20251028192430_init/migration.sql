@@ -5,6 +5,7 @@ CREATE TABLE "User" (
     "password" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'member',
     "profileImage" TEXT,
+    "tokenVersion" INTEGER NOT NULL DEFAULT 1,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -31,6 +32,7 @@ CREATE TABLE "TeamMembership" (
 CREATE TABLE "Project" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
+    "nameNormalized" TEXT NOT NULL,
     "description" TEXT,
     "serverUrl" TEXT,
     "openApiSpec" JSONB NOT NULL,
@@ -88,7 +90,7 @@ CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 CREATE UNIQUE INDEX "Team_id_key" ON "Team"("id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Project_name_key" ON "Project"("name");
+CREATE UNIQUE INDEX "Project_nameNormalized_key" ON "Project"("nameNormalized");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProjectLink_projectId_url_key" ON "ProjectLink"("projectId", "url");

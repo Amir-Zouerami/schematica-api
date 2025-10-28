@@ -7,8 +7,10 @@ import {
 	IsOptional,
 	IsString,
 	IsUrl,
+	Validate,
 	ValidateNested,
 } from 'class-validator';
+import { AreLinksUniqueConstraint } from '../validators/are-links-unique.validator';
 import { ProjectLinkDto } from './project-link.dto';
 
 export class CreateProjectDto {
@@ -34,6 +36,7 @@ export class CreateProjectDto {
 	@ArrayMinSize(1, { message: 'links must contain at least one item' })
 	@ValidateNested({ each: true, message: 'each link must be an object' })
 	@Type(() => ProjectLinkDto)
+	@Validate(AreLinksUniqueConstraint)
 	@IsOptional()
 	links?: ProjectLinkDto[];
 }
