@@ -5,6 +5,7 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { FastifyRequest } from 'fastify';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -13,18 +14,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProjectOwnerGuard implements CanActivate {
 	constructor(private readonly prisma: PrismaService) {}
 
-import { FastifyRequest } from 'fastify';
-import { ForbiddenException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+	async canActivate(context: ExecutionContext): Promise<boolean> {
+		const request = context.switchToHttp().getRequest<FastifyRequest>();
+		const user = request.user as UserDto;
 
-async canActivate(context: ExecutionContext): Promise<boolean> {
-	const request = context.switchToHttp().getRequest<FastifyRequest>();
-	const user = request.user as UserDto;
+		if (!user) {
+			throw new ForbiddenException(
+				'Authentication credentials were not provided.',
+			);
+		}
 
-	if (!user) {
-		throw new ForbiddenException('Authentication credentials were not provided.');
-	}
-	if (user.role === Role.admin) return true;
+		if (user.role === Role.admin) return true;
+
 		const projectId = (request.params as { projectId?: string }).projectId;
 		if (!projectId) {
 			throw new NotFoundException(
