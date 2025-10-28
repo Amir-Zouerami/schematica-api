@@ -4,6 +4,7 @@ import { Prisma, Project, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { ProjectConcurrencyException } from 'src/common/exceptions/project-concurrency.exception';
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
 import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
@@ -12,6 +13,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -206,6 +208,83 @@ export class ProjectsService {
 		}
 
 		return openApiSpec;
+	}
+
+	async update(
+		projectId: string,
+		updateProjectDto: UpdateProjectDto,
+		updater: UserDto,
+	): Promise<ProjectDetailDto> {
+		const { name, lastKnownUpdatedAt, links, ...otherData } =
+			updateProjectDto;
+
+		const existingProject = await this.prisma.project.findUnique({
+			where: { id: projectId },
+		});
+
+		if (!existingProject) {
+			throw new ProjectNotFoundException(projectId);
+		}
+
+		if (existingProject.updatedAt.toISOString() !== lastKnownUpdatedAt) {
+			throw new ProjectConcurrencyException();
+		}
+
+		if (name.toLowerCase() !== existingProject.name.toLowerCase()) {
+			const projectWithNewName = await this.prisma.project.findUnique({
+				where: { name },
+			});
+
+			if (projectWithNewName) {
+				throw new ProjectConflictException(name);
+			}
+		}
+
+		const updatedProject = await this.prisma.$transaction(async (tx) => {
+			await tx.projectLink.deleteMany({ where: { projectId } });
+
+			return tx.project.update({
+				where: { id: projectId },
+				data: {
+					name,
+					updatedById: updater.id,
+					links: links
+						? {
+								create: links.map((link) => ({
+									name: link.name,
+									url: link.url,
+								})),
+							}
+						: undefined,
+					...otherData,
+				},
+				select: {
+					id: true,
+					name: true,
+					description: true,
+					serverUrl: true,
+					createdAt: true,
+					updatedAt: true,
+					creator: {
+						select: {
+							id: true,
+							username: true,
+							profileImage: true,
+						},
+					},
+					updatedBy: {
+						select: {
+							id: true,
+							username: true,
+							profileImage: true,
+						},
+					},
+					links: true,
+				},
+			});
+		});
+
+		return updatedProject;
 	}
 
 	private _createAccessControlWhereClause(
