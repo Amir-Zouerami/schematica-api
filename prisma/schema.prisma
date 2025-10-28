@@ -60,13 +60,14 @@ model TeamMembership {
 }
 
 model Project {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  serverUrl   String?
-  openApiSpec Json
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  nameNormalized String   @unique
+  description    String?
+  serverUrl      String?
+  openApiSpec    Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // --- Relations ---
   creatorId String
