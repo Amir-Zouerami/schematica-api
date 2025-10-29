@@ -63,6 +63,11 @@ function configureApp(
 	}
 }
 
+/**
+ * Bootstraps the NestJS Fastify application and starts the HTTP server.
+ *
+ * Creates a Fastify-backed Nest application that generates request IDs, reads runtime configuration (including the HTTP port), applies global validation and app configuration, and begins listening on 0.0.0.0 using the configured port.
+ */
 async function bootstrap() {
 	const adapter = new FastifyAdapter({
 		genReqId: () => uuidv4(),

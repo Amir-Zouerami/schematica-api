@@ -18,6 +18,11 @@ type SeedUser = {
 const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
+/**
+ * Create or update the initial teams in the database.
+ *
+ * Upserts three teams with ids "backend", "leadership", and "UI", ensuring their names are set to "Backend", "Leadership", and "UI" respectively.
+ */
 async function seedTeams() {
 	console.log('Seeding teams...');
 	const teamsToCreate = [
@@ -36,6 +41,13 @@ async function seedTeams() {
 	console.log('Teams seeded successfully.');
 }
 
+/**
+ * Seed initial users from seed-data/users.json into the database.
+ *
+ * Reads the JSON file, hashes each user's password, and upserts user records by username.
+ * New users are created with the provided id, username, hashed password, role, profile image,
+ * and team memberships connected to the specified team IDs.
+ */
 async function seedUsers() {
 	console.log('Seeding users...');
 	const usersPath = join(__dirname, 'seed-data', 'users.json');
@@ -65,6 +77,13 @@ async function seedUsers() {
 	console.log('Users seeded successfully.');
 }
 
+/**
+ * Seed the "Project Nova" project along with its related records and access rules.
+ *
+ * Creates the project (including a link and a denied user), configures team access
+ * (leadership as OWNER, UI as VIEWER), adds two endpoints for the project, and
+ * attaches a note to one endpoint — all executed inside a database transaction.
+ */
 async function seedProjects() {
 	console.log('Seeding projects...');
 
@@ -179,6 +198,11 @@ async function seedProjects() {
 	console.log('Projects and related data seeded successfully.');
 }
 
+/**
+ * Orchestrates the full database seeding process by running team, user, and project seed tasks in order.
+ *
+ * Executes seedTeams, seedUsers, and seedProjects sequentially to populate initial data.
+ */
 async function main() {
 	console.log('Starting seed process...');
 	await seedTeams();
