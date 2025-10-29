@@ -10,9 +10,7 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'notSameAsCurrentPassword', async: false })
-export class NotSameAsCurrentPasswordConstraint
-	implements ValidatorConstraintInterface
-{
+export class NotSameAsCurrentPasswordConstraint implements ValidatorConstraintInterface {
 	validate(newPassword: string, args: ValidationArguments) {
 		const object = args.object as ChangePasswordDto;
 		return newPassword !== object.currentPassword;

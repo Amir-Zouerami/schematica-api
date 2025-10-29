@@ -26,12 +26,9 @@ import { UsersModule } from './users/users.module';
 		LoggerModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: (
-				configService: ConfigService<AllConfigTypes, true>,
-			) => {
+			useFactory: (configService: ConfigService<AllConfigTypes, true>) => {
 				const isProduction =
-					configService.get('app.nodeEnv', { infer: true }) ===
-					'production';
+					configService.get('app.nodeEnv', { infer: true }) === 'production';
 
 				return {
 					pinoHttp: {

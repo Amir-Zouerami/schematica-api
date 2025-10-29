@@ -8,7 +8,7 @@ import { ProjectLinkDto } from '../dto/project-link.dto';
 @ValidatorConstraint({ name: 'areLinksUnique', async: false })
 export class AreLinksUniqueConstraint implements ValidatorConstraintInterface {
 	validate(links: ProjectLinkDto[], _args: ValidationArguments): boolean {
-		if (!links || links.length === 0) {
+		if (!links || !Array.isArray(links) || links.length === 0) {
 			return true;
 		}
 

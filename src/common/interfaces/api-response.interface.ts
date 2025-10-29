@@ -30,17 +30,14 @@ export interface PaginatedServiceResponse<T> {
 }
 
 // Type guard to check if data from the service is paginated
-export function isPaginatedServiceResponse<T>(
-	data: unknown,
-): data is PaginatedServiceResponse<T> {
+export function isPaginatedServiceResponse<T>(data: unknown): data is PaginatedServiceResponse<T> {
 	if (typeof data !== 'object' || data === null) {
 		return false;
 	}
 
 	const potentialResponse = data as Record<string, unknown>;
 
-	const hasData =
-		'data' in potentialResponse && Array.isArray(potentialResponse.data);
+	const hasData = 'data' in potentialResponse && Array.isArray(potentialResponse.data);
 	const hasMeta =
 		'meta' in potentialResponse &&
 		typeof potentialResponse.meta === 'object' &&

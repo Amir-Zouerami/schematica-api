@@ -1,10 +1,4 @@
-import {
-	ArgumentsHost,
-	Catch,
-	ExceptionFilter,
-	HttpException,
-	HttpStatus,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { FastifyRequest } from 'fastify';
 import { PinoLogger } from 'nestjs-pino';
@@ -32,13 +26,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 		const ctx = host.switchToHttp();
 		const request = ctx.getRequest<FastifyRequest>();
 
-		const { httpStatus, message, metaCode, type } =
-			this.parseException(exception);
+		const { httpStatus, message, metaCode, type } = this.parseException(exception);
 
 		if (httpStatus >= Number(HttpStatus.INTERNAL_SERVER_ERROR)) {
-			const formattedMessage = Array.isArray(message)
-				? message.join(', ')
-				: message;
+			const formattedMessage = Array.isArray(message) ? message.join(', ') : message;
 
 			const logObject = {
 				message: `[Unhandled Exception] HTTP ${httpStatus} - ${formattedMessage}`,
@@ -109,10 +100,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 			httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
 			message: 'An unexpected internal server error occurred.',
 			metaCode: 'INTERNAL_SERVER_ERROR',
-			type:
-				exception instanceof Error
-					? exception.constructor.name
-					: 'UnknownError',
+			type: exception instanceof Error ? exception.constructor.name : 'UnknownError',
 		};
 	}
 }

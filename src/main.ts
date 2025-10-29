@@ -1,14 +1,7 @@
-import {
-	INestApplication,
-	ValidationPipe,
-	VersioningType,
-} from '@nestjs/common';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import {
-	FastifyAdapter,
-	NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { Logger } from 'nestjs-pino';
 import { join } from 'node:path';
@@ -75,11 +68,9 @@ async function bootstrap() {
 		genReqId: () => uuidv4(),
 	});
 
-	const app = await NestFactory.create<NestFastifyApplication>(
-		AppModule,
-		adapter,
-		{ bufferLogs: true },
-	);
+	const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
+		bufferLogs: true,
+	});
 
 	const configService = app.get(ConfigService<AllConfigTypes, true>);
 	const port = configService.get('app.port', { infer: true });
