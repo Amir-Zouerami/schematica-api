@@ -3,8 +3,53 @@ name: Continuous Integration
 on:
     push:
         branches: [main]
+        paths-ignore:
+            # 📝 Documentation
+            - "README.md"
+            - "LICENSE"
+            - "CHANGELOG.md"
+            - "CONTRIBUTING.md"
+            - "docs/**"
+            # 🧰 Project config & editor settings (safe to skip for CI)
+            - ".vscode/**"
+            - ".idea/**"
+            - ".editorconfig"
+            # 🧾 Non-source files
+            - "*.md"
+            - "*.txt"
+            # ⚙️ GitHub & meta files
+            - ".github/**"
+            - ".gitignore"
+            - ".gitattributes"
+            # 🎨 Assets and static files
+            - "assets/**"
+            - "public/**"
+            - "static/**"
+
     pull_request:
         branches: [main]
+        paths-ignore:
+            # 📝 Documentation
+            - "README.md"
+            - "LICENSE"
+            - "CHANGELOG.md"
+            - "CONTRIBUTING.md"
+            - "docs/**"
+            # 🧰 Project config & editor settings (safe to skip for CI)
+            - ".vscode/**"
+            - ".idea/**"
+            - ".editorconfig"
+            # 🧾 Non-source files
+            - "*.md"
+            - "*.txt"
+            # ⚙️ GitHub & meta files
+            - ".github/**"
+            - ".gitignore"
+            - ".gitattributes"
+            # 🎨 Assets and static files
+            - "assets/**"
+            - "public/**"
+            - "static/**"
 
 jobs:
     lint-and-format:
