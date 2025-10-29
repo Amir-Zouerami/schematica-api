@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Prisma, Project, Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -9,68 +9,71 @@ import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-f
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
 
 @Injectable()
 export class ProjectsService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
+		private readonly specBuilder: OpenApiSpecBuilder,
 	) {
 		this.logger.setContext(ProjectsService.name);
 	}
 
-	async create(
-		createProjectDto: CreateProjectDto,
-		creator: UserDto,
-	): Promise<Project> {
+	async create(createProjectDto: CreateProjectDto, creator: UserDto): Promise<ProjectDetailDto> {
 		const { name, description, serverUrl, links } = createProjectDto;
 
-		const initialOpenApiSpec = {
-			openapi: '3.0.0',
-			info: {
-				title: name,
-				version: '1.0.0',
-				description: description || `API documentation for ${name}`,
-			},
-			servers: serverUrl ? [{ url: serverUrl }] : [],
-			paths: {},
-			components: {
-				schemas: {},
-				parameters: {},
-				responses: {},
-				requestBodies: {},
-			},
-		};
-
 		try {
-			return await this.prisma.project.create({
-				data: {
-					name,
-					nameNormalized: name.toLowerCase(),
-					description,
-					serverUrl,
-					openApiSpec: initialOpenApiSpec,
-					creatorId: creator.id,
-					updatedById: creator.id,
-					links: links
-						? {
-								create: links.map((link) => ({
-									name: link.name,
-									url: link.url,
-								})),
-							}
-						: undefined,
-					userAccesses: {
-						create: {
-							userId: creator.id,
-							type: 'OWNER',
-						},
+			return await this.prisma.$transaction(async (tx) => {
+				const project = await tx.project.create({
+					data: {
+						name,
+						nameNormalized: name.toLowerCase(),
+						description,
+						serverUrl,
+						creatorId: creator.id,
+						updatedById: creator.id,
+						links: links
+							? {
+									create: links.map((link) => ({
+										name: link.name,
+										url: link.url,
+									})),
+								}
+							: undefined,
 					},
-				},
+				});
+
+				await tx.userProjectAccess.create({
+					data: {
+						userId: creator.id,
+						projectId: project.id,
+						type: 'OWNER',
+					},
+				});
+
+				const newProjectDetail = await tx.project.findUniqueOrThrow({
+					where: { id: project.id },
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						serverUrl: true,
+						createdAt: true,
+						updatedAt: true,
+						creator: { select: { id: true, username: true, profileImage: true } },
+						updatedBy: { select: { id: true, username: true, profileImage: true } },
+						links: true,
+					},
+				});
+
+				return newProjectDetail as ProjectDetailDto;
 			});
 		} catch (error) {
 			this._handlePrismaError(error, {
@@ -85,7 +88,7 @@ export class ProjectsService {
 		paginationQuery: PaginationQueryDto,
 	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
 		try {
-			const { skip, limit } = paginationQuery;
+			const { skip, limit, page } = paginationQuery;
 			const where = this._createAccessControlWhereClause(user);
 
 			const [projects, total] = await this.prisma.$transaction([
@@ -120,23 +123,24 @@ export class ProjectsService {
 			]);
 
 			return {
+				data: projects.map((p) => ({
+					...p,
+					creator: p.creator as SanitizedUserDto,
+					updatedBy: p.updatedBy as SanitizedUserDto,
+				})),
 				meta: {
-					page: paginationQuery.page,
-					limit,
-					lastPage: Math.ceil(total / limit),
 					total,
+					page,
+					limit,
+					lastPage: Math.ceil(total / limit) || 1,
 				},
-				data: projects,
 			};
 		} catch (error) {
 			this._handlePrismaError(error);
 		}
 	}
 
-	async findOneByIdForUser(
-		projectId: string,
-		user: UserDto,
-	): Promise<ProjectDetailDto> {
+	async findOneByIdForUser(projectId: string, user: UserDto): Promise<ProjectDetailDto> {
 		try {
 			const where = this._createAccessControlWhereClause(user);
 			const project = await this.prisma.project.findFirst({
@@ -163,34 +167,16 @@ export class ProjectsService {
 					},
 					links: true,
 				},
-				where: { id: projectId, ...where },
+				where: { AND: [{ id: projectId }, where] },
 			});
 
 			if (!project) {
 				throw new ProjectNotFoundException(projectId);
 			}
-			return project;
-		} catch (error) {
-			this._handlePrismaError(error);
-		}
-	}
 
-	async findSpecByIdForUser(
-		projectId: string,
-		user: UserDto,
-	): Promise<{ openApiSpec: Prisma.JsonValue }> {
-		try {
-			const where = this._createAccessControlWhereClause(user);
-			const project = await this.prisma.project.findFirst({
-				select: { openApiSpec: true },
-				where: { id: projectId, ...where },
-			});
-
-			if (!project) {
-				throw new ProjectNotFoundException(projectId);
-			}
-			return project;
+			return project as ProjectDetailDto;
 		} catch (error) {
+			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error);
 		}
 	}
@@ -200,31 +186,45 @@ export class ProjectsService {
 		updateProjectDto: UpdateProjectDto,
 		updater: UserDto,
 	): Promise<ProjectDetailDto> {
-		const { name, lastKnownUpdatedAt, links, ...otherData } =
-			updateProjectDto;
+		const { name, lastKnownUpdatedAt, links, ...otherData } = updateProjectDto;
 
 		try {
-			return await this.prisma.$transaction(async (tx) => {
-				await tx.projectLink.deleteMany({ where: { projectId } });
+			const projectExists = await this.prisma.project.findUnique({
+				where: { id: projectId },
+			});
 
-				return tx.project.update({
+			if (!projectExists) {
+				throw new ProjectNotFoundException(projectId);
+			}
+
+			return await this.prisma.$transaction(async (tx) => {
+				await tx.project.findUniqueOrThrow({
 					where: {
 						id: projectId,
 						updatedAt: new Date(lastKnownUpdatedAt),
 					},
+				});
+
+				if (links !== undefined) {
+					await tx.projectLink.deleteMany({ where: { projectId } });
+				}
+
+				return tx.project.update({
+					where: { id: projectId },
 					data: {
 						name,
 						nameNormalized: name ? name.toLowerCase() : undefined,
 						...otherData,
 						updatedById: updater.id,
-						links: links
-							? {
-									create: links.map((link) => ({
-										name: link.name,
-										url: link.url,
-									})),
-								}
-							: undefined,
+						links:
+							links !== undefined
+								? {
+										create: links.map((link) => ({
+											name: link.name,
+											url: link.url,
+										})),
+									}
+								: undefined,
 					},
 					select: {
 						id: true,
@@ -252,6 +252,7 @@ export class ProjectsService {
 				});
 			});
 		} catch (error) {
+			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error, {
 				P2025: new ProjectConcurrencyException(),
 				P2002: new ProjectConflictException(name),
@@ -261,9 +262,7 @@ export class ProjectsService {
 
 	async delete(projectId: string): Promise<void> {
 		try {
-			await this.prisma.project.delete({
-				where: { id: projectId },
-			});
+			await this.prisma.project.delete({ where: { id: projectId } });
 		} catch (error) {
 			this._handlePrismaError(error, {
 				P2025: new ProjectNotFoundException(projectId),
@@ -271,12 +270,35 @@ export class ProjectsService {
 		}
 	}
 
-	private _createAccessControlWhereClause(
-		user: UserDto,
-	): Prisma.ProjectWhereInput {
+	async getOpenApiSpec(projectId: string, user: UserDto): Promise<Prisma.JsonValue> {
+		try {
+			const where = this._createAccessControlWhereClause(user);
+			const projectWithEndpoints = await this.prisma.project.findFirst({
+				where: { AND: [{ id: projectId }, where] },
+				include: {
+					endpoints: {
+						select: { path: true, method: true, operation: true },
+						orderBy: { path: 'asc' },
+					},
+				},
+			});
+
+			if (!projectWithEndpoints) {
+				throw new ProjectNotFoundException(projectId);
+			}
+
+			return this.specBuilder.build(projectWithEndpoints, projectWithEndpoints.endpoints);
+		} catch (error) {
+			if (error instanceof ProjectNotFoundException) throw error;
+			this._handlePrismaError(error);
+		}
+	}
+
+	private _createAccessControlWhereClause(user: UserDto): Prisma.ProjectWhereInput {
 		if (user.role === Role.admin) {
 			return {};
 		}
+
 		return {
 			deniedUsers: { none: { id: user.id } },
 			OR: [
@@ -298,6 +320,7 @@ export class ProjectsService {
 			if (error.code === 'P2002' && exceptions?.P2002) {
 				throw exceptions.P2002;
 			}
+
 			if (error.code === 'P2025' && exceptions?.P2025) {
 				throw exceptions.P2025;
 			}
@@ -307,15 +330,7 @@ export class ProjectsService {
 			throw exceptions.default;
 		}
 
-		this.logger.error(
-			{
-				error:
-					error instanceof Error
-						? error.stack
-						: JSON.stringify(error),
-			},
-			'An unexpected error occurred in ProjectsService.',
-		);
+		this.logger.error({ error }, 'An unexpected database error occurred in ProjectsService.');
 
 		throw new InternalServerErrorException('An unexpected error occurred.');
 	}

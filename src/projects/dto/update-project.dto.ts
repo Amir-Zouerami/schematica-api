@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
 	IsArray,
@@ -14,31 +14,31 @@ import { AreLinksUniqueConstraint } from '../validators/are-links-unique.validat
 import { ProjectLinkDto } from './project-link.dto';
 
 export class UpdateProjectDto {
-	@ApiProperty({ description: "The project's new name." })
+	@ApiProperty({
+		description: "The project's new name.",
+		example: 'Project Nova v2',
+	})
 	@IsString()
 	@IsNotEmpty()
 	name: string;
 
-	@ApiProperty({
-		description: "The project's new description.",
-		required: false,
-	})
+	@ApiPropertyOptional({ description: "The project's new description." })
 	@IsString()
 	@IsOptional()
+	@IsNotEmpty()
 	description?: string;
 
-	@ApiProperty({
+	@ApiPropertyOptional({
 		description: 'The new base URL for the API server.',
-		required: false,
 	})
 	@IsUrl()
 	@IsOptional()
 	serverUrl?: string;
 
-	@ApiProperty({
-		description: 'The complete new set of related links for the project.',
+	@ApiPropertyOptional({
+		description:
+			'The complete new set of related links for the project. An empty array will remove all links.',
 		type: [ProjectLinkDto],
-		required: false,
 	})
 	@IsArray()
 	@ValidateNested({ each: true, message: 'each link must be an object' })
@@ -50,7 +50,7 @@ export class UpdateProjectDto {
 	@ApiProperty({
 		description:
 			'The last `updatedAt` timestamp known by the client, for optimistic concurrency control.',
-		required: true,
+		example: '2025-10-29T10:00:00.000Z',
 	})
 	@IsDateString()
 	@IsNotEmpty()

@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
+	ApiConflictResponse,
 	ApiCreatedResponse,
 	ApiForbiddenResponse,
 	ApiNoContentResponse,
@@ -20,7 +21,7 @@ import {
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import { Prisma, Project } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -43,24 +44,25 @@ export class ProjectsController {
 	@Post()
 	@ApiCreatedResponse({
 		description: 'The project has been successfully created.',
+		type: ProjectDetailDto,
 	})
-	async create(
+	@ApiConflictResponse({ description: 'A project with this name already exists.' })
+	create(
 		@Body() createProjectDto: CreateProjectDto,
 		@CurrentUser() user: UserDto,
-	): Promise<Project> {
-		return await this.projectsService.create(createProjectDto, user);
+	): Promise<ProjectDetailDto> {
+		return this.projectsService.create(createProjectDto, user);
 	}
 
 	@Get()
 	@ApiOkResponse({
 		description: 'A paginated list of projects visible to the user.',
-		type: ProjectSummaryDto,
 	})
-	async findAll(
+	findAll(
 		@Query() paginationQuery: PaginationQueryDto,
 		@CurrentUser() user: UserDto,
 	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
-		return await this.projectsService.findAllForUser(user, paginationQuery);
+		return this.projectsService.findAllForUser(user, paginationQuery);
 	}
 
 	@Get(':projectId')
@@ -71,25 +73,11 @@ export class ProjectsController {
 	@ApiNotFoundResponse({
 		description: 'Project not found or user lacks access.',
 	})
-	async findOne(
+	findOne(
 		@Param('projectId') projectId: string,
 		@CurrentUser() user: UserDto,
-	) {
-		return await this.projectsService.findOneByIdForUser(projectId, user);
-	}
-
-	@Get(':projectId/openapi')
-	@ApiOkResponse({
-		description: 'The OpenAPI specification for the project.',
-	})
-	@ApiNotFoundResponse({
-		description: 'Project not found or user lacks access.',
-	})
-	async findSpec(
-		@Param('projectId') projectId: string,
-		@CurrentUser() user: UserDto,
-	): Promise<{ openApiSpec: Prisma.JsonValue }> {
-		return await this.projectsService.findSpecByIdForUser(projectId, user);
+	): Promise<ProjectDetailDto> {
+		return this.projectsService.findOneByIdForUser(projectId, user);
 	}
 
 	@Put(':projectId')
@@ -101,16 +89,16 @@ export class ProjectsController {
 	@ApiForbiddenResponse({
 		description: 'User does not have ownership of this project.',
 	})
-	async update(
+	@ApiConflictResponse({
+		description:
+			'A project with the new name already exists, or a concurrency conflict occurred.',
+	})
+	update(
 		@Param('projectId') projectId: string,
 		@Body() updateProjectDto: UpdateProjectDto,
 		@CurrentUser() user: UserDto,
 	): Promise<ProjectDetailDto> {
-		return await this.projectsService.update(
-			projectId,
-			updateProjectDto,
-			user,
-		);
+		return this.projectsService.update(projectId, updateProjectDto, user);
 	}
 
 	@Delete(':projectId')
@@ -122,6 +110,20 @@ export class ProjectsController {
 	})
 	@ApiNotFoundResponse({ description: 'Project not found.' })
 	async delete(@Param('projectId') projectId: string): Promise<void> {
-		return await this.projectsService.delete(projectId);
+		await this.projectsService.delete(projectId);
+	}
+
+	@Get(':projectId/openapi')
+	@ApiOkResponse({
+		description: 'The dynamically generated OpenAPI specification for the project.',
+	})
+	@ApiNotFoundResponse({
+		description: 'Project not found or user lacks access.',
+	})
+	getOpenApiSpec(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	): Promise<Prisma.JsonValue> {
+		return this.projectsService.getOpenApiSpec(projectId, user);
 	}
 }

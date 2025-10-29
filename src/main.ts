@@ -1,14 +1,7 @@
-import {
-	INestApplication,
-	ValidationPipe,
-	VersioningType,
-} from '@nestjs/common';
+import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import {
-	FastifyAdapter,
-	NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { Logger } from 'nestjs-pino';
 import { join } from 'node:path';
@@ -70,16 +63,19 @@ function configureApp(
 	}
 }
 
+/**
+ * Bootstraps the NestJS Fastify application and starts the HTTP server.
+ *
+ * Creates a Fastify-backed Nest application that generates request IDs, reads runtime configuration (including the HTTP port), applies global validation and app configuration, and begins listening on 0.0.0.0 using the configured port.
+ */
 async function bootstrap() {
 	const adapter = new FastifyAdapter({
 		genReqId: () => uuidv4(),
 	});
 
-	const app = await NestFactory.create<NestFastifyApplication>(
-		AppModule,
-		adapter,
-		{ bufferLogs: true },
-	);
+	const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
+		bufferLogs: true,
+	});
 
 	const configService = app.get(ConfigService<AllConfigTypes, true>);
 	const port = configService.get('app.port', { infer: true });

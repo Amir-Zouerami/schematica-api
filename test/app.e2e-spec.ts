@@ -1,8 +1,5 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import {
-	FastifyAdapter,
-	NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { FastifyInstance } from 'fastify';
 import request from 'supertest';
@@ -16,9 +13,7 @@ describe('AppController (e2e)', () => {
 			imports: [AppModule],
 		}).compile();
 
-		app = moduleFixture.createNestApplication<NestFastifyApplication>(
-			new FastifyAdapter(),
-		);
+		app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
 		app.setGlobalPrefix('api');
 		app.enableVersioning({
@@ -29,9 +24,7 @@ describe('AppController (e2e)', () => {
 
 		await app.init();
 
-		const fastifyInstance = app
-			.getHttpAdapter()
-			.getInstance() as FastifyInstance;
+		const fastifyInstance = app.getHttpAdapter().getInstance() as FastifyInstance;
 		await fastifyInstance.ready();
 	});
 
@@ -44,9 +37,6 @@ describe('AppController (e2e)', () => {
 	});
 
 	it('POST /api/v2/auth/login -> should return 401 for an empty request', () => {
-		return request(app.getHttpServer())
-			.post('/api/v2/auth/login')
-			.send({})
-			.expect(401);
+		return request(app.getHttpServer()).post('/api/v2/auth/login').send({}).expect(401);
 	});
 });
