@@ -42,6 +42,25 @@ jobs:
         runs-on: ubuntu-latest
         needs: lint-and-format
 
+        env:
+            NODE_ENV: "test"
+            PORT: 3001
+            DATABASE_URL: "file:./ci-test.db"
+
+            # --- Secrets ---
+            JWT_SECRET: ${{ secrets.JWT_SECRET }}
+            JWT_EXPIRATION_TIME: "5m"
+
+            # --- App Config ---
+            APP_TITLE: "Schematica CI"
+            APP_DESCRIPTION: "API Docs"
+            APP_VERSION: "2.0"
+            APP_TAG: "Schematica"
+            APP_SERVER_URL: "http://localhost:3001"
+            APP_GLOBAL_PREFIX: "api"
+            APP_DOCS_PATH: "docs"
+            CORS_ORIGIN: "*"
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
@@ -49,7 +68,7 @@ jobs:
             - name: Setup Bun
               uses: oven-sh/setup-bun@v2
               with:
-                  version: "latest"
+                  bun-version: latest
 
             - name: Cache Bun dependencies
               uses: actions/cache@v4
@@ -63,13 +82,14 @@ jobs:
               run: bun install --frozen-lockfile
 
             - name: Run tests
+              id: run-tests
               run: bun run test -- --runInBand --coverage
 
-            - name: Upload coverage artifact
-              if: success()
+            - name: Upload coverage artifact (on failure)
+              if: failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: coverage-report
+                  name: failed-test-coverage
                   path: coverage
 
     build:
@@ -99,3 +119,10 @@ jobs:
 
             - name: Build the project
               run: bun run build
+
+            - name: Upload build artifact
+              if: success()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-dist
+                  path: dist
