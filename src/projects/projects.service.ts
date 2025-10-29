@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Prisma, Project, Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -26,20 +26,11 @@ export class ProjectsService {
 		this.logger.setContext(ProjectsService.name);
 	}
 
-	async create(createProjectDto: CreateProjectDto, creator: UserDto): Promise<Project> {
+	async create(createProjectDto: CreateProjectDto, creator: UserDto): Promise<ProjectDetailDto> {
 		const { name, description, serverUrl, links } = createProjectDto;
 
 		try {
 			return await this.prisma.$transaction(async (tx) => {
-				const projectLinks = links
-					? {
-							create: links.map((link) => ({
-								name: link.name,
-								url: link.url,
-							})),
-						}
-					: undefined;
-
 				const project = await tx.project.create({
 					data: {
 						name,
@@ -48,7 +39,14 @@ export class ProjectsService {
 						serverUrl,
 						creatorId: creator.id,
 						updatedById: creator.id,
-						links: projectLinks,
+						links: links
+							? {
+									create: links.map((link) => ({
+										name: link.name,
+										url: link.url,
+									})),
+								}
+							: undefined,
 					},
 				});
 
@@ -60,7 +58,22 @@ export class ProjectsService {
 					},
 				});
 
-				return project;
+				const newProjectDetail = await tx.project.findUniqueOrThrow({
+					where: { id: project.id },
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						serverUrl: true,
+						createdAt: true,
+						updatedAt: true,
+						creator: { select: { id: true, username: true, profileImage: true } },
+						updatedBy: { select: { id: true, username: true, profileImage: true } },
+						links: true,
+					},
+				});
+
+				return newProjectDetail as ProjectDetailDto;
 			});
 		} catch (error) {
 			this._handlePrismaError(error, {
