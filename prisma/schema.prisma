@@ -1,40 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// --- ENUMS ---
-
-enum Role {
-  admin
-  member
-}
-
-enum AccessType {
-  OWNER
-  ALLOWED
-}
-
-// --- MODELS ---
-
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
+  id           String  @id @default(cuid())
+  username     String  @unique
   password     String
-  role         Role     @default(member)
+  role         Role    @default(member)
   profileImage String?
+
   tokenVersion Int      @default(1)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // --- Relations ---
   teamMemberships TeamMembership[]
-  createdProjects Project[]           @relation("CreatedBy")
-  updatedProjects Project[]           @relation("UpdatedBy")
+
+  // "Blame" relations for tracking creation/updates
+  createdProjects  Project[]  @relation("ProjectCreator")
+  updatedProjects  Project[]  @relation("ProjectUpdater")
+  createdEndpoints Endpoint[] @relation("EndpointCreator")
+  updatedEndpoints Endpoint[] @relation("EndpointUpdater")
+  writtenNotes     Note[]
+
+  // Access control relations
   projectAccesses UserProjectAccess[]
   deniedProjects  Project[]           @relation("DeniedProjectAccess")
 }
@@ -45,38 +38,35 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // --- Relations ---
-  userMemberships TeamMembership[]
+  members         TeamMembership[]
   projectAccesses TeamProjectAccess[]
 }
 
 model TeamMembership {
-  userId String
-  teamId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
 
   @@id([userId, teamId])
 }
 
 model Project {
-  id             String   @id @default(uuid())
+  id             String   @id @default(cuid())
   name           String
   nameNormalized String   @unique
   description    String?
   serverUrl      String?
-  openApiSpec    Json
+  creator        User     @relation("ProjectCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creatorId      String
+  updatedBy      User     @relation("ProjectUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  updatedById    String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  // --- Relations ---
-  creatorId String
-  creator   User   @relation("CreatedBy", fields: [creatorId], references: [id])
+  links     ProjectLink[]
+  endpoints Endpoint[]
 
-  updatedById String
-  updatedBy   User   @relation("UpdatedBy", fields: [updatedById], references: [id])
-
-  links        ProjectLink[]
   userAccesses UserProjectAccess[]
   teamAccesses TeamProjectAccess[]
   deniedUsers  User[]              @relation("DeniedProjectAccess")
@@ -86,30 +76,71 @@ model ProjectLink {
   id        Int     @id @default(autoincrement())
   name      String
   url       String
-  projectId String
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
 
   @@unique([projectId, url])
 }
 
-model UserProjectAccess {
-  userId    String
-  projectId String
-  type      AccessType
+model Endpoint {
+  id     String @id @default(cuid())
+  path   String
+  method String
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  operation Json
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  creator     User     @relation("EndpointCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  creatorId   String
+  updatedBy   User     @relation("EndpointUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  updatedById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  notes Note[]
+
+  @@unique([projectId, path, method])
+}
+
+model Note {
+  id         Int      @id @default(autoincrement())
+  content    String
+  endpoint   Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  endpointId String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// --- Access Control Tables ---
+model UserProjectAccess {
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  type      AccessType // "OWNER" or "VIEWER"
 
   @@id([userId, projectId])
 }
 
 model TeamProjectAccess {
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
   teamId    String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectId String
-  type      AccessType
-
-  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      AccessType // "OWNER" or "VIEWER"
 
   @@id([teamId, projectId])
+}
+
+enum Role {
+  admin
+  member
+}
+
+enum AccessType {
+  OWNER
+  VIEWER
 }

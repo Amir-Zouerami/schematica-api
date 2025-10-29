@@ -1,9 +1,4 @@
-import {
-	CallHandler,
-	ExecutionContext,
-	Injectable,
-	NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger } from 'nestjs-pino';
 import { Observable } from 'rxjs';
@@ -12,10 +7,7 @@ import { Observable } from 'rxjs';
 export class InjectUserInterceptor implements NestInterceptor {
 	constructor(private readonly logger: PinoLogger) {}
 
-	intercept(
-		context: ExecutionContext,
-		next: CallHandler,
-	): Observable<unknown> {
+	intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
 		const request = context.switchToHttp().getRequest<FastifyRequest>();
 		const response = context.switchToHttp().getResponse<FastifyReply>();
 

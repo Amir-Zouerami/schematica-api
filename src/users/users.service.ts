@@ -1,8 +1,4 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
@@ -57,13 +53,8 @@ export class UsersService {
 	 * @param userId The ID of the user whose password is being changed.
 	 * @param changePasswordDto The DTO containing the current and new passwords.
 	 */
-	async updatePassword(
-		userId: string,
-		changePasswordDto: ChangePasswordDto,
-	): Promise<void> {
-		if (
-			changePasswordDto.currentPassword === changePasswordDto.newPassword
-		) {
+	async updatePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<void> {
+		if (changePasswordDto.currentPassword === changePasswordDto.newPassword) {
 			throw new BadRequestException(
 				'New password cannot be the same as the current password.',
 			);
@@ -77,19 +68,13 @@ export class UsersService {
 			throw new NotFoundException('User not found.');
 		}
 
-		const isPasswordCorrect = await compare(
-			changePasswordDto.currentPassword,
-			user.password,
-		);
+		const isPasswordCorrect = await compare(changePasswordDto.currentPassword, user.password);
 
 		if (!isPasswordCorrect) {
 			throw new BadRequestException('Incorrect current password.');
 		}
 
-		const newHashedPassword = await hash(
-			changePasswordDto.newPassword,
-			SALT_ROUNDS,
-		);
+		const newHashedPassword = await hash(changePasswordDto.newPassword, SALT_ROUNDS);
 
 		await this.prisma.user.update({
 			where: { id: userId },

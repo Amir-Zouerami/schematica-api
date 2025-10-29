@@ -1,9 +1,4 @@
-import {
-	CallHandler,
-	ExecutionContext,
-	Injectable,
-	NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 
@@ -23,10 +18,7 @@ import { AllConfigTypes } from 'src/config/config.type';
 @Injectable()
 export class TransformInterceptor<T>
 	implements
-		NestInterceptor<
-			T | PaginatedServiceResponse<T>,
-			ApiResponse<T> | PaginatedApiResponse<T>
-		>
+		NestInterceptor<T | PaginatedServiceResponse<T>, ApiResponse<T> | PaginatedApiResponse<T>>
 {
 	constructor(
 		private readonly reflector: Reflector,
@@ -38,9 +30,7 @@ export class TransformInterceptor<T>
 		next: CallHandler<T | PaginatedServiceResponse<T>>,
 	): Observable<ApiResponse<T> | PaginatedApiResponse<T>> {
 		const request = context.switchToHttp().getRequest<FastifyRequest>();
-		const defaultVersion = this.configService
-			.get('app.version', { infer: true })
-			.split('.')[0];
+		const defaultVersion = this.configService.get('app.version', { infer: true }).split('.')[0];
 
 		const apiVersion =
 			this.reflector.getAllAndOverride<string>('__version__', [
