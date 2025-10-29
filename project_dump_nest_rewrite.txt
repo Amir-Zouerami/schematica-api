@@ -1,0 +1,3089 @@
+// Path: .gitignore
+//----------------------------------------------------------------------
+# compiled output
+/dist
+/node_modules
+/build
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# temp directory
+.temp
+.tmp
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+/generated/prisma
+
+prisma/*.db
+//--- End of .gitignore ---
+
+
+// Path: README.md
+//----------------------------------------------------------------------
+working on it...
+//--- End of README.md ---
+
+
+// Path: eslint.config.mjs
+//----------------------------------------------------------------------
+// @ts-check
+import eslint from '@eslint/js';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+	{
+		ignores: ['eslint.config.mjs'],
+	},
+	eslint.configs.recommended,
+	...tseslint.configs.recommendedTypeChecked,
+	eslintPluginPrettierRecommended,
+	{
+		languageOptions: {
+			globals: {
+				...globals.node,
+				...globals.jest,
+			},
+			sourceType: 'commonjs',
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+	},
+	{
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'off',
+			'@typescript-eslint/no-floating-promises': 'warn',
+			'@typescript-eslint/no-unsafe-argument': 'warn',
+			'prettier/prettier': ['error', { endOfLine: 'auto' }],
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+				},
+			],
+		},
+	},
+);
+//--- End of eslint.config.mjs ---
+
+
+// Path: nest-cli.json
+//----------------------------------------------------------------------
+{
+	"$schema": "https://json.schemastore.org/nest-cli",
+	"collection": "@nestjs/schematics",
+	"sourceRoot": "src",
+	"compilerOptions": {
+		"deleteOutDir": true
+	}
+}
+//--- End of nest-cli.json ---
+
+
+// Path: package.json
+//----------------------------------------------------------------------
+{
+	"name": "schematica-api",
+	"version": "0.0.1",
+	"description": "",
+	"author": "",
+	"private": true,
+	"license": "GPL-3.0-only",
+	"scripts": {
+		"build": "nest build",
+		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+		"start": "nest start",
+		"start:dev": "nest start --watch",
+		"start:debug": "nest start --debug --watch",
+		"start:prod": "node dist/main",
+		"lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+		"test": "jest",
+		"test:watch": "jest --watch",
+		"test:cov": "jest --coverage",
+		"test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+		"test:e2e": "jest --config ./test/jest-e2e.json",
+		"migrate:dev": "dotenv -e .env -- prisma migrate dev",
+		"migrate:reset": "dotenv -e .env -- prisma migrate reset"
+	},
+	"dependencies": {
+		"@fastify/static": "^8.2.0",
+		"@nestjs/common": "^11.1.6",
+		"@nestjs/config": "^4.0.2",
+		"@nestjs/core": "^11.1.6",
+		"@nestjs/jwt": "^11.0.1",
+		"@nestjs/passport": "^11.0.5",
+		"@nestjs/platform-fastify": "^11.1.6",
+		"@nestjs/swagger": "^11.2.1",
+		"@prisma/client": "^6.17.1",
+		"bcrypt": "^6.0.0",
+		"class-transformer": "^0.5.1",
+		"class-validator": "^0.14.2",
+		"fastify": "^5.6.1",
+		"nestjs-pino": "^4.4.1",
+		"passport": "^0.7.0",
+		"passport-jwt": "^4.0.1",
+		"passport-local": "^1.0.0",
+		"pino-http": "^11.0.0",
+		"pino-pretty": "^13.1.2",
+		"reflect-metadata": "^0.2.2",
+		"rxjs": "^7.8.2",
+		"uuid": "^13.0.0"
+	},
+	"devDependencies": {
+		"@eslint/eslintrc": "^3.3.1",
+		"@eslint/js": "^9.37.0",
+		"@nestjs/cli": "^11.0.10",
+		"@nestjs/schematics": "^11.0.9",
+		"@nestjs/testing": "^11.1.6",
+		"@types/bcrypt": "^6.0.0",
+		"@types/jest": "^30.0.0",
+		"@types/node": "^22.18.11",
+		"@types/passport-jwt": "^4.0.1",
+		"@types/passport-local": "^1.0.38",
+		"@types/supertest": "^6.0.3",
+		"@types/uuid": "^11.0.0",
+		"dotenv-cli": "^10.0.0",
+		"eslint": "^9.37.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-prettier": "^5.5.4",
+		"globals": "^16.4.0",
+		"jest": "^30.2.0",
+		"prettier": "^3.6.2",
+		"prisma": "^6.17.1",
+		"source-map-support": "^0.5.21",
+		"supertest": "^7.1.4",
+		"ts-jest": "^29.4.5",
+		"ts-loader": "^9.5.4",
+		"ts-node": "^10.9.2",
+		"tsconfig-paths": "^4.2.0",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.46.1"
+	},
+	"jest": {
+		"moduleFileExtensions": [
+			"js",
+			"json",
+			"ts"
+		],
+		"rootDir": "src",
+		"testRegex": ".*\\.spec\\.ts$",
+		"transform": {
+			"^.+\\.(t|j)s$": "ts-jest"
+		},
+		"collectCoverageFrom": [
+			"**/*.(t|j)s"
+		],
+		"coverageDirectory": "../coverage",
+		"testEnvironment": "node"
+	},
+	"trustedDependencies": [
+		"@nestjs/core",
+		"@prisma/client",
+		"@prisma/engines",
+		"prisma",
+		"unrs-resolver"
+	]
+}
+//--- End of package.json ---
+
+
+// Path: prisma/migrations/20251028192430_init/migration.sql
+//----------------------------------------------------------------------
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'member',
+    "profileImage" TEXT,
+    "tokenVersion" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "Team" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "TeamMembership" (
+    "userId" TEXT NOT NULL,
+    "teamId" TEXT NOT NULL,
+
+    PRIMARY KEY ("userId", "teamId"),
+    CONSTRAINT "TeamMembership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "TeamMembership_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Project" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "nameNormalized" TEXT NOT NULL,
+    "description" TEXT,
+    "serverUrl" TEXT,
+    "openApiSpec" JSONB NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "creatorId" TEXT NOT NULL,
+    "updatedById" TEXT NOT NULL,
+    CONSTRAINT "Project_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Project_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "ProjectLink" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    CONSTRAINT "ProjectLink_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "UserProjectAccess" (
+    "userId" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+
+    PRIMARY KEY ("userId", "projectId"),
+    CONSTRAINT "UserProjectAccess_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "UserProjectAccess_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "TeamProjectAccess" (
+    "teamId" TEXT NOT NULL,
+    "projectId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+
+    PRIMARY KEY ("teamId", "projectId"),
+    CONSTRAINT "TeamProjectAccess_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "Team" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "TeamProjectAccess_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "_DeniedProjectAccess" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+    CONSTRAINT "_DeniedProjectAccess_A_fkey" FOREIGN KEY ("A") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "_DeniedProjectAccess_B_fkey" FOREIGN KEY ("B") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Team_id_key" ON "Team"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Project_nameNormalized_key" ON "Project"("nameNormalized");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProjectLink_projectId_url_key" ON "ProjectLink"("projectId", "url");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "_DeniedProjectAccess_AB_unique" ON "_DeniedProjectAccess"("A", "B");
+
+-- CreateIndex
+CREATE INDEX "_DeniedProjectAccess_B_index" ON "_DeniedProjectAccess"("B");
+//--- End of prisma/migrations/20251028192430_init/migration.sql ---
+
+
+// Path: prisma/migrations/migration_lock.toml
+//----------------------------------------------------------------------
+# Please do not edit this file manually
+# It should be added in your version-control system (e.g., Git)
+provider = "sqlite"
+//--- End of prisma/migrations/migration_lock.toml ---
+
+
+// Path: prisma/seed-data/users.json
+//----------------------------------------------------------------------
+[
+	{
+		"id": "1",
+		"username": "amir.zouerami",
+		"password": "password123",
+		"role": "admin",
+		"teams": ["backend", "leadership"],
+		"profileImage": "/profile-pictures/amir.zouerami.png"
+	},
+	{
+		"id": "2",
+		"username": "brooklyn.lee",
+		"password": "password456",
+		"role": "member",
+		"teams": ["UI"],
+		"profileImage": "/profile-pictures/brooklyn.lee.png"
+	},
+	{
+		"id": "3",
+		"username": "charlie.davis",
+		"password": "password789",
+		"role": "member",
+		"teams": ["UI"],
+		"profileImage": "/profile-pictures/charlie.davis.png"
+	}
+]
+//--- End of prisma/seed-data/users.json ---
+
+
+// Path: prisma/seed.ts
+//----------------------------------------------------------------------
+// biome-ignore-all lint/suspicious/noConsole: allow console for debugging the seed script
+// biome-ignore-all lint/performance/noAwaitInLoops: allow in seeding script
+
+import { PrismaClient, Role } from '@prisma/client';
+import { hash } from 'bcrypt';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+type SeedUser = {
+	username: string;
+	password: string;
+	role: 'admin' | 'member';
+	profileImage: string | null;
+	teams: string[];
+};
+
+const prisma = new PrismaClient();
+const SALT_ROUNDS = 10;
+
+async function main() {
+	console.log('Start seeding...');
+
+	// --- Seed Teams ---
+	const teamsToCreate = [
+		{ id: 'backend' },
+		{ id: 'leadership' },
+		{ id: 'UI' },
+	];
+
+	console.log('Seeding teams...');
+	for (const teamData of teamsToCreate) {
+		await prisma.team.upsert({
+			where: { id: teamData.id },
+			update: {},
+			create: {
+				id: teamData.id,
+				name: teamData.id,
+			},
+		});
+	}
+	console.log('Teams seeded successfully.');
+
+	// --- Seed Users ---
+	const usersPath = join(__dirname, 'seed-data', 'users.json');
+	const usersRaw = await readFile(usersPath, 'utf-8');
+	const usersData = JSON.parse(usersRaw) as SeedUser[];
+
+	console.log('Seeding users...');
+	for (const userData of usersData) {
+		const hashedPassword = await hash(userData.password, SALT_ROUNDS);
+
+		await prisma.user.upsert({
+			where: { username: userData.username },
+			update: {},
+			create: {
+				username: userData.username,
+				password: hashedPassword,
+				role: userData.role === 'admin' ? Role.admin : Role.member,
+				profileImage: userData.profileImage,
+				teamMemberships: {
+					create: userData.teams.map((teamId: string) => ({
+						team: {
+							connect: {
+								id: teamId,
+							},
+						},
+					})),
+				},
+			},
+		});
+	}
+	console.log('Users seeded successfully.');
+
+	console.log('Seeding finished.');
+}
+
+main()
+	.catch((e) => {
+		console.error(e);
+		process.exit(1);
+	})
+	.finally(async () => {
+		await prisma.$disconnect();
+	});
+//--- End of prisma/seed.ts ---
+
+
+// Path: prisma.config.ts
+//----------------------------------------------------------------------
+import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+	migrations: {
+		seed: 'bun prisma/seed.ts',
+	},
+});
+//--- End of prisma.config.ts ---
+
+
+// Path: src/app.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { ServerResponse } from 'http';
+import { LoggerModule } from 'nestjs-pino';
+import { AuthModule } from './auth/auth.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
+import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
+import appConfig from './config/app.config';
+import { AllConfigTypes } from './config/config.type';
+import databaseConfig from './config/database.config';
+import jwtConfig from './config/jwt.config';
+import { PrismaModule } from './prisma/prisma.module';
+import { ProjectsModule } from './projects/projects.module';
+import { TeamsModule } from './teams/teams.module';
+import { UsersModule } from './users/users.module';
+
+@Module({
+	imports: [
+		ConfigModule.forRoot({
+			isGlobal: true,
+			load: [databaseConfig, appConfig, jwtConfig],
+		}),
+
+		LoggerModule.forRootAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (
+				configService: ConfigService<AllConfigTypes, true>,
+			) => {
+				const isProduction =
+					configService.get('app.nodeEnv', { infer: true }) ===
+					'production';
+
+				return {
+					pinoHttp: {
+						transport: !isProduction
+							? {
+									target: 'pino-pretty',
+									options: {
+										singleLine: false,
+										colorize: true,
+									},
+								}
+							: undefined,
+						level: isProduction ? 'info' : 'debug',
+						customProps: (_req, res: ServerResponse) => {
+							return res.customProps || {};
+						},
+					},
+				};
+			},
+		}),
+
+		PrismaModule,
+		AuthModule,
+		UsersModule,
+		TeamsModule,
+		ProjectsModule,
+	],
+	controllers: [],
+	providers: [
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: InjectUserInterceptor,
+		},
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: TransformInterceptor,
+		},
+		{
+			provide: APP_FILTER,
+			useClass: AllExceptionsFilter,
+		},
+	],
+})
+export class AppModule {}
+//--- End of src/app.module.ts ---
+
+
+// Path: src/auth/auth.controller.spec.ts
+//----------------------------------------------------------------------
+import { Test, type TestingModule } from '@nestjs/testing';
+import { AuthController } from './auth.controller';
+
+describe('AuthController', () => {
+	let controller: AuthController;
+
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			controllers: [AuthController],
+		}).compile();
+
+		controller = module.get<AuthController>(AuthController);
+	});
+
+	it('should be defined', () => {
+		expect(controller).toBeDefined();
+	});
+});
+//--- End of src/auth/auth.controller.spec.ts ---
+
+
+// Path: src/auth/auth.controller.ts
+//----------------------------------------------------------------------
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { AuthService } from './auth.service';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { LoginDto } from './dto/login.dto';
+import { UserDto } from './dto/user.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+
+@ApiTags('Authentication')
+@Controller('auth')
+export class AuthController {
+	constructor(private readonly authService: AuthService) {}
+
+	@ApiBody({ type: LoginDto })
+	@UseGuards(LocalAuthGuard)
+	@Post('login')
+	login(@CurrentUser() user: UserDto) {
+		return this.authService.login(user);
+	}
+
+	@ApiBearerAuth()
+	@UseGuards(JwtAuthGuard)
+	@Get('me')
+	getProfile(@CurrentUser() user: UserDto): UserDto {
+		return user;
+	}
+}
+//--- End of src/auth/auth.controller.ts ---
+
+
+// Path: src/auth/auth.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import type { AllConfigTypes } from 'src/config/config.type';
+import { PrismaModule } from '../prisma/prisma.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { LocalStrategy } from './strategies/local.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
+
+@Module({
+	imports: [
+		PrismaModule,
+		PassportModule,
+		ConfigModule,
+		JwtModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: (
+				configService: ConfigService<AllConfigTypes, true>,
+			) => ({
+				secret: configService.get('jwt.secret', { infer: true }),
+				signOptions: {
+					expiresIn: configService.get('jwt.expirationTime', '1h', {
+						infer: true,
+					}),
+				},
+			}),
+		}),
+	],
+	controllers: [AuthController],
+	providers: [AuthService, LocalStrategy, JwtStrategy],
+})
+export class AuthModule {}
+//--- End of src/auth/auth.module.ts ---
+
+
+// Path: src/auth/auth.service.spec.ts
+//----------------------------------------------------------------------
+import { Test, type TestingModule } from '@nestjs/testing';
+import { AuthService } from './auth.service';
+
+describe('AuthService', () => {
+	let service: AuthService;
+
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			providers: [AuthService],
+		}).compile();
+
+		service = module.get<AuthService>(AuthService);
+	});
+
+	it('should be defined', () => {
+		expect(service).toBeDefined();
+	});
+});
+//--- End of src/auth/auth.service.spec.ts ---
+
+
+// Path: src/auth/auth.service.ts
+//----------------------------------------------------------------------
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import type { User } from '@prisma/client';
+import { compare } from 'bcrypt';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Injectable()
+export class AuthService {
+	constructor(
+		private prismaService: PrismaService,
+		private jwtService: JwtService,
+	) {}
+
+	/**
+	 * Validates a user's credentials.
+	 *
+	 * @param username The user's username.
+	 * @param pass The user's plain-text password.
+	 * @returns The user object without the password if validation is successful, otherwise null.
+	 */
+	async validateUser(
+		username: string,
+		passwordPlainText: string,
+	): Promise<Omit<User, 'password'> | null> {
+		const user = await this.prismaService.user.findUnique({
+			where: { username },
+		});
+
+		if (!user) {
+			return null;
+		}
+
+		const passwordsMatch = await compare(passwordPlainText, user.password);
+
+		if (passwordsMatch) {
+			const { password: _, ...result } = user;
+			return result;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Generates a JWT for a given user.
+	 *
+	 * @param user The user object (without the password).
+	 * @returns An object containing the access token.
+	 */
+	login(user: Omit<User, 'password'>) {
+		const payload = {
+			username: user.username,
+			sub: user.id,
+			role: user.role,
+			tokenVersion: user.tokenVersion,
+		};
+
+		return {
+			access_token: this.jwtService.sign(payload),
+		};
+	}
+}
+//--- End of src/auth/auth.service.ts ---
+
+
+// Path: src/auth/decorators/current-user.decorator.ts
+//----------------------------------------------------------------------
+import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+import type { User } from '@prisma/client';
+import type { FastifyRequest } from 'fastify';
+
+type FastifyRequestWithUser = FastifyRequest & { user: Omit<User, 'password'> };
+
+export const CurrentUser = createParamDecorator(
+	(_data: unknown, ctx: ExecutionContext) => {
+		const request = ctx.switchToHttp().getRequest<FastifyRequestWithUser>();
+		return request.user;
+	},
+);
+//--- End of src/auth/decorators/current-user.decorator.ts ---
+
+
+// Path: src/auth/decorators/roles.decorator.ts
+//----------------------------------------------------------------------
+import { SetMetadata } from '@nestjs/common';
+import { Role } from '@prisma/client';
+
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: Role[]) => SetMetadata(ROLES_KEY, roles);
+//--- End of src/auth/decorators/roles.decorator.ts ---
+
+
+// Path: src/auth/dto/login.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsString } from "class-validator";
+
+export class LoginDto {
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	username!: string;
+
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	password!: string;
+}
+//--- End of src/auth/dto/login.dto.ts ---
+
+
+// Path: src/auth/dto/user.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { Role, Team } from '@prisma/client';
+import { TeamDto } from 'src/teams/dto/team.dto';
+import { UserWithTeams } from 'src/users/users.types';
+
+export class UserDto {
+	@ApiProperty()
+	id: string;
+
+	@ApiProperty()
+	username: string;
+
+	@ApiProperty({ enum: Role })
+	role: Role;
+
+	@ApiProperty({ required: false, nullable: true })
+	profileImage: string | null;
+
+	@ApiProperty({ required: false, type: () => [TeamDto] })
+	teams?: Team[];
+
+	tokenVersion: number;
+
+	@ApiProperty()
+	createdAt: Date;
+
+	@ApiProperty()
+	updatedAt: Date;
+
+	constructor(user: UserWithTeams) {
+		this.id = user.id;
+		this.username = user.username;
+		this.role = user.role;
+		this.profileImage = user.profileImage;
+		this.createdAt = user.createdAt;
+		this.updatedAt = user.updatedAt;
+		this.teams = user.teams;
+	}
+}
+//--- End of src/auth/dto/user.dto.ts ---
+
+
+// Path: src/auth/guards/jwt-auth.guard.ts
+//----------------------------------------------------------------------
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+//--- End of src/auth/guards/jwt-auth.guard.ts ---
+
+
+// Path: src/auth/guards/local-auth.guard.ts
+//----------------------------------------------------------------------
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class LocalAuthGuard extends AuthGuard('local') {}
+//--- End of src/auth/guards/local-auth.guard.ts ---
+
+
+// Path: src/auth/guards/roles.guard.ts
+//----------------------------------------------------------------------
+import {
+	CanActivate,
+	ExecutionContext,
+	ForbiddenException,
+	Injectable,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Role } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
+import { ROLES_KEY } from '../decorators/roles.decorator';
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+	constructor(private reflector: Reflector) {}
+
+	canActivate(context: ExecutionContext): boolean {
+		const requiredRoles = this.reflector.getAllAndOverride<Role[]>(
+			ROLES_KEY,
+			[context.getHandler(), context.getClass()],
+		);
+
+		if (!requiredRoles?.length) {
+			return true;
+		}
+
+		const { user } = context.switchToHttp().getRequest<FastifyRequest>();
+
+		if (!user) {
+			throw new ForbiddenException(
+				'Authentication credentials were not provided.',
+			);
+		}
+
+		const hasRole = requiredRoles.some((role) => user.role === role);
+
+		if (!hasRole) {
+			throw new ForbiddenException(
+				'You do not have permission to perform this action.',
+			);
+		}
+
+		return true;
+	}
+}
+//--- End of src/auth/guards/roles.guard.ts ---
+
+
+// Path: src/auth/strategies/jwt.strategy.ts
+//----------------------------------------------------------------------
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { AllConfigTypes } from 'src/config/config.type';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserWithTeams } from 'src/users/users.types';
+
+export type JwtPayload = {
+	sub: string;
+	username: string;
+	role: string;
+	tokenVersion: number;
+};
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+	constructor(
+		private readonly prismaService: PrismaService,
+		configService: ConfigService<AllConfigTypes, true>,
+	) {
+		super({
+			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+			ignoreExpiration: false,
+			secretOrKey: configService.get('jwt.secret', { infer: true }),
+		});
+	}
+
+	/**
+	 * This method is called by Passport after it has successfully verified the token's
+	 * signature and expiration.
+	 *
+	 * @param payload The decoded payload from the JWT.
+	 * @returns The user object that will be attached to the request.
+	 */
+	async validate(payload: JwtPayload): Promise<UserWithTeams> {
+		const user = await this.prismaService.user.findUnique({
+			where: { id: payload.sub },
+			include: {
+				teamMemberships: { select: { team: true } },
+			},
+		});
+
+		if (!user) {
+			throw new UnauthorizedException('User not found.');
+		}
+
+		if (user.tokenVersion !== payload.tokenVersion) {
+			throw new UnauthorizedException('Token is no longer valid.');
+		}
+
+		const { password: _, teamMemberships, ...result } = user;
+		return {
+			...result,
+			teams: teamMemberships.map((m) => m.team),
+		};
+	}
+}
+//--- End of src/auth/strategies/jwt.strategy.ts ---
+
+
+// Path: src/auth/strategies/local.strategy.ts
+//----------------------------------------------------------------------
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import type { User } from '@prisma/client';
+import { Strategy } from 'passport-local';
+import { AuthService } from '../auth.service';
+
+@Injectable()
+export class LocalStrategy extends PassportStrategy(Strategy) {
+	constructor(private authService: AuthService) {
+		super();
+	}
+
+	/**
+	 * Passport automatically calls this method with the credentials from the request body.
+	 *
+	 * @param username The username extracted from the request.
+	 * @param password The password extracted from the request.
+	 * @returns The full user object if validation is successful.
+	 * @throws { UnauthorizedException } if validation fails.
+	 */
+	async validate(
+		username: string,
+		password: string,
+	): Promise<Omit<User, 'password'>> {
+		const user = await this.authService.validateUser(username, password);
+
+		if (!user) {
+			throw new UnauthorizedException('Invalid credentials');
+		}
+
+		return user;
+	}
+}
+//--- End of src/auth/strategies/local.strategy.ts ---
+
+
+// Path: src/common/dto/pagination-query.dto.ts
+//----------------------------------------------------------------------
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
+
+export class PaginationQueryDto {
+	@ApiPropertyOptional({
+		description: 'The number of items to return.',
+		default: 10,
+		minimum: 1,
+		maximum: 100,
+	})
+	@Type(() => Number) // Transform the query param from string to number
+	@IsInt()
+	@Min(1)
+	@Max(100)
+	@IsOptional()
+	limit = 10;
+
+	@ApiPropertyOptional({
+		description: 'The page number to return.',
+		default: 1,
+		minimum: 1,
+	})
+	@Type(() => Number)
+	@IsInt()
+	@Min(1)
+	@IsOptional()
+	page = 1;
+
+	// This getter is a convenience for calculating the offset in the service.
+	get skip(): number {
+		return (this.page - 1) * this.limit;
+	}
+}
+//--- End of src/common/dto/pagination-query.dto.ts ---
+
+
+// Path: src/common/exceptions/base-app.exception.ts
+//----------------------------------------------------------------------
+import { HttpException } from '@nestjs/common';
+
+export class BaseAppException extends HttpException {
+	public metaCode: string;
+
+	/**
+	 * @param message The error message for the client.
+	 * @param httpStatus The HTTP status code.
+	 * @param metaCode A specific, machine-readable code for this error.
+	 */
+	constructor(message: string, httpStatus: number, metaCode: string) {
+		super(message, httpStatus);
+		this.metaCode = metaCode;
+	}
+}
+//--- End of src/common/exceptions/base-app.exception.ts ---
+
+
+// Path: src/common/exceptions/project-concurrency.exception.ts
+//----------------------------------------------------------------------
+import { HttpStatus } from '@nestjs/common';
+import { BaseAppException } from './base-app.exception';
+
+export class ProjectConcurrencyException extends BaseAppException {
+	constructor() {
+		super(
+			'This project has been updated by someone else since you started editing.',
+			HttpStatus.CONFLICT,
+			'PROJECT_CONCURRENCY_CONFLICT',
+		);
+	}
+}
+//--- End of src/common/exceptions/project-concurrency.exception.ts ---
+
+
+// Path: src/common/exceptions/project-conflict.exception.ts
+//----------------------------------------------------------------------
+import { HttpStatus } from '@nestjs/common';
+import { BaseAppException } from './base-app.exception';
+
+export class ProjectConflictException extends BaseAppException {
+	constructor(projectName: string) {
+		super(
+			`A project with the name "${projectName}" already exists.`,
+			HttpStatus.CONFLICT,
+			'PROJECT_NAME_ALREADY_EXISTS',
+		);
+	}
+}
+//--- End of src/common/exceptions/project-conflict.exception.ts ---
+
+
+// Path: src/common/exceptions/project-creation-failure.exception.ts
+//----------------------------------------------------------------------
+import { HttpStatus } from '@nestjs/common';
+import { BaseAppException } from './base-app.exception';
+
+export class ProjectCreationFailure extends BaseAppException {
+	constructor(projectName) {
+		super(
+			`Failed to create the project: "${projectName}".`,
+			HttpStatus.INTERNAL_SERVER_ERROR,
+			'PROJECT_CREATION_FAILED',
+		);
+	}
+}
+//--- End of src/common/exceptions/project-creation-failure.exception.ts ---
+
+
+// Path: src/common/exceptions/project-not-found.exception.ts
+//----------------------------------------------------------------------
+import { HttpStatus } from '@nestjs/common';
+import { BaseAppException } from './base-app.exception';
+
+export class ProjectNotFoundException extends BaseAppException {
+	constructor(projectId: string) {
+		super(
+			`Project with ID "${projectId}" not found or you do not have permission to view it.`,
+			HttpStatus.NOT_FOUND,
+			'PROJECT_NOT_FOUND',
+		);
+	}
+}
+//--- End of src/common/exceptions/project-not-found.exception.ts ---
+
+
+// Path: src/common/filters/all-exceptions.filter.ts
+//----------------------------------------------------------------------
+import {
+	ArgumentsHost,
+	Catch,
+	ExceptionFilter,
+	HttpException,
+	HttpStatus,
+} from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
+import { FastifyRequest } from 'fastify';
+import { PinoLogger } from 'nestjs-pino';
+import { BaseAppException } from '../exceptions/base-app.exception';
+
+const statusToMetaCode = {
+	[HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
+	[HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
+	[HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+	[HttpStatus.NOT_FOUND]: 'NOT_FOUND',
+	[HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
+} as const;
+
+type KnownMetaCode = (typeof statusToMetaCode)[keyof typeof statusToMetaCode];
+
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+	constructor(
+		private readonly httpAdapterHost: HttpAdapterHost,
+		private readonly logger: PinoLogger,
+	) {}
+
+	catch(exception: unknown, host: ArgumentsHost): void {
+		const { httpAdapter } = this.httpAdapterHost;
+		const ctx = host.switchToHttp();
+		const request = ctx.getRequest<FastifyRequest>();
+
+		const { httpStatus, message, metaCode, type } =
+			this.parseException(exception);
+
+		if (httpStatus >= Number(HttpStatus.INTERNAL_SERVER_ERROR)) {
+			const formattedMessage = Array.isArray(message)
+				? message.join(', ')
+				: message;
+
+			const logObject = {
+				message: `[Unhandled Exception] HTTP ${httpStatus} - ${formattedMessage}`,
+				request: {
+					id: request.id,
+					url: request.url,
+					method: request.method,
+				},
+
+				stack: exception instanceof Error ? exception.stack : undefined,
+				exception,
+			};
+			this.logger.error(logObject);
+		}
+
+		const responseBody = {
+			meta: {
+				requestId: request.id,
+				timestamp: new Date().toISOString(),
+				metaCode,
+			},
+			data: null,
+			error: {
+				statusCode: httpStatus,
+				message,
+				type,
+			},
+		};
+
+		httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
+	}
+
+	private parseException(exception: unknown) {
+		if (exception instanceof BaseAppException) {
+			return {
+				httpStatus: exception.getStatus(),
+				message: exception.message,
+				metaCode: exception.metaCode,
+				type: exception.constructor.name,
+			};
+		}
+
+		if (exception instanceof HttpException) {
+			const httpStatus = exception.getStatus();
+			const response = exception.getResponse();
+
+			const errorResponse =
+				typeof response === 'string'
+					? { message: response }
+					: (response as {
+							message: string | string[];
+							error?: string;
+						});
+
+			const metaCode: KnownMetaCode =
+				statusToMetaCode[httpStatus as keyof typeof statusToMetaCode] ??
+				'UNHANDLED_HTTP_EXCEPTION';
+
+			return {
+				httpStatus,
+				message: errorResponse.message,
+				metaCode,
+				type: errorResponse.error || exception.constructor.name,
+			};
+		}
+
+		return {
+			httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+			message: 'An unexpected internal server error occurred.',
+			metaCode: 'INTERNAL_SERVER_ERROR',
+			type:
+				exception instanceof Error
+					? exception.constructor.name
+					: 'UnknownError',
+		};
+	}
+}
+//--- End of src/common/filters/all-exceptions.filter.ts ---
+
+
+// Path: src/common/interceptors/inject-user.interceptor.ts
+//----------------------------------------------------------------------
+import {
+	CallHandler,
+	ExecutionContext,
+	Injectable,
+	NestInterceptor,
+} from '@nestjs/common';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { PinoLogger } from 'nestjs-pino';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class InjectUserInterceptor implements NestInterceptor {
+	constructor(private readonly logger: PinoLogger) {}
+
+	intercept(
+		context: ExecutionContext,
+		next: CallHandler,
+	): Observable<unknown> {
+		const request = context.switchToHttp().getRequest<FastifyRequest>();
+		const response = context.switchToHttp().getResponse<FastifyReply>();
+
+		if (request.user) {
+			const userPayload = {
+				user: {
+					id: request.user.id,
+					username: request.user.username,
+				},
+			};
+
+			// For custom logs within services:
+			// This adds the `user` object to the request-scoped logger instance.
+			this.logger.assign(userPayload);
+
+			// For the final "request completed" log:
+			// This attaches the data for pino-http to find at the end.
+			response.raw.customProps = userPayload;
+		}
+
+		return next.handle();
+	}
+}
+//--- End of src/common/interceptors/inject-user.interceptor.ts ---
+
+
+// Path: src/common/interceptors/transform/transform.interceptor.spec.ts
+//----------------------------------------------------------------------
+import { TransformInterceptor } from "./transform.interceptor";
+
+describe("TransformInterceptor", () => {
+	it("should be defined", () => {
+		expect(new TransformInterceptor()).toBeDefined();
+	});
+});
+//--- End of src/common/interceptors/transform/transform.interceptor.spec.ts ---
+
+
+// Path: src/common/interceptors/transform/transform.interceptor.ts
+//----------------------------------------------------------------------
+import {
+	CallHandler,
+	ExecutionContext,
+	Injectable,
+	NestInterceptor,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
+
+import { FastifyRequest } from 'fastify';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import {
+	ApiResponse,
+	isPaginatedServiceResponse,
+	PaginatedApiResponse,
+	PaginatedServiceResponse,
+	RequestMeta,
+} from 'src/common/interfaces/api-response.interface';
+import { AllConfigTypes } from 'src/config/config.type';
+
+@Injectable()
+export class TransformInterceptor<T>
+	implements
+		NestInterceptor<
+			T | PaginatedServiceResponse<T>,
+			ApiResponse<T> | PaginatedApiResponse<T>
+		>
+{
+	constructor(
+		private readonly reflector: Reflector,
+		private readonly configService: ConfigService<AllConfigTypes, true>,
+	) {}
+
+	intercept(
+		context: ExecutionContext,
+		next: CallHandler<T | PaginatedServiceResponse<T>>,
+	): Observable<ApiResponse<T> | PaginatedApiResponse<T>> {
+		const request = context.switchToHttp().getRequest<FastifyRequest>();
+		const defaultVersion = this.configService
+			.get('app.version', { infer: true })
+			.split('.')[0];
+
+		const apiVersion =
+			this.reflector.getAllAndOverride<string>('__version__', [
+				context.getHandler(),
+				context.getClass(),
+			]) ?? defaultVersion;
+
+		return next.handle().pipe(
+			map((data): ApiResponse<T> | PaginatedApiResponse<T> => {
+				const requestMeta: RequestMeta = {
+					requestId: request.id,
+					apiVersion: apiVersion,
+					timestamp: new Date().toISOString(),
+				};
+
+				if (isPaginatedServiceResponse<T>(data)) {
+					return {
+						meta: {
+							...requestMeta,
+							...data.meta,
+						},
+						data: data.data,
+					};
+				}
+
+				return {
+					meta: requestMeta,
+					data: data,
+				};
+			}),
+		);
+	}
+}
+//--- End of src/common/interceptors/transform/transform.interceptor.ts ---
+
+
+// Path: src/common/interfaces/api-response.interface.ts
+//----------------------------------------------------------------------
+export interface RequestMeta {
+	requestId: string;
+	apiVersion: string;
+	timestamp: string;
+}
+
+export interface PaginationMeta {
+	total: number;
+	page: number;
+	limit: number;
+	lastPage: number;
+}
+
+// The response structure for a standard (non-paginated) request
+export interface ApiResponse<T> {
+	data: T;
+	meta: RequestMeta;
+}
+
+// The response structure for a paginated request
+export interface PaginatedApiResponse<T> {
+	data: T[];
+	meta: RequestMeta & PaginationMeta;
+}
+
+// A contract for what the service layer should return for paginated data
+export interface PaginatedServiceResponse<T> {
+	data: T[];
+	meta: PaginationMeta;
+}
+
+// Type guard to check if data from the service is paginated
+export function isPaginatedServiceResponse<T>(
+	data: unknown,
+): data is PaginatedServiceResponse<T> {
+	if (typeof data !== 'object' || data === null) {
+		return false;
+	}
+
+	const potentialResponse = data as Record<string, unknown>;
+
+	const hasData =
+		'data' in potentialResponse && Array.isArray(potentialResponse.data);
+	const hasMeta =
+		'meta' in potentialResponse &&
+		typeof potentialResponse.meta === 'object' &&
+		potentialResponse.meta !== null;
+
+	if (!hasData || !hasMeta) {
+		return false;
+	}
+
+	const meta = potentialResponse.meta as Record<string, unknown>;
+	const hasTotal = 'total' in meta && typeof meta.total === 'number';
+
+	return hasTotal;
+}
+//--- End of src/common/interfaces/api-response.interface.ts ---
+
+
+// Path: src/config/app.config.ts
+//----------------------------------------------------------------------
+import { getEnv, getEnvInt } from './env.helper';
+
+export interface AppConfig {
+	app: {
+		nodeEnv: string;
+		port: number;
+		title: string;
+		description: string;
+		version: string;
+		tag: string;
+		serverUrl: string;
+		globalPrefix: string;
+		docsPath: string;
+		corsOrigin: string;
+	};
+}
+
+export default (): AppConfig => {
+	return {
+		app: {
+			nodeEnv: getEnv('NODE_ENV'),
+			port: getEnvInt('PORT'),
+			title: getEnv('APP_TITLE'),
+			description: getEnv('APP_DESCRIPTION'),
+			version: getEnv('APP_VERSION'),
+			tag: getEnv('APP_TAG'),
+			serverUrl: getEnv('APP_SERVER_URL'),
+			globalPrefix: getEnv('APP_GLOBAL_PREFIX'),
+			docsPath: getEnv('APP_DOCS_PATH'),
+			corsOrigin: getEnv('CORS_ORIGIN'),
+		},
+	};
+};
+//--- End of src/config/app.config.ts ---
+
+
+// Path: src/config/config.type.ts
+//----------------------------------------------------------------------
+import type { AppConfig } from './app.config';
+import type { DbConfig } from './database.config';
+import type { JwtConfig } from './jwt.config';
+
+export type AllConfigTypes = AppConfig & DbConfig & JwtConfig;
+//--- End of src/config/config.type.ts ---
+
+
+// Path: src/config/database.config.ts
+//----------------------------------------------------------------------
+import { getEnv } from './env.helper';
+
+export interface DbConfig {
+	database: {
+		url: string;
+	};
+}
+
+export default (): DbConfig => {
+	return {
+		database: {
+			url: getEnv('DATABASE_URL'),
+		},
+	};
+};
+//--- End of src/config/database.config.ts ---
+
+
+// Path: src/config/env.helper.ts
+//----------------------------------------------------------------------
+export const getEnv = (name: string): string => {
+	const value = process.env[name];
+
+	if (!value) {
+		throw new Error(`Missing environment variable: ${name}`);
+	}
+
+	return value;
+};
+
+export const getEnvInt = (name: string, defaultValue?: number): number => {
+	const value = process.env[name];
+	if (!value) {
+		if (defaultValue !== undefined) return defaultValue;
+		throw new Error(`Missing environment variable: ${name}`);
+	}
+
+	const parsed = parseInt(value, 10);
+
+	if (Number.isNaN(parsed)) {
+		throw new Error(`Environment variable ${name} must be a number`);
+	}
+
+	return parsed;
+};
+//--- End of src/config/env.helper.ts ---
+
+
+// Path: src/config/jwt.config.ts
+//----------------------------------------------------------------------
+import { getEnv } from './env.helper';
+
+export interface JwtConfig {
+	jwt: {
+		secret: string;
+		expirationTime: string;
+	};
+}
+
+export default (): JwtConfig => {
+	return {
+		jwt: {
+			secret: getEnv('JWT_SECRET'),
+			expirationTime: getEnv('JWT_EXPIRATION_TIME'),
+		},
+	};
+};
+//--- End of src/config/jwt.config.ts ---
+
+
+// Path: src/main.ts
+//----------------------------------------------------------------------
+import {
+	INestApplication,
+	ValidationPipe,
+	VersioningType,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import {
+	FastifyAdapter,
+	NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+
+import { Logger } from 'nestjs-pino';
+import { join } from 'node:path';
+import { v4 as uuidv4 } from 'uuid';
+import { AppModule } from './app.module';
+import type { AllConfigTypes } from './config/config.type';
+import { setupSwagger } from './swagger';
+
+function setupPipes(app: INestApplication): void {
+	app.useGlobalPipes(
+		new ValidationPipe({
+			whitelist: true,
+			forbidNonWhitelisted: true,
+			forbidUnknownValues: true,
+			transform: true,
+			transformOptions: {
+				enableImplicitConversion: true,
+			},
+		}),
+	);
+}
+
+function configureApp(
+	app: NestFastifyApplication,
+	configService: ConfigService<AllConfigTypes, true>,
+): void {
+	const globalPrefix = configService.get('app.globalPrefix', { infer: true });
+	const corsOrigin = configService.get('app.corsOrigin', { infer: true });
+	const appVersion = configService.get('app.version', { infer: true });
+	const nodeEnv = configService.get('app.nodeEnv', { infer: true });
+	const version = appVersion.split('.')[0];
+
+	app.useStaticAssets({
+		root: join(__dirname, '..', 'public'),
+		prefix: '/',
+		setHeaders: (res, path) => {
+			if (path.endsWith('.wasm')) {
+				res.setHeader('Content-Type', 'application/wasm');
+			}
+		},
+	});
+
+	app.setGlobalPrefix(globalPrefix);
+	app.useLogger(app.get(Logger));
+	app.enableVersioning({
+		type: VersioningType.URI,
+		defaultVersion: version,
+	});
+
+	if (corsOrigin) {
+		app.enableCors({
+			origin: corsOrigin === '*' ? true : corsOrigin.split(','),
+			credentials: true,
+		});
+	}
+
+	if (nodeEnv !== 'production') {
+		setupSwagger(app);
+	}
+}
+
+async function bootstrap() {
+	const adapter = new FastifyAdapter({
+		genReqId: () => uuidv4(),
+	});
+
+	const app = await NestFactory.create<NestFastifyApplication>(
+		AppModule,
+		adapter,
+		{ bufferLogs: true },
+	);
+
+	const configService = app.get(ConfigService<AllConfigTypes, true>);
+	const port = configService.get('app.port', { infer: true });
+
+	setupPipes(app);
+	configureApp(app, configService);
+
+	await app.listen(port, '0.0.0.0');
+}
+
+/* eslint-disable-next-line @typescript-eslint/no-floating-promises */
+bootstrap();
+//--- End of src/main.ts ---
+
+
+// Path: src/prisma/prisma.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Module({
+	providers: [PrismaService],
+	exports: [PrismaService],
+})
+export class PrismaModule {}
+//--- End of src/prisma/prisma.module.ts ---
+
+
+// Path: src/prisma/prisma.service.spec.ts
+//----------------------------------------------------------------------
+import { Test, type TestingModule } from '@nestjs/testing';
+import { PrismaService } from './prisma.service';
+
+describe('PrismaService', () => {
+	let service: PrismaService;
+
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			providers: [PrismaService],
+		}).compile();
+
+		service = module.get<PrismaService>(PrismaService);
+	});
+
+	it('should be defined', () => {
+		expect(service).toBeDefined();
+	});
+});
+//--- End of src/prisma/prisma.service.spec.ts ---
+
+
+// Path: src/prisma/prisma.service.ts
+//----------------------------------------------------------------------
+import { Injectable, type OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+	async onModuleInit() {
+		await this.$connect();
+	}
+}
+//--- End of src/prisma/prisma.service.ts ---
+
+
+// Path: src/projects/dto/create-project.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+	ArrayMinSize,
+	IsArray,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	IsUrl,
+	Validate,
+	ValidateNested,
+} from 'class-validator';
+import { AreLinksUniqueConstraint } from '../validators/are-links-unique.validator';
+import { ProjectLinkDto } from './project-link.dto';
+
+export class CreateProjectDto {
+	@ApiProperty({ example: 'Project Nova' })
+	@IsString()
+	@IsNotEmpty()
+	name: string;
+
+	@ApiPropertyOptional({ example: 'A test project for the UI team.' })
+	@IsString()
+	@IsOptional()
+	@IsNotEmpty()
+	description?: string;
+
+	@ApiPropertyOptional({ example: 'https://api.test.com' })
+	@IsUrl()
+	@IsOptional()
+	@IsNotEmpty()
+	serverUrl?: string;
+
+	@ApiPropertyOptional({ type: [ProjectLinkDto] })
+	@IsArray()
+	@ArrayMinSize(1, { message: 'links must contain at least one item' })
+	@ValidateNested({ each: true, message: 'each link must be an object' })
+	@Type(() => ProjectLinkDto)
+	@Validate(AreLinksUniqueConstraint)
+	@IsOptional()
+	links?: ProjectLinkDto[];
+}
+//--- End of src/projects/dto/create-project.dto.ts ---
+
+
+// Path: src/projects/dto/project-detail.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { Project, ProjectLink } from '@prisma/client';
+import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
+import { ProjectLinkDto } from './project-link.dto';
+
+export class ProjectDetailDto
+	implements
+		Omit<
+			Project,
+			'openApiSpec' | 'creatorId' | 'updatedById' | 'nameNormalized'
+		>
+{
+	@ApiProperty()
+	id: string;
+
+	@ApiProperty()
+	name: string;
+
+	@ApiProperty({ nullable: true })
+	description: string | null;
+
+	@ApiProperty({ nullable: true })
+	serverUrl: string | null;
+
+	@ApiProperty({ type: SanitizedUserDto })
+	creator: SanitizedUserDto;
+
+	@ApiProperty({ type: SanitizedUserDto })
+	updatedBy: SanitizedUserDto;
+
+	@ApiProperty({ type: [ProjectLinkDto] })
+	links: ProjectLink[];
+
+	@ApiProperty()
+	createdAt: Date;
+
+	@ApiProperty()
+	updatedAt: Date;
+}
+//--- End of src/projects/dto/project-detail.dto.ts ---
+
+
+// Path: src/projects/dto/project-link.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsUrl } from 'class-validator';
+
+export class ProjectLinkDto {
+	@ApiProperty({ example: 'Gitlab Milestone' })
+	@IsString()
+	@IsNotEmpty()
+	name: string;
+
+	@ApiProperty({ example: 'https://gitlab.com/...' })
+	@IsUrl()
+	@IsNotEmpty()
+	url: string;
+}
+//--- End of src/projects/dto/project-link.dto.ts ---
+
+
+// Path: src/projects/dto/project-summary.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { Project } from '@prisma/client';
+import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
+
+export class ProjectSummaryDto
+	implements
+		Omit<
+			Project,
+			| 'openApiSpec'
+			| 'serverUrl'
+			| 'creatorId'
+			| 'updatedById'
+			| 'nameNormalized'
+		>
+{
+	@ApiProperty()
+	id: string;
+
+	@ApiProperty()
+	name: string;
+
+	@ApiProperty({ nullable: true })
+	description: string | null;
+
+	@ApiProperty()
+	createdAt: Date;
+
+	@ApiProperty()
+	updatedAt: Date;
+
+	@ApiProperty({ type: SanitizedUserDto })
+	creator: SanitizedUserDto;
+
+	@ApiProperty({ type: SanitizedUserDto })
+	updatedBy: SanitizedUserDto;
+}
+//--- End of src/projects/dto/project-summary.dto.ts ---
+
+
+// Path: src/projects/dto/update-project.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+	IsArray,
+	IsDateString,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	IsUrl,
+	Validate,
+	ValidateNested,
+} from 'class-validator';
+import { AreLinksUniqueConstraint } from '../validators/are-links-unique.validator';
+import { ProjectLinkDto } from './project-link.dto';
+
+export class UpdateProjectDto {
+	@ApiProperty({ description: "The project's new name." })
+	@IsString()
+	@IsNotEmpty()
+	name: string;
+
+	@ApiProperty({
+		description: "The project's new description.",
+		required: false,
+	})
+	@IsString()
+	@IsOptional()
+	description?: string;
+
+	@ApiProperty({
+		description: 'The new base URL for the API server.',
+		required: false,
+	})
+	@IsUrl()
+	@IsOptional()
+	serverUrl?: string;
+
+	@ApiProperty({
+		description: 'The complete new set of related links for the project.',
+		type: [ProjectLinkDto],
+		required: false,
+	})
+	@IsArray()
+	@ValidateNested({ each: true, message: 'each link must be an object' })
+	@Type(() => ProjectLinkDto)
+	@Validate(AreLinksUniqueConstraint)
+	@IsOptional()
+	links?: ProjectLinkDto[];
+
+	@ApiProperty({
+		description:
+			'The last `updatedAt` timestamp known by the client, for optimistic concurrency control.',
+		required: true,
+	})
+	@IsDateString()
+	@IsNotEmpty()
+	lastKnownUpdatedAt: string;
+}
+//--- End of src/projects/dto/update-project.dto.ts ---
+
+
+// Path: src/projects/guards/project-owner.guard.ts
+//----------------------------------------------------------------------
+import {
+	CanActivate,
+	ExecutionContext,
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
+import { UserDto } from 'src/auth/dto/user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Injectable()
+export class ProjectOwnerGuard implements CanActivate {
+	constructor(private readonly prisma: PrismaService) {}
+
+	async canActivate(context: ExecutionContext): Promise<boolean> {
+		const request = context.switchToHttp().getRequest<FastifyRequest>();
+		const user = request.user as UserDto;
+
+		if (!user) {
+			throw new ForbiddenException(
+				'Authentication credentials were not provided.',
+			);
+		}
+
+		if (user.role === Role.admin) return true;
+
+		const projectId = (request.params as { projectId?: string }).projectId;
+		if (!projectId) {
+			throw new NotFoundException(
+				'Project ID not found in request parameters.',
+			);
+		}
+
+		const projectAccess = await this.prisma.userProjectAccess.findFirst({
+			where: {
+				projectId,
+				userId: user.id,
+				type: 'OWNER',
+			},
+		});
+
+		if (!projectAccess) {
+			throw new ForbiddenException(
+				'You do not have permission to perform this action.',
+			);
+		}
+
+		return true;
+	}
+}
+//--- End of src/projects/guards/project-owner.guard.ts ---
+
+
+// Path: src/projects/projects.controller.ts
+//----------------------------------------------------------------------
+import {
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	HttpStatus,
+	Param,
+	Post,
+	Put,
+	Query,
+	UseGuards,
+} from '@nestjs/common';
+import {
+	ApiBearerAuth,
+	ApiCreatedResponse,
+	ApiForbiddenResponse,
+	ApiNoContentResponse,
+	ApiNotFoundResponse,
+	ApiOkResponse,
+	ApiTags,
+} from '@nestjs/swagger';
+import { Prisma, Project } from '@prisma/client';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UserDto } from 'src/auth/dto/user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectDetailDto } from './dto/project-detail.dto';
+import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { ProjectOwnerGuard } from './guards/project-owner.guard';
+import { ProjectsService } from './projects.service';
+
+@ApiTags('Projects')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('projects')
+export class ProjectsController {
+	constructor(private readonly projectsService: ProjectsService) {}
+
+	@Post()
+	@ApiCreatedResponse({
+		description: 'The project has been successfully created.',
+	})
+	async create(
+		@Body() createProjectDto: CreateProjectDto,
+		@CurrentUser() user: UserDto,
+	): Promise<Project> {
+		return await this.projectsService.create(createProjectDto, user);
+	}
+
+	@Get()
+	@ApiOkResponse({
+		description: 'A paginated list of projects visible to the user.',
+		type: ProjectSummaryDto,
+	})
+	async findAll(
+		@Query() paginationQuery: PaginationQueryDto,
+		@CurrentUser() user: UserDto,
+	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
+		return await this.projectsService.findAllForUser(user, paginationQuery);
+	}
+
+	@Get(':projectId')
+	@ApiOkResponse({
+		description: 'The detailed information for a single project.',
+		type: ProjectDetailDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'Project not found or user lacks access.',
+	})
+	async findOne(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	) {
+		return await this.projectsService.findOneByIdForUser(projectId, user);
+	}
+
+	@Get(':projectId/openapi')
+	@ApiOkResponse({
+		description: 'The OpenAPI specification for the project.',
+	})
+	@ApiNotFoundResponse({
+		description: 'Project not found or user lacks access.',
+	})
+	async findSpec(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	): Promise<{ openApiSpec: Prisma.JsonValue }> {
+		return await this.projectsService.findSpecByIdForUser(projectId, user);
+	}
+
+	@Put(':projectId')
+	@UseGuards(ProjectOwnerGuard)
+	@ApiOkResponse({
+		description: 'Project metadata updated successfully.',
+		type: ProjectDetailDto,
+	})
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+	})
+	async update(
+		@Param('projectId') projectId: string,
+		@Body() updateProjectDto: UpdateProjectDto,
+		@CurrentUser() user: UserDto,
+	): Promise<ProjectDetailDto> {
+		return await this.projectsService.update(
+			projectId,
+			updateProjectDto,
+			user,
+		);
+	}
+
+	@Delete(':projectId')
+	@UseGuards(ProjectOwnerGuard)
+	@HttpCode(HttpStatus.NO_CONTENT)
+	@ApiNoContentResponse({ description: 'Project deleted successfully.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+	})
+	@ApiNotFoundResponse({ description: 'Project not found.' })
+	async delete(@Param('projectId') projectId: string): Promise<void> {
+		return await this.projectsService.delete(projectId);
+	}
+}
+//--- End of src/projects/projects.controller.ts ---
+
+
+// Path: src/projects/projects.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { ProjectOwnerGuard } from './guards/project-owner.guard';
+import { ProjectsController } from './projects.controller';
+import { ProjectsService } from './projects.service';
+
+@Module({
+	imports: [PrismaModule, AuthModule],
+	controllers: [ProjectsController],
+	providers: [ProjectsService, ProjectOwnerGuard],
+})
+export class ProjectsModule {}
+//--- End of src/projects/projects.module.ts ---
+
+
+// Path: src/projects/projects.service.ts
+//----------------------------------------------------------------------
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Prisma, Project, Role } from '@prisma/client';
+import { PinoLogger } from 'nestjs-pino';
+import { UserDto } from 'src/auth/dto/user.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { ProjectConcurrencyException } from 'src/common/exceptions/project-concurrency.exception';
+import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
+import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
+import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
+import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectDetailDto } from './dto/project-detail.dto';
+import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+
+@Injectable()
+export class ProjectsService {
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly logger: PinoLogger,
+	) {
+		this.logger.setContext(ProjectsService.name);
+	}
+
+	async create(
+		createProjectDto: CreateProjectDto,
+		creator: UserDto,
+	): Promise<Project> {
+		const { name, description, serverUrl, links } = createProjectDto;
+
+		const initialOpenApiSpec = {
+			openapi: '3.0.0',
+			info: {
+				title: name,
+				version: '1.0.0',
+				description: description || `API documentation for ${name}`,
+			},
+			servers: serverUrl ? [{ url: serverUrl }] : [],
+			paths: {},
+			components: {
+				schemas: {},
+				parameters: {},
+				responses: {},
+				requestBodies: {},
+			},
+		};
+
+		try {
+			return await this.prisma.project.create({
+				data: {
+					name,
+					nameNormalized: name.toLowerCase(),
+					description,
+					serverUrl,
+					openApiSpec: initialOpenApiSpec,
+					creatorId: creator.id,
+					updatedById: creator.id,
+					links: links
+						? {
+								create: links.map((link) => ({
+									name: link.name,
+									url: link.url,
+								})),
+							}
+						: undefined,
+					userAccesses: {
+						create: {
+							userId: creator.id,
+							type: 'OWNER',
+						},
+					},
+				},
+			});
+		} catch (error) {
+			this._handlePrismaError(error, {
+				P2002: new ProjectConflictException(name),
+				default: new ProjectCreationFailure(name),
+			});
+		}
+	}
+
+	async findAllForUser(
+		user: UserDto,
+		paginationQuery: PaginationQueryDto,
+	): Promise<PaginatedServiceResponse<ProjectSummaryDto>> {
+		try {
+			const { skip, limit } = paginationQuery;
+			const where = this._createAccessControlWhereClause(user);
+
+			const [projects, total] = await this.prisma.$transaction([
+				this.prisma.project.findMany({
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						createdAt: true,
+						updatedAt: true,
+						creator: {
+							select: {
+								id: true,
+								username: true,
+								profileImage: true,
+							},
+						},
+						updatedBy: {
+							select: {
+								id: true,
+								username: true,
+								profileImage: true,
+							},
+						},
+					},
+					where,
+					skip,
+					take: limit,
+					orderBy: { updatedAt: 'desc' },
+				}),
+				this.prisma.project.count({ where }),
+			]);
+
+			return {
+				meta: {
+					page: paginationQuery.page,
+					limit,
+					lastPage: Math.ceil(total / limit),
+					total,
+				},
+				data: projects,
+			};
+		} catch (error) {
+			this._handlePrismaError(error);
+		}
+	}
+
+	async findOneByIdForUser(
+		projectId: string,
+		user: UserDto,
+	): Promise<ProjectDetailDto> {
+		try {
+			const where = this._createAccessControlWhereClause(user);
+			const project = await this.prisma.project.findFirst({
+				select: {
+					id: true,
+					name: true,
+					description: true,
+					serverUrl: true,
+					createdAt: true,
+					updatedAt: true,
+					creator: {
+						select: {
+							id: true,
+							username: true,
+							profileImage: true,
+						},
+					},
+					updatedBy: {
+						select: {
+							id: true,
+							username: true,
+							profileImage: true,
+						},
+					},
+					links: true,
+				},
+				where: { id: projectId, ...where },
+			});
+
+			if (!project) {
+				throw new ProjectNotFoundException(projectId);
+			}
+			return project;
+		} catch (error) {
+			this._handlePrismaError(error);
+		}
+	}
+
+	async findSpecByIdForUser(
+		projectId: string,
+		user: UserDto,
+	): Promise<{ openApiSpec: Prisma.JsonValue }> {
+		try {
+			const where = this._createAccessControlWhereClause(user);
+			const project = await this.prisma.project.findFirst({
+				select: { openApiSpec: true },
+				where: { id: projectId, ...where },
+			});
+
+			if (!project) {
+				throw new ProjectNotFoundException(projectId);
+			}
+			return project;
+		} catch (error) {
+			this._handlePrismaError(error);
+		}
+	}
+
+	async update(
+		projectId: string,
+		updateProjectDto: UpdateProjectDto,
+		updater: UserDto,
+	): Promise<ProjectDetailDto> {
+		const { name, lastKnownUpdatedAt, links, ...otherData } =
+			updateProjectDto;
+
+		try {
+			return await this.prisma.$transaction(async (tx) => {
+				await tx.projectLink.deleteMany({ where: { projectId } });
+
+				return tx.project.update({
+					where: {
+						id: projectId,
+						updatedAt: new Date(lastKnownUpdatedAt),
+					},
+					data: {
+						name,
+						nameNormalized: name ? name.toLowerCase() : undefined,
+						...otherData,
+						updatedById: updater.id,
+						links: links
+							? {
+									create: links.map((link) => ({
+										name: link.name,
+										url: link.url,
+									})),
+								}
+							: undefined,
+					},
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						serverUrl: true,
+						createdAt: true,
+						updatedAt: true,
+						creator: {
+							select: {
+								id: true,
+								username: true,
+								profileImage: true,
+							},
+						},
+						updatedBy: {
+							select: {
+								id: true,
+								username: true,
+								profileImage: true,
+							},
+						},
+						links: true,
+					},
+				});
+			});
+		} catch (error) {
+			this._handlePrismaError(error, {
+				P2025: new ProjectConcurrencyException(),
+				P2002: new ProjectConflictException(name),
+			});
+		}
+	}
+
+	async delete(projectId: string): Promise<void> {
+		try {
+			await this.prisma.project.delete({
+				where: { id: projectId },
+			});
+		} catch (error) {
+			this._handlePrismaError(error, {
+				P2025: new ProjectNotFoundException(projectId),
+			});
+		}
+	}
+
+	private _createAccessControlWhereClause(
+		user: UserDto,
+	): Prisma.ProjectWhereInput {
+		if (user.role === Role.admin) {
+			return {};
+		}
+		return {
+			deniedUsers: { none: { id: user.id } },
+			OR: [
+				{ userAccesses: { some: { userId: user.id } } },
+				{
+					teamAccesses: {
+						some: { teamId: { in: user.teams?.map((t) => t.id) } },
+					},
+				},
+			],
+		};
+	}
+
+	private _handlePrismaError(
+		error: unknown,
+		exceptions?: { P2002?: Error; P2025?: Error; default?: Error },
+	): never {
+		if (error instanceof Prisma.PrismaClientKnownRequestError) {
+			if (error.code === 'P2002' && exceptions?.P2002) {
+				throw exceptions.P2002;
+			}
+			if (error.code === 'P2025' && exceptions?.P2025) {
+				throw exceptions.P2025;
+			}
+		}
+
+		if (exceptions?.default) {
+			throw exceptions.default;
+		}
+
+		this.logger.error(
+			{
+				error:
+					error instanceof Error
+						? error.stack
+						: JSON.stringify(error),
+			},
+			'An unexpected error occurred in ProjectsService.',
+		);
+
+		throw new InternalServerErrorException('An unexpected error occurred.');
+	}
+}
+//--- End of src/projects/projects.service.ts ---
+
+
+// Path: src/projects/validators/are-links-unique.validator.ts
+//----------------------------------------------------------------------
+import {
+	ValidationArguments,
+	ValidatorConstraint,
+	ValidatorConstraintInterface,
+} from 'class-validator';
+import { ProjectLinkDto } from '../dto/project-link.dto';
+
+@ValidatorConstraint({ name: 'areLinksUnique', async: false })
+export class AreLinksUniqueConstraint implements ValidatorConstraintInterface {
+	validate(links: ProjectLinkDto[], _args: ValidationArguments): boolean {
+		if (!links || links.length === 0) {
+			return true;
+		}
+
+		const urls = links.map((link) => link.url);
+		const uniqueUrls = new Set(urls);
+		return uniqueUrls.size === urls.length;
+	}
+
+	defaultMessage(_args: ValidationArguments): string {
+		return 'Each link URL within a project must be unique.';
+	}
+}
+//--- End of src/projects/validators/are-links-unique.validator.ts ---
+
+
+// Path: src/swagger.ts
+//----------------------------------------------------------------------
+import { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllConfigTypes } from './config/config.type';
+
+export function setupSwagger(app: INestApplication): void {
+	const configService = app.get(ConfigService<AllConfigTypes, true>);
+
+	const appTitle = configService.get('app.title', { infer: true });
+	const appVersion = configService.get('app.version', { infer: true });
+	const appTag = configService.get('app.tag', { infer: true });
+	const appServerUrl = configService.get('app.serverUrl', { infer: true });
+	const appDocsPath = configService.get('app.docsPath', { infer: true });
+	const appDescription = configService.get('app.description', {
+		infer: true,
+	});
+
+	const config = new DocumentBuilder()
+		.setTitle(appTitle)
+		.setDescription(appDescription)
+		.setVersion(appVersion)
+		.addTag(appTag)
+		.addServer(appServerUrl)
+		.build();
+
+	const document = SwaggerModule.createDocument(app, config);
+	SwaggerModule.setup(appDocsPath, app, document);
+}
+//--- End of src/swagger.ts ---
+
+
+// Path: src/teams/dto/team.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { Team } from '@prisma/client';
+
+export class TeamDto implements Team {
+	@ApiProperty()
+	id: string;
+
+	@ApiProperty()
+	name: string;
+
+	@ApiProperty()
+	createdAt: Date;
+
+	@ApiProperty()
+	updatedAt: Date;
+}
+//--- End of src/teams/dto/team.dto.ts ---
+
+
+// Path: src/teams/teams.controller.ts
+//----------------------------------------------------------------------
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Team } from '@prisma/client';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { TeamsService } from './teams.service';
+
+@ApiTags('Teams')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('teams')
+export class TeamsController {
+	constructor(private readonly teamService: TeamsService) {}
+
+	@Get()
+	@ApiOkResponse({ description: 'a list of all teams' })
+	async findAll(
+		@Query() paginationQuery: PaginationQueryDto,
+	): Promise<PaginatedServiceResponse<Team>> {
+		return await this.teamService.findAllPaginated(paginationQuery);
+	}
+}
+//--- End of src/teams/teams.controller.ts ---
+
+
+// Path: src/teams/teams.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { TeamsController } from './teams.controller';
+import { TeamsService } from './teams.service';
+
+@Module({
+	imports: [PrismaModule],
+	controllers: [TeamsController],
+	providers: [TeamsService],
+})
+export class TeamsModule {}
+//--- End of src/teams/teams.module.ts ---
+
+
+// Path: src/teams/teams.service.ts
+//----------------------------------------------------------------------
+import { Injectable } from '@nestjs/common';
+import { Team } from '@prisma/client';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Injectable()
+export class TeamsService {
+	constructor(private readonly prisma: PrismaService) {}
+
+	/**
+	 * Retrieves a paginated list of all teams.
+	 */
+	async findAllPaginated(
+		paginationQuery: PaginationQueryDto,
+	): Promise<PaginatedServiceResponse<Team>> {
+		const { limit, skip, page } = paginationQuery;
+
+		const [teams, total] = await this.prisma.$transaction([
+			this.prisma.team.findMany({
+				skip: skip,
+				take: limit,
+				orderBy: {
+					name: 'asc',
+				},
+			}),
+			this.prisma.team.count(),
+		]);
+
+		return {
+			data: teams,
+			meta: {
+				total,
+				page,
+				limit,
+				lastPage: Math.ceil(total / limit),
+			},
+		};
+	}
+}
+//--- End of src/teams/teams.service.ts ---
+
+
+// Path: src/types/fastify.d.ts
+//----------------------------------------------------------------------
+import type { User } from '@prisma/client';
+import 'fastify';
+
+type UserInRequest = Omit<User, 'password'>;
+
+// Use declaration merging to add our custom 'id' property, etc. to the FastifyRequest interface
+declare module 'fastify' {
+	export interface FastifyRequest {
+		id: string;
+		user?: UserInRequest;
+	}
+}
+//--- End of src/types/fastify.d.ts ---
+
+
+// Path: src/types/http.d.ts
+//----------------------------------------------------------------------
+import 'http';
+
+// Use declaration merging to add our custom property to Node's ServerResponse
+declare module 'http' {
+	interface ServerResponse {
+		customProps?: {
+			user?: {
+				id: string;
+				username: string;
+			};
+		};
+	}
+}
+//--- End of src/types/http.d.ts ---
+
+
+// Path: src/users/dto/change-password.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import {
+	IsNotEmpty,
+	IsString,
+	MinLength,
+	Validate,
+	ValidationArguments,
+	ValidatorConstraint,
+	ValidatorConstraintInterface,
+} from 'class-validator';
+
+@ValidatorConstraint({ name: 'notSameAsCurrentPassword', async: false })
+export class NotSameAsCurrentPasswordConstraint
+	implements ValidatorConstraintInterface
+{
+	validate(newPassword: string, args: ValidationArguments) {
+		const object = args.object as ChangePasswordDto;
+		return newPassword !== object.currentPassword;
+	}
+
+	defaultMessage() {
+		return 'New password cannot be the same as the current password.';
+	}
+}
+
+export class ChangePasswordDto {
+	@ApiProperty({ description: "The user's current password" })
+	@IsString()
+	@IsNotEmpty()
+	currentPassword: string;
+
+	@ApiProperty({ description: 'The desired new password', minLength: 8 })
+	@IsString()
+	@IsNotEmpty()
+	@MinLength(8, {
+		message: 'New password must be at least 8 characters long',
+	})
+	@Validate(NotSameAsCurrentPasswordConstraint)
+	newPassword: string;
+}
+//--- End of src/users/dto/change-password.dto.ts ---
+
+
+// Path: src/users/dto/sanitized-user.dto.ts
+//----------------------------------------------------------------------
+import { ApiProperty } from '@nestjs/swagger';
+import { SanitizedUser } from '../users.types';
+
+export class SanitizedUserDto implements SanitizedUser {
+	@ApiProperty()
+	id: string;
+
+	@ApiProperty()
+	username: string;
+
+	@ApiProperty({ nullable: true })
+	profileImage: string | null;
+}
+//--- End of src/users/dto/sanitized-user.dto.ts ---
+
+
+// Path: src/users/users.controller.spec.ts
+//----------------------------------------------------------------------
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersController } from './users.controller';
+
+describe('UsersController', () => {
+  let controller: UsersController;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [UsersController],
+    }).compile();
+
+    controller = module.get<UsersController>(UsersController);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+});
+//--- End of src/users/users.controller.spec.ts ---
+
+
+// Path: src/users/users.controller.ts
+//----------------------------------------------------------------------
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UserDto } from 'src/auth/dto/user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UsersService } from './users.service';
+
+@ApiTags('Users')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('users')
+export class UsersController {
+	constructor(private readonly usersService: UsersService) {}
+
+	@Get()
+	@ApiOkResponse({ description: 'A paginated list of sanitized users.' })
+	findAllPaginated(@Query() paginationQuery: PaginationQueryDto) {
+		return this.usersService.findAllPaginated(paginationQuery);
+	}
+
+	@Post('change-password')
+	@ApiOkResponse({ description: 'Password changed successfully.' })
+	async changePassword(
+		@CurrentUser() user: UserDto,
+		@Body() changePasswordDto: ChangePasswordDto,
+	) {
+		await this.usersService.updatePassword(user.id, changePasswordDto);
+		return {
+			message: 'Password updated successfully. Please log in again.',
+		};
+	}
+}
+//--- End of src/users/users.controller.ts ---
+
+
+// Path: src/users/users.module.ts
+//----------------------------------------------------------------------
+import { Module } from '@nestjs/common';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+@Module({
+	imports: [PrismaModule],
+	controllers: [UsersController],
+	providers: [UsersService],
+	exports: [UsersService],
+})
+export class UsersModule {}
+//--- End of src/users/users.module.ts ---
+
+
+// Path: src/users/users.service.spec.ts
+//----------------------------------------------------------------------
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from './users.service';
+
+describe('UsersService', () => {
+  let service: UsersService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [UsersService],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+});
+//--- End of src/users/users.service.spec.ts ---
+
+
+// Path: src/users/users.service.ts
+//----------------------------------------------------------------------
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
+import { compare, hash } from 'bcrypt';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { SanitizedUser } from './users.types';
+
+const SALT_ROUNDS = 10;
+
+@Injectable()
+export class UsersService {
+	constructor(private readonly prisma: PrismaService) {}
+
+	/**
+	 * Retrieves a paginated list of all users with sensitive information removed.
+	 */
+	async findAllPaginated(
+		paginationQuery: PaginationQueryDto,
+	): Promise<PaginatedServiceResponse<SanitizedUser>> {
+		const { limit, skip } = paginationQuery;
+
+		const [users, total] = await this.prisma.$transaction([
+			this.prisma.user.findMany({
+				select: {
+					id: true,
+					username: true,
+					profileImage: true,
+				},
+				skip: skip,
+				take: limit,
+				orderBy: {
+					username: 'asc',
+				},
+			}),
+			this.prisma.user.count(),
+		]);
+
+		return {
+			data: users,
+			meta: {
+				total,
+				page: paginationQuery.page,
+				limit: paginationQuery.limit,
+				lastPage: Math.ceil(total / limit),
+			},
+		};
+	}
+
+	/**
+	 * Updates the password for a given user.
+	 *
+	 * @param userId The ID of the user whose password is being changed.
+	 * @param changePasswordDto The DTO containing the current and new passwords.
+	 */
+	async updatePassword(
+		userId: string,
+		changePasswordDto: ChangePasswordDto,
+	): Promise<void> {
+		if (
+			changePasswordDto.currentPassword === changePasswordDto.newPassword
+		) {
+			throw new BadRequestException(
+				'New password cannot be the same as the current password.',
+			);
+		}
+
+		const user = await this.prisma.user.findUnique({
+			where: { id: userId },
+		});
+
+		if (!user) {
+			throw new NotFoundException('User not found.');
+		}
+
+		const isPasswordCorrect = await compare(
+			changePasswordDto.currentPassword,
+			user.password,
+		);
+
+		if (!isPasswordCorrect) {
+			throw new BadRequestException('Incorrect current password.');
+		}
+
+		const newHashedPassword = await hash(
+			changePasswordDto.newPassword,
+			SALT_ROUNDS,
+		);
+
+		await this.prisma.user.update({
+			where: { id: userId },
+			data: {
+				password: newHashedPassword,
+				tokenVersion: { increment: 1 },
+			},
+		});
+	}
+}
+//--- End of src/users/users.service.ts ---
+
+
+// Path: src/users/users.types.ts
+//----------------------------------------------------------------------
+import { Team, User } from '@prisma/client';
+
+export type SanitizedUser = {
+	id: string;
+	username: string;
+	profileImage: string | null;
+};
+
+export type UserWithTeams = Omit<User, 'password'> & {
+	teams: Team[];
+};
+//--- End of src/users/users.types.ts ---
+
+
+// Path: test/app.e2e-spec.ts
+//----------------------------------------------------------------------
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import {
+	FastifyAdapter,
+	NestFastifyApplication,
+} from '@nestjs/platform-fastify';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { FastifyInstance } from 'fastify';
+import request from 'supertest';
+import { AppModule } from './../src/app.module';
+
+describe('AppController (e2e)', () => {
+	let app: NestFastifyApplication;
+
+	beforeAll(async () => {
+		const moduleFixture: TestingModule = await Test.createTestingModule({
+			imports: [AppModule],
+		}).compile();
+
+		app = moduleFixture.createNestApplication<NestFastifyApplication>(
+			new FastifyAdapter(),
+		);
+
+		app.setGlobalPrefix('api');
+		app.enableVersioning({
+			type: VersioningType.URI,
+			defaultVersion: '2',
+		});
+		app.useGlobalPipes(new ValidationPipe());
+
+		await app.init();
+
+		const fastifyInstance = app
+			.getHttpAdapter()
+			.getInstance() as FastifyInstance;
+		await fastifyInstance.ready();
+	});
+
+	afterAll(async () => {
+		await app.close();
+	});
+
+	it('GET / -> should return 404', () => {
+		return request(app.getHttpServer()).get('/').expect(404);
+	});
+
+	it('POST /api/v2/auth/login -> should return 401 for an empty request', () => {
+		return request(app.getHttpServer())
+			.post('/api/v2/auth/login')
+			.send({})
+			.expect(401);
+	});
+});
+//--- End of test/app.e2e-spec.ts ---
+
+
+// Path: test/jest-e2e.json
+//----------------------------------------------------------------------
+{
+	"moduleFileExtensions": ["js", "json", "ts"],
+	"rootDir": "..",
+	"testEnvironment": "node",
+	"testRegex": ".e2e-spec.ts$",
+	"transform": {
+		"^.+\\.(t|j)s$": "ts-jest"
+	},
+	"moduleNameMapper": {
+		"^src/(.*)$": "<rootDir>/src/$1"
+	}
+}
+//--- End of test/jest-e2e.json ---
+
+
+// Path: tsconfig.build.json
+//----------------------------------------------------------------------
+{
+	"extends": "./tsconfig.json",
+	"exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+}
+//--- End of tsconfig.build.json ---
+
+
+// Path: tsconfig.json
+//----------------------------------------------------------------------
+{
+	"compilerOptions": {
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"resolvePackageJsonExports": true,
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		"declaration": true,
+		"removeComments": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "ES2023",
+		"sourceMap": true,
+		"outDir": "./dist",
+		"baseUrl": "./",
+		"incremental": true,
+		"skipLibCheck": true,
+		"strictNullChecks": true,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": false,
+		"strictBindCallApply": false,
+		"noFallthroughCasesInSwitch": false
+	}
+}
+//--- End of tsconfig.json ---

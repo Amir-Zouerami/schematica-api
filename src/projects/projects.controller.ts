@@ -21,7 +21,7 @@ import {
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import { Prisma, Project } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -46,13 +46,11 @@ export class ProjectsController {
 		description: 'The project has been successfully created.',
 		type: ProjectDetailDto,
 	})
-	@ApiConflictResponse({
-		description: 'A project with this name already exists.',
-	})
+	@ApiConflictResponse({ description: 'A project with this name already exists.' })
 	create(
 		@Body() createProjectDto: CreateProjectDto,
 		@CurrentUser() user: UserDto,
-	): Promise<Project> {
+	): Promise<ProjectDetailDto> {
 		return this.projectsService.create(createProjectDto, user);
 	}
 
