@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { type OpenAPIObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { type OpenAPIObject } from '@nestjs/swagger';
 import { IsDateString, IsNotEmpty, IsObject } from 'class-validator';
 
 export class UpdateOpenApiSpecDto {

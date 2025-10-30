@@ -3,7 +3,7 @@
  * Using a Set provides efficient O(1) lookups.
  * @see https://swagger.io/specification/#path-item-object
  */
-export const VALID_HTTP_METHODS = new Set([
+export const VALID_HTTP_METHODS: ReadonlySet<string> = new Set([
 	'get',
 	'put',
 	'post',
