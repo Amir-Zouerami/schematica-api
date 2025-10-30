@@ -1,18 +1,30 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { PinoLogger } from 'nestjs-pino';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { EndpointsService } from './endpoints.service';
 
 describe('EndpointsService', () => {
-  let service: EndpointsService;
+	let service: EndpointsService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [EndpointsService],
-    }).compile();
+	const mockPrismaService = {};
+	const mockPinoLogger = {
+		setContext: jest.fn(),
+		error: jest.fn(),
+	};
 
-    service = module.get<EndpointsService>(EndpointsService);
-  });
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			providers: [
+				EndpointsService,
+				{ provide: PrismaService, useValue: mockPrismaService },
+				{ provide: PinoLogger, useValue: mockPinoLogger },
+			],
+		}).compile();
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+		service = module.get<EndpointsService>(EndpointsService);
+	});
+
+	it('should be defined', () => {
+		expect(service).toBeDefined();
+	});
 });
