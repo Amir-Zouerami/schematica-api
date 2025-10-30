@@ -19,9 +19,9 @@ import {
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { UserDto } from 'src/auth/dto/user.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { UserDto } from '../../auth/dto/user.dto';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { NoteDto } from '../notes/dto/note.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
