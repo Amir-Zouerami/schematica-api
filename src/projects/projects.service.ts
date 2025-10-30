@@ -313,12 +313,17 @@ export class ProjectsService {
 		const { spec, lastKnownUpdatedAt } = updateOpenApiSpecDto;
 
 		try {
+			let dereferencedSpec: OpenAPIV3.Document;
+
 			try {
-				await SwaggerParser.validate(spec as OpenAPIV3.Document);
+				dereferencedSpec = (await SwaggerParser.dereference(
+					spec as OpenAPIV3.Document,
+				)) as OpenAPIV3.Document;
 			} catch (err) {
 				if (err instanceof Error) {
 					throw new SpecValidationException(err.message);
 				}
+
 				throw new SpecValidationException('An unknown validation error occurred.');
 			}
 
@@ -331,7 +336,7 @@ export class ProjectsService {
 				const { toCreate, toUpdate, toDeleteIds } =
 					this.specReconciliationService.reconcile(
 						project.endpoints,
-						spec as OpenAPIV3.Document,
+						dereferencedSpec,
 						user,
 						projectId,
 					);
@@ -356,13 +361,13 @@ export class ProjectsService {
 					);
 				}
 
-				const serverUrl = spec.servers?.[0]?.url ?? null;
+				const serverUrl = dereferencedSpec.servers?.[0]?.url ?? null;
 				const updatedProject = await tx.project.update({
 					where: { id: projectId },
 					data: {
-						name: spec.info.title,
-						nameNormalized: spec.info.title.toLowerCase(),
-						description: spec.info.description,
+						name: dereferencedSpec.info.title,
+						nameNormalized: dereferencedSpec.info.title.toLowerCase(),
+						description: dereferencedSpec.info.description,
 						serverUrl,
 						updatedById: user.id,
 					},
@@ -388,6 +393,7 @@ export class ProjectsService {
 
 			this._handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
+				// Use the dereferenced spec's title for the conflict exception
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
 					spec.info.title,
 				),
