@@ -22,11 +22,11 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CreateEndpointDto } from './dto/create-endpoint.dto';
-import { EndpointDto } from './dto/endpoint.dto';
-import { UpdateEndpointDto } from './dto/update-endpoint.dto';
-import { EndpointsService } from './endpoints.service';
-import { ProjectOwnerGuard } from './guards/project-owner.guard';
+import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
+import { EndpointDto } from '../endpoints/dto/endpoint.dto';
+import { UpdateEndpointDto } from '../endpoints/dto/update-endpoint.dto';
+import { EndpointsService } from '../endpoints/endpoints.service';
+import { ProjectOwnerGuard } from '../guards/project-owner.guard';
 
 @ApiTags('Projects - Endpoints')
 @ApiBearerAuth()
