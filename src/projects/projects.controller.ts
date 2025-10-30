@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
+	ApiBody,
 	ApiConflictResponse,
 	ApiCreatedResponse,
 	ApiForbiddenResponse,
@@ -30,6 +31,7 @@ import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.int
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectOwnerGuard } from './guards/project-owner.guard';
 import { ProjectsService } from './projects.service';
@@ -125,5 +127,27 @@ export class ProjectsController {
 		@CurrentUser() user: UserDto,
 	): Promise<Prisma.JsonValue> {
 		return this.projectsService.getOpenApiSpec(projectId, user);
+	}
+
+	@Put(':projectId/openapi')
+	@UseGuards(ProjectOwnerGuard)
+	@ApiOkResponse({
+		description:
+			'The OpenAPI specification has been successfully imported and all endpoints replaced.',
+		type: ProjectDetailDto,
+	})
+	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
+	@ApiConflictResponse({
+		description:
+			'A concurrency conflict occurred. The project has been updated by someone else.',
+	})
+	@ApiNotFoundResponse({ description: 'Project not found.' })
+	@ApiBody({ type: UpdateOpenApiSpecDto })
+	importOpenApiSpec(
+		@Param('projectId') projectId: string,
+		@Body() updateOpenApiSpecDto: UpdateOpenApiSpecDto,
+		@CurrentUser() user: UserDto,
+	): Promise<ProjectDetailDto> {
+		return this.projectsService.importOpenApiSpec(projectId, updateOpenApiSpecDto, user);
 	}
 }

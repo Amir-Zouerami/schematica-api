@@ -7,10 +7,17 @@ import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
 import { AreLinksUniqueConstraint } from './validators/are-links-unique.validator';
+import { SpecReconciliationService } from './spec-reconciliation/spec-reconciliation.service';
 
 @Module({
 	imports: [PrismaModule, AuthModule, EndpointsModule],
 	controllers: [ProjectsController],
-	providers: [ProjectsService, ProjectOwnerGuard, OpenApiSpecBuilder, AreLinksUniqueConstraint],
+	providers: [
+		ProjectsService,
+		ProjectOwnerGuard,
+		OpenApiSpecBuilder,
+		AreLinksUniqueConstraint,
+		SpecReconciliationService,
+	],
 })
 export class ProjectsModule {}
