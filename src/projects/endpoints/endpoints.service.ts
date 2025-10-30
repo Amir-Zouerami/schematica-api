@@ -2,14 +2,14 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
-import { EndpointConflictException } from 'src/common/exceptions/endpoint-conflict.exception';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateEndpointDto } from './dto/create-endpoint.dto';
-import { EndpointDto } from './dto/endpoint.dto';
-import { UpdateEndpointDto } from './dto/update-endpoint.dto';
-import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-concurrency.exception';
-import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
+import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-concurrency.exception';
+import { EndpointConflictException } from 'src/common/exceptions/endpoint-conflict.exception';
+import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
+import { EndpointDto } from '../endpoints/dto/endpoint.dto';
+import { UpdateEndpointDto } from '../endpoints/dto/update-endpoint.dto';
 
 @Injectable()
 export class EndpointsService {
