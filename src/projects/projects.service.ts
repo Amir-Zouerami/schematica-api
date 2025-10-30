@@ -1,6 +1,8 @@
+import SwaggerParser from '@apidevtools/swagger-parser';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
+import { type OpenAPIV3 } from 'openapi-types';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -8,14 +10,17 @@ import { ProjectConcurrencyException } from 'src/common/exceptions/project-concu
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
 import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
+import { SpecValidationException } from 'src/common/exceptions/spec-validation.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
+import { SpecReconciliationService } from './spec-reconciliation/spec-reconciliation.service';
 
 @Injectable()
 export class ProjectsService {
@@ -23,6 +28,7 @@ export class ProjectsService {
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
 		private readonly specBuilder: OpenApiSpecBuilder,
+		private readonly specReconciliationService: SpecReconciliationService,
 	) {
 		this.logger.setContext(ProjectsService.name);
 	}
@@ -296,6 +302,99 @@ export class ProjectsService {
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error);
+		}
+	}
+
+	async importOpenApiSpec(
+		projectId: string,
+		updateOpenApiSpecDto: UpdateOpenApiSpecDto,
+		user: UserDto,
+	): Promise<ProjectDetailDto> {
+		const { spec, lastKnownUpdatedAt } = updateOpenApiSpecDto;
+
+		try {
+			try {
+				await SwaggerParser.validate(spec as OpenAPIV3.Document);
+			} catch (err) {
+				if (err instanceof Error) {
+					throw new SpecValidationException(err.message);
+				}
+				throw new SpecValidationException('An unknown validation error occurred.');
+			}
+
+			return await this.prisma.$transaction(async (tx) => {
+				const project = await tx.project.findUniqueOrThrow({
+					where: { id: projectId, updatedAt: new Date(lastKnownUpdatedAt) },
+					include: { endpoints: true },
+				});
+
+				const { toCreate, toUpdate, toDeleteIds } =
+					this.specReconciliationService.reconcile(
+						project.endpoints,
+						spec as OpenAPIV3.Document,
+						user,
+						projectId,
+					);
+
+				if (toDeleteIds.length > 0) {
+					await tx.note.deleteMany({ where: { endpointId: { in: toDeleteIds } } });
+					await tx.endpoint.deleteMany({ where: { id: { in: toDeleteIds } } });
+				}
+
+				if (toCreate.length > 0) {
+					await tx.endpoint.createMany({ data: toCreate });
+				}
+
+				if (toUpdate.length > 0) {
+					await Promise.all(
+						toUpdate.map((u) =>
+							tx.endpoint.update({
+								where: { id: u.id },
+								data: { operation: u.operation, updatedById: u.updatedById },
+							}),
+						),
+					);
+				}
+
+				const serverUrl = spec.servers?.[0]?.url ?? null;
+				const updatedProject = await tx.project.update({
+					where: { id: projectId },
+					data: {
+						name: spec.info.title,
+						nameNormalized: spec.info.title.toLowerCase(),
+						description: spec.info.description,
+						serverUrl,
+						updatedById: user.id,
+					},
+					select: {
+						id: true,
+						name: true,
+						description: true,
+						serverUrl: true,
+						createdAt: true,
+						updatedAt: true,
+						creator: { select: { id: true, username: true, profileImage: true } },
+						updatedBy: { select: { id: true, username: true, profileImage: true } },
+						links: true,
+					},
+				});
+
+				return updatedProject as ProjectDetailDto;
+			});
+		} catch (error) {
+			if (error instanceof SpecValidationException) {
+				throw error;
+			}
+
+			this._handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
+				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
+					spec.info.title,
+				),
+				default: new InternalServerErrorException(
+					'Failed to import OpenAPI specification.',
+				),
+			});
 		}
 	}
 
