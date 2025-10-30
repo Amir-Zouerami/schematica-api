@@ -393,7 +393,6 @@ export class ProjectsService {
 
 			this._handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
-				// Use the dereferenced spec's title for the conflict exception
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
 					spec.info.title,
 				),

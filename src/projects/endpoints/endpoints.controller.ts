@@ -29,10 +29,10 @@ import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.int
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
 import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
+import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
 import { EndpointDto } from './dto/endpoint.dto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
 import { EndpointsService } from './endpoints.service';
-import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
 
 @ApiTags('Projects - Endpoints')
 @ApiBearerAuth()
@@ -64,8 +64,11 @@ export class EndpointsController {
 	})
 	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
 	@ApiNotFoundResponse({ description: 'Project or endpoint not found.' })
-	findOne(@Param('endpointId') endpointId: string): Promise<EndpointDto> {
-		return this.endpointsService.findOneById(endpointId);
+	findOne(
+		@Param('projectId') projectId: string,
+		@Param('endpointId') endpointId: string,
+	): Promise<EndpointDto> {
+		return this.endpointsService.findOneById(projectId, endpointId);
 	}
 
 	@Post()
@@ -99,11 +102,12 @@ export class EndpointsController {
 			'A concurrency conflict occurred, or the new path/method conflicts with an existing endpoint.',
 	})
 	update(
+		@Param('projectId') projectId: string,
 		@Param('endpointId') endpointId: string,
 		@Body() updateEndpointDto: UpdateEndpointDto,
 		@CurrentUser() user: UserDto,
 	): Promise<EndpointDto> {
-		return this.endpointsService.update(endpointId, updateEndpointDto, user);
+		return this.endpointsService.update(projectId, endpointId, updateEndpointDto, user);
 	}
 
 	@Delete(':endpointId')
@@ -112,7 +116,10 @@ export class EndpointsController {
 	@ApiNoContentResponse({ description: 'The endpoint has been successfully deleted.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
 	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
-	async remove(@Param('endpointId') endpointId: string): Promise<void> {
-		await this.endpointsService.remove(endpointId);
+	async remove(
+		@Param('projectId') projectId: string,
+		@Param('endpointId') endpointId: string,
+	): Promise<void> {
+		await this.endpointsService.remove(projectId, endpointId);
 	}
 }

@@ -81,11 +81,12 @@ export class EndpointsService {
 		}
 	}
 
-	async findOneById(endpointId: string): Promise<EndpointDto> {
+	async findOneById(projectId: string, endpointId: string): Promise<EndpointDto> {
 		try {
 			const endpoint = await this.prisma.endpoint.findUniqueOrThrow({
 				where: { id: endpointId },
 				select: {
+					projectId: true,
 					id: true,
 					path: true,
 					method: true,
@@ -97,8 +98,17 @@ export class EndpointsService {
 				},
 			});
 
-			return endpoint as EndpointDto;
+			if (endpoint.projectId !== projectId) {
+				throw new EndpointNotFoundException(endpointId);
+			}
+
+			const { projectId: _ignored, ...rest } = endpoint;
+			return rest as EndpointDto;
 		} catch (error) {
+			if (error instanceof EndpointNotFoundException) {
+				throw error;
+			}
+
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
@@ -156,6 +166,7 @@ export class EndpointsService {
 	}
 
 	async update(
+		projectId: string,
 		endpointId: string,
 		updateEndpointDto: UpdateEndpointDto,
 		updater: UserDto,
@@ -166,6 +177,7 @@ export class EndpointsService {
 			const updatedEndpoint = await this.prisma.endpoint.update({
 				where: {
 					id: endpointId,
+					projectId: projectId,
 					updatedAt: new Date(lastKnownUpdatedAt),
 				},
 				data: {
@@ -202,18 +214,21 @@ export class EndpointsService {
 		}
 	}
 
-	async remove(endpointId: string): Promise<void> {
+	async remove(projectId: string, endpointId: string): Promise<void> {
 		try {
-			await this.prisma.endpoint.delete({
-				where: { id: endpointId },
+			const result = await this.prisma.endpoint.deleteMany({
+				where: {
+					id: endpointId,
+					projectId: projectId,
+				},
 			});
-		} catch (error) {
-			if (
-				error instanceof Prisma.PrismaClientKnownRequestError &&
-				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
-			) {
+
+			if (result.count === 0) {
 				throw new EndpointNotFoundException(endpointId);
 			}
+		} catch (error) {
+			if (error instanceof EndpointNotFoundException) throw error;
+
 			this.logger.error({ error: error as unknown }, 'Failed to delete endpoint.');
 			throw new InternalServerErrorException('Failed to delete endpoint.');
 		}
