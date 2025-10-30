@@ -1,6 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
+import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { EndpointsController } from './endpoints.controller';
 import { EndpointsService } from './endpoints.service';
 
@@ -16,6 +17,7 @@ describe('EndpointsController', () => {
 			providers: [
 				{ provide: EndpointsService, useValue: mockEndpointsService },
 				ProjectOwnerGuard,
+				ProjectViewerGuard,
 				{ provide: PrismaService, useValue: mockPrismaService },
 			],
 		}).compile();
