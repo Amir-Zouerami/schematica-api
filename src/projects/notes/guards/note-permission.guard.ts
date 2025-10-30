@@ -22,57 +22,49 @@ export class NotePermissionGuard implements CanActivate {
 		const user = request.user as UserDto;
 		const params = request.params as { endpointId?: string; noteId?: string };
 
-		if (!user) {
-			throw new ForbiddenException('Authentication credentials were not provided.');
+		if (user.role === Role.admin) return true;
+
+		const projectId = await this.getProjectIdFromRequest(params);
+
+		const isReadOperation = request.method === 'GET';
+
+		const hasPermission = isReadOperation
+			? await this.canViewProject(user, projectId)
+			: await this.isProjectOwner(user, projectId);
+
+		if (!hasPermission) {
+			throw new NotePermissionException();
 		}
 
-		if (user.role === Role.admin) {
-			return true;
-		}
+		return true;
+	}
 
-		let projectId: string | null = null;
-
+	private async getProjectIdFromRequest(params: {
+		endpointId?: string;
+		noteId?: string;
+	}): Promise<string> {
 		if (params.noteId) {
-			const noteId = Number(params.noteId);
-
-			if (Number.isNaN(noteId)) {
-				throw new BadRequestException('Invalid Note ID format.');
-			}
+			const noteId = parseInt(params.noteId, 10);
+			if (Number.isNaN(noteId)) throw new BadRequestException('Invalid Note ID format.');
 
 			const note = await this.prisma.note.findUnique({
 				where: { id: noteId },
 				select: { endpoint: { select: { projectId: true } } },
 			});
+			if (!note || !note.endpoint) throw new NoteNotFoundException(params.noteId);
+			return note.endpoint.projectId;
+		}
 
-			if (!note || !note.endpoint) {
-				throw new NoteNotFoundException(params.noteId);
-			}
-
-			projectId = note.endpoint.projectId;
-		} else if (params.endpointId) {
+		if (params.endpointId) {
 			const endpoint = await this.prisma.endpoint.findUnique({
 				where: { id: params.endpointId },
 				select: { projectId: true },
 			});
-
-			if (!endpoint) {
-				throw new EndpointNotFoundException(params.endpointId);
-			}
-
-			projectId = endpoint.projectId;
+			if (!endpoint) throw new EndpointNotFoundException(params.endpointId);
+			return endpoint.projectId;
 		}
 
-		if (!projectId) {
-			throw new ForbiddenException('Could not determine the project for this resource.');
-		}
-
-		const isOwner = await this.isProjectOwner(user, projectId);
-
-		if (!isOwner) {
-			throw new NotePermissionException();
-		}
-
-		return true;
+		throw new ForbiddenException('Could not determine the project for this resource.');
 	}
 
 	private async isProjectOwner(user: UserDto, projectId: string): Promise<boolean> {
@@ -101,5 +93,21 @@ export class NotePermissionGuard implements CanActivate {
 		}
 
 		return false;
+	}
+
+	private async canViewProject(user: UserDto, projectId: string): Promise<boolean> {
+		const projectAccess = await this.prisma.project.findFirst({
+			where: {
+				id: projectId,
+				deniedUsers: { none: { id: user.id } },
+				OR: [
+					{ userAccesses: { some: { userId: user.id } } },
+					{ teamAccesses: { some: { teamId: { in: user.teams?.map((t) => t.id) } } } },
+				],
+			},
+			select: { id: true },
+		});
+
+		return !!projectAccess;
 	}
 }

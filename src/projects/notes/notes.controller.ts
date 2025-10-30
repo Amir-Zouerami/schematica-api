@@ -27,7 +27,6 @@ import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { NotePermissionGuard } from './guards/note-permission.guard';
 import { NotesService } from './notes.service';
-import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 
 @ApiTags('Projects - Notes')
 @ApiBearerAuth()
@@ -37,7 +36,7 @@ export class NotesController {
 	constructor(private readonly notesService: NotesService) {}
 
 	@Get('endpoints/:endpointId/notes')
-	@UseGuards(ProjectViewerGuard)
+	@UseGuards(NotePermissionGuard)
 	@ApiOkResponse({
 		description: 'A list of all notes for the specified endpoint.',
 		type: [NoteDto],
