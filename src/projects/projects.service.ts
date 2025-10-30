@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
+import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { ProjectConcurrencyException } from 'src/common/exceptions/project-concurrency.exception';
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
@@ -77,8 +78,10 @@ export class ProjectsService {
 			});
 		} catch (error) {
 			this._handlePrismaError(error, {
-				P2002: new ProjectConflictException(name),
-				default: new ProjectCreationFailure(name),
+				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
+					createProjectDto.name,
+				),
+				default: new ProjectCreationFailure(createProjectDto.name),
 			});
 		}
 	}
@@ -254,8 +257,10 @@ export class ProjectsService {
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error, {
-				P2025: new ProjectConcurrencyException(),
-				P2002: new ProjectConflictException(name),
+				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
+				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
+					updateProjectDto.name,
+				),
 			});
 		}
 	}
@@ -265,7 +270,7 @@ export class ProjectsService {
 			await this.prisma.project.delete({ where: { id: projectId } });
 		} catch (error) {
 			this._handlePrismaError(error, {
-				P2025: new ProjectNotFoundException(projectId),
+				[PrismaErrorCode.RecordNotFound]: new ProjectNotFoundException(projectId),
 			});
 		}
 	}
@@ -314,15 +319,13 @@ export class ProjectsService {
 
 	private _handlePrismaError(
 		error: unknown,
-		exceptions?: { P2002?: Error; P2025?: Error; default?: Error },
+		exceptions?: { [key in PrismaErrorCode]?: Error } & { default?: Error },
 	): never {
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			if (error.code === 'P2002' && exceptions?.P2002) {
-				throw exceptions.P2002;
-			}
+			const specificError = exceptions?.[error.code as PrismaErrorCode];
 
-			if (error.code === 'P2025' && exceptions?.P2025) {
-				throw exceptions.P2025;
+			if (specificError) {
+				throw specificError;
 			}
 		}
 
@@ -330,8 +333,10 @@ export class ProjectsService {
 			throw exceptions.default;
 		}
 
-		this.logger.error({ error }, 'An unexpected database error occurred in ProjectsService.');
-
+		this.logger.error(
+			{ error: error },
+			'An unexpected database error occurred in ProjectsService.',
+		);
 		throw new InternalServerErrorException('An unexpected error occurred.');
 	}
 }
