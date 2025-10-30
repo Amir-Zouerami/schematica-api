@@ -1,7 +1,6 @@
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { FastifyInstance } from 'fastify';
 import request from 'supertest';
 import { AppModule } from './../src/app.module';
 
@@ -24,7 +23,7 @@ describe('AppController (e2e)', () => {
 
 		await app.init();
 
-		const fastifyInstance = app.getHttpAdapter().getInstance() as FastifyInstance;
+		const fastifyInstance = app.getHttpAdapter().getInstance();
 		await fastifyInstance.ready();
 	});
 
