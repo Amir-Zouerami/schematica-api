@@ -18,7 +18,7 @@ export class CreateUserDto {
 	role: Role;
 
 	@ApiPropertyOptional({
-		description: 'A list of team IDs the user should belong to.',
+		description: 'A list of team IDs (which are the lowercase team names).',
 		type: [String],
 		example: ['backend', 'ui'],
 	})

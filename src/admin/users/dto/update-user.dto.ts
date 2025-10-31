@@ -9,7 +9,7 @@ export class UpdateUserDto {
 
 	@ApiPropertyOptional({
 		description:
-			'The complete new set of team IDs for the user. An empty array will remove all team memberships.',
+			'The complete new set of team IDs (lowercase team names) for the user. An empty array will remove all team memberships.',
 		type: [String],
 		example: ['leadership'],
 	})

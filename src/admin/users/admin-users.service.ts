@@ -110,9 +110,11 @@ export class AdminUsersService {
 
 		try {
 			const updatedUser = await this.prisma.$transaction(async (tx) => {
-				await tx.teamMembership.deleteMany({
-					where: { userId: userId },
-				});
+				if (teams !== undefined) {
+					await tx.teamMembership.deleteMany({
+						where: { userId },
+					});
+				}
 
 				const user = await tx.user.update({
 					where: { id: userId },
@@ -134,6 +136,7 @@ export class AdminUsersService {
 			});
 
 			const { password: _, teamMemberships, ...result } = updatedUser;
+
 			return new UserDto({
 				...result,
 				teams: teamMemberships.map((m) => m.team),
