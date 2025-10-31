@@ -231,7 +231,18 @@ export class ProjectsService {
 	): Promise<ProjectDetailDto> {
 		const { owners, viewers, deniedUsers, lastKnownUpdatedAt } = updateAccessDto;
 
-		if (currentUser.role !== Role.admin && !owners.users.includes(currentUser.id)) {
+		const ownerUsers = owners?.users ?? [];
+		const ownerTeams = owners?.teams ?? [];
+		const viewerUsers = viewers?.users ?? [];
+		const viewerTeams = viewers?.teams ?? [];
+		const safeDeniedUsers = deniedUsers ?? [];
+
+		const currentUserTeamIds = new Set(currentUser.teams?.map((team) => team.id) ?? []);
+		const stillOwner =
+			ownerUsers.includes(currentUser.id) ||
+			ownerTeams.some((teamId) => currentUserTeamIds.has(teamId));
+
+		if (currentUser.role !== Role.admin && !stillOwner) {
 			throw new ForbiddenException(
 				'Project owners cannot remove themselves from the owner list.',
 			);
@@ -256,39 +267,42 @@ export class ProjectsService {
 				]);
 
 				const createOwnerUsers =
-					owners.users.length > 0
+					ownerUsers.length > 0
 						? tx.userProjectAccess.createMany({
-								data: owners.users.map((userId) => ({
+								data: ownerUsers.map((userId) => ({
 									projectId,
 									userId,
 									type: AccessType.OWNER,
 								})),
 							})
 						: Promise.resolve();
+
 				const createOwnerTeams =
-					owners.teams.length > 0
+					ownerTeams.length > 0
 						? tx.teamProjectAccess.createMany({
-								data: owners.teams.map((teamId) => ({
+								data: ownerTeams.map((teamId) => ({
 									projectId,
 									teamId,
 									type: AccessType.OWNER,
 								})),
 							})
 						: Promise.resolve();
+
 				const createViewerUsers =
-					viewers.users.length > 0
+					viewerUsers.length > 0
 						? tx.userProjectAccess.createMany({
-								data: viewers.users.map((userId) => ({
+								data: viewerUsers.map((userId) => ({
 									projectId,
 									userId,
 									type: AccessType.VIEWER,
 								})),
 							})
 						: Promise.resolve();
+
 				const createViewerTeams =
-					viewers.teams.length > 0
+					viewerTeams.length > 0
 						? tx.teamProjectAccess.createMany({
-								data: viewers.teams.map((teamId) => ({
+								data: viewerTeams.map((teamId) => ({
 									projectId,
 									teamId,
 									type: AccessType.VIEWER,
@@ -306,7 +320,7 @@ export class ProjectsService {
 				return tx.project.update({
 					where: { id: projectId },
 					data: {
-						deniedUsers: { set: deniedUsers.map((userId) => ({ id: userId })) },
+						deniedUsers: { set: safeDeniedUsers.map((userId) => ({ id: userId })) },
 						updatedById: currentUser.id,
 					},
 					include: projectDetailInclude,
