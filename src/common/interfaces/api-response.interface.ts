@@ -11,16 +11,24 @@ export interface PaginationMeta {
 	lastPage: number;
 }
 
+export interface ErrorPayload {
+	statusCode: number;
+	message: string | string[];
+	type: string;
+}
+
 // The response structure for a standard (non-paginated) request
 export interface ApiResponse<T> {
-	data: T;
+	data: T | null;
 	meta: RequestMeta;
+	error: ErrorPayload | null;
 }
 
 // The response structure for a paginated request
 export interface PaginatedApiResponse<T> {
-	data: T[];
+	data: T[] | null;
 	meta: RequestMeta & PaginationMeta;
+	error: ErrorPayload | null;
 }
 
 // A contract for what the service layer should return for paginated data

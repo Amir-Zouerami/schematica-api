@@ -1,5 +1,3 @@
-// Path: src/projects/notes/notes.service.spec.ts
-
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/prisma/prisma.service';

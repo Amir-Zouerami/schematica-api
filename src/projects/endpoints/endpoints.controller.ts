@@ -26,7 +26,7 @@ import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
-import { ProjectOwnerGuard } from '../guards/project-owner.guard';
+import { ProjectOwnerGuard } from '../../common/guards/project-owner.guard';
 import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
