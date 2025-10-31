@@ -1,6 +1,7 @@
 // Path: src/projects/projects.module.ts
 
 import { Module } from '@nestjs/common';
+import { AccessControlModule } from 'src/access-control/access-control.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
@@ -13,7 +14,14 @@ import { SpecReconciliationService } from './spec-reconciliation/spec-reconcilia
 import { AreLinksUniqueConstraint } from './validators/are-links-unique.validator';
 
 @Module({
-	imports: [PrismaModule, AuthModule, EndpointsModule, NotesModule, GuardsModule],
+	imports: [
+		PrismaModule,
+		AuthModule,
+		EndpointsModule,
+		NotesModule,
+		GuardsModule,
+		AccessControlModule,
+	],
 	controllers: [ProjectsController],
 	providers: [
 		ProjectsService,

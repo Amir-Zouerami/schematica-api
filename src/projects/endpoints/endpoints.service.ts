@@ -13,6 +13,7 @@ import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
 import { EndpointDto } from '../endpoints/dto/endpoint.dto';
 import { UpdateEndpointDto } from '../endpoints/dto/update-endpoint.dto';
 import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
+import { EndpointAppMetadata } from '../spec-reconciliation/spec-reconciliation.types';
 
 @Injectable()
 export class EndpointsService {
@@ -47,27 +48,8 @@ export class EndpointsService {
 				this.prisma.endpoint.count({ where }),
 			]);
 
-			const summaryData = endpoints.map((endpoint): EndpointSummaryDto => {
-				const operation = endpoint.operation as Record<string, unknown> | null;
-
-				const summary =
-					typeof operation?.summary === 'string' ? operation.summary : undefined;
-
-				const tags = Array.isArray(operation?.tags)
-					? (operation.tags as string[])
-					: undefined;
-
-				return {
-					id: endpoint.id,
-					path: endpoint.path,
-					method: endpoint.method,
-					summary,
-					tags,
-				};
-			});
-
 			return {
-				data: summaryData,
+				data: endpoints.map((endpoint) => new EndpointSummaryDto(endpoint)),
 				meta: {
 					total,
 					page,
@@ -85,16 +67,9 @@ export class EndpointsService {
 		try {
 			const endpoint = await this.prisma.endpoint.findUniqueOrThrow({
 				where: { id: endpointId },
-				select: {
-					projectId: true,
-					id: true,
-					path: true,
-					method: true,
-					operation: true,
-					createdAt: true,
-					updatedAt: true,
-					creator: { select: { id: true, username: true, profileImage: true } },
-					updatedBy: { select: { id: true, username: true, profileImage: true } },
+				include: {
+					creator: true,
+					updatedBy: true,
 				},
 			});
 
@@ -102,8 +77,7 @@ export class EndpointsService {
 				throw new EndpointNotFoundException(endpointId);
 			}
 
-			const { projectId: _ignored, ...rest } = endpoint;
-			return rest as EndpointDto;
+			return new EndpointDto(endpoint);
 		} catch (error) {
 			if (error instanceof EndpointNotFoundException) {
 				throw error;
@@ -127,30 +101,37 @@ export class EndpointsService {
 		creator: UserDto,
 	): Promise<EndpointDto> {
 		const { path, method, operation } = createEndpointDto;
+		const now = new Date().toISOString();
+
+		// Create the metadata object
+		const metadata: EndpointAppMetadata = {
+			createdBy: creator.username,
+			createdAt: now,
+			lastEditedBy: creator.username,
+			lastEditedAt: now,
+		};
+
+		const operationWithMetadata = {
+			...operation,
+			'x-app-metadata': metadata,
+		};
 
 		try {
 			const newEndpoint = await this.prisma.endpoint.create({
 				data: {
 					path,
 					method,
-					operation: operation as unknown as Prisma.JsonObject,
+					operation: operationWithMetadata as unknown as Prisma.JsonObject, // Cast is safe here
 					projectId,
 					creatorId: creator.id,
 					updatedById: creator.id,
 				},
-				select: {
-					id: true,
-					path: true,
-					method: true,
-					operation: true,
-					createdAt: true,
-					updatedAt: true,
-					creator: { select: { id: true, username: true, profileImage: true } },
-					updatedBy: { select: { id: true, username: true, profileImage: true } },
+				include: {
+					creator: true,
+					updatedBy: true,
 				},
 			});
-
-			return newEndpoint;
+			return new EndpointDto(newEndpoint);
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -172,8 +153,30 @@ export class EndpointsService {
 		updater: UserDto,
 	): Promise<EndpointDto> {
 		const { path, method, operation, lastKnownUpdatedAt } = updateEndpointDto;
+		const now = new Date().toISOString();
 
 		try {
+			// First, get the existing endpoint to preserve its original metadata
+			const existingEndpoint = await this.prisma.endpoint.findUniqueOrThrow({
+				where: { id: endpointId, projectId },
+			});
+
+			const existingMetadata = (existingEndpoint.operation as Prisma.JsonObject)?.[
+				'x-app-metadata'
+			] as EndpointAppMetadata | undefined;
+
+			const newMetadata: EndpointAppMetadata = {
+				createdBy: existingMetadata?.createdBy ?? updater.username,
+				createdAt: existingMetadata?.createdAt ?? now,
+				lastEditedBy: updater.username,
+				lastEditedAt: now,
+			};
+
+			const operationWithMetadata = {
+				...operation,
+				'x-app-metadata': newMetadata,
+			};
+
 			const updatedEndpoint = await this.prisma.endpoint.update({
 				where: {
 					id: endpointId,
@@ -183,22 +186,15 @@ export class EndpointsService {
 				data: {
 					path,
 					method,
-					operation: operation as unknown as Prisma.JsonObject,
+					operation: operationWithMetadata as unknown as Prisma.JsonObject,
 					updatedById: updater.id,
 				},
-				select: {
-					id: true,
-					path: true,
-					method: true,
-					operation: true,
-					createdAt: true,
-					updatedAt: true,
-					creator: { select: { id: true, username: true, profileImage: true } },
-					updatedBy: { select: { id: true, username: true, profileImage: true } },
+				include: {
+					creator: true,
+					updatedBy: true,
 				},
 			});
-
-			return updatedEndpoint as EndpointDto;
+			return new EndpointDto(updatedEndpoint);
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if ((error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound) {

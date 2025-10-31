@@ -1,8 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Note } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 
-export class NoteDto implements Omit<Note, 'authorId' | 'endpointId'> {
+export const noteDtoInclude = {
+	author: {
+		select: {
+			id: true,
+			username: true,
+			profileImage: true,
+		},
+	},
+} satisfies Prisma.NoteInclude;
+
+const _noteDtoInternalType = { include: noteDtoInclude };
+type NoteWithAuthor = Prisma.NoteGetPayload<typeof _noteDtoInternalType>;
+
+export class NoteDto {
 	@ApiProperty()
 	id: number;
 
@@ -17,4 +30,12 @@ export class NoteDto implements Omit<Note, 'authorId' | 'endpointId'> {
 
 	@ApiProperty({ type: () => SanitizedUserDto })
 	author: SanitizedUserDto;
+
+	constructor(note: NoteWithAuthor) {
+		this.id = note.id;
+		this.content = note.content;
+		this.createdAt = note.createdAt;
+		this.updatedAt = note.updatedAt;
+		this.author = new SanitizedUserDto(note.author);
+	}
 }

@@ -13,7 +13,6 @@ import { ProjectNotFoundException } from 'src/common/exceptions/project-not-foun
 import { SpecValidationException } from 'src/common/exceptions/spec-validation.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
@@ -67,20 +66,14 @@ export class ProjectsService {
 
 				const newProjectDetail = await tx.project.findUniqueOrThrow({
 					where: { id: project.id },
-					select: {
-						id: true,
-						name: true,
-						description: true,
-						serverUrl: true,
-						createdAt: true,
-						updatedAt: true,
-						creator: { select: { id: true, username: true, profileImage: true } },
-						updatedBy: { select: { id: true, username: true, profileImage: true } },
+					include: {
+						creator: true,
+						updatedBy: true,
 						links: true,
 					},
 				});
 
-				return newProjectDetail as ProjectDetailDto;
+				return new ProjectDetailDto(newProjectDetail);
 			});
 		} catch (error) {
 			this._handlePrismaError(error, {
@@ -102,26 +95,9 @@ export class ProjectsService {
 
 			const [projects, total] = await this.prisma.$transaction([
 				this.prisma.project.findMany({
-					select: {
-						id: true,
-						name: true,
-						description: true,
-						createdAt: true,
-						updatedAt: true,
-						creator: {
-							select: {
-								id: true,
-								username: true,
-								profileImage: true,
-							},
-						},
-						updatedBy: {
-							select: {
-								id: true,
-								username: true,
-								profileImage: true,
-							},
-						},
+					include: {
+						creator: true,
+						updatedBy: true,
 					},
 					where,
 					skip,
@@ -132,11 +108,7 @@ export class ProjectsService {
 			]);
 
 			return {
-				data: projects.map((p) => ({
-					...p,
-					creator: p.creator as SanitizedUserDto,
-					updatedBy: p.updatedBy as SanitizedUserDto,
-				})),
+				data: projects.map((p) => new ProjectSummaryDto(p)),
 				meta: {
 					total,
 					page,
@@ -153,27 +125,9 @@ export class ProjectsService {
 		try {
 			const where = this._createAccessControlWhereClause(user);
 			const project = await this.prisma.project.findFirst({
-				select: {
-					id: true,
-					name: true,
-					description: true,
-					serverUrl: true,
-					createdAt: true,
-					updatedAt: true,
-					creator: {
-						select: {
-							id: true,
-							username: true,
-							profileImage: true,
-						},
-					},
-					updatedBy: {
-						select: {
-							id: true,
-							username: true,
-							profileImage: true,
-						},
-					},
+				include: {
+					creator: true,
+					updatedBy: true,
 					links: true,
 				},
 				where: { AND: [{ id: projectId }, where] },
@@ -183,7 +137,7 @@ export class ProjectsService {
 				throw new ProjectNotFoundException(projectId);
 			}
 
-			return project as ProjectDetailDto;
+			return new ProjectDetailDto(project);
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error);
@@ -206,7 +160,7 @@ export class ProjectsService {
 				throw new ProjectNotFoundException(projectId);
 			}
 
-			return await this.prisma.$transaction(async (tx) => {
+			const updatedProject = await this.prisma.$transaction(async (tx) => {
 				await tx.project.findUniqueOrThrow({
 					where: {
 						id: projectId,
@@ -235,31 +189,15 @@ export class ProjectsService {
 									}
 								: undefined,
 					},
-					select: {
-						id: true,
-						name: true,
-						description: true,
-						serverUrl: true,
-						createdAt: true,
-						updatedAt: true,
-						creator: {
-							select: {
-								id: true,
-								username: true,
-								profileImage: true,
-							},
-						},
-						updatedBy: {
-							select: {
-								id: true,
-								username: true,
-								profileImage: true,
-							},
-						},
+					include: {
+						creator: true,
+						updatedBy: true,
 						links: true,
 					},
 				});
 			});
+
+			return new ProjectDetailDto(updatedProject);
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
 			this._handlePrismaError(error, {
@@ -371,20 +309,14 @@ export class ProjectsService {
 						serverUrl,
 						updatedById: user.id,
 					},
-					select: {
-						id: true,
-						name: true,
-						description: true,
-						serverUrl: true,
-						createdAt: true,
-						updatedAt: true,
-						creator: { select: { id: true, username: true, profileImage: true } },
-						updatedBy: { select: { id: true, username: true, profileImage: true } },
+					include: {
+						creator: true,
+						updatedBy: true,
 						links: true,
 					},
 				});
 
-				return updatedProject as ProjectDetailDto;
+				return new ProjectDetailDto(updatedProject);
 			});
 		} catch (error) {
 			if (error instanceof SpecValidationException) {
