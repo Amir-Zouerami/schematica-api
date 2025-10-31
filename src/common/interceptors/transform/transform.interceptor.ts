@@ -1,11 +1,9 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
-
 import { FastifyRequest } from 'fastify';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-
 import {
 	ApiResponse,
 	isPaginatedServiceResponse,
@@ -53,12 +51,14 @@ export class TransformInterceptor<T>
 							...data.meta,
 						},
 						data: data.data,
+						error: null,
 					};
 				}
 
 				return {
 					meta: requestMeta,
 					data: data,
+					error: null,
 				};
 			}),
 		);

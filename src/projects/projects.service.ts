@@ -12,6 +12,7 @@ import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-f
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { SpecValidationException } from 'src/common/exceptions/spec-validation.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
@@ -76,7 +77,9 @@ export class ProjectsService {
 				return new ProjectDetailDto(newProjectDetail);
 			});
 		} catch (error) {
-			this._handlePrismaError(error, {
+			this.logger.error({ error: error as unknown }, 'Failed to create project.');
+
+			handlePrismaError(error, {
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
 					createProjectDto.name,
 				),
@@ -117,7 +120,8 @@ export class ProjectsService {
 				},
 			};
 		} catch (error) {
-			this._handlePrismaError(error);
+			this.logger.error({ error: error as unknown }, 'Failed to find projects for user.');
+			handlePrismaError(error);
 		}
 	}
 
@@ -140,7 +144,13 @@ export class ProjectsService {
 			return new ProjectDetailDto(project);
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
-			this._handlePrismaError(error);
+
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to find project by ID ${projectId}.`,
+			);
+
+			handlePrismaError(error);
 		}
 	}
 
@@ -200,7 +210,13 @@ export class ProjectsService {
 			return new ProjectDetailDto(updatedProject);
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
-			this._handlePrismaError(error, {
+
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to update project ${projectId}.`,
+			);
+
+			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
 					updateProjectDto.name,
@@ -213,7 +229,11 @@ export class ProjectsService {
 		try {
 			await this.prisma.project.delete({ where: { id: projectId } });
 		} catch (error) {
-			this._handlePrismaError(error, {
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to delete project ${projectId}.`,
+			);
+			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectNotFoundException(projectId),
 			});
 		}
@@ -239,7 +259,13 @@ export class ProjectsService {
 			return this.specBuilder.build(projectWithEndpoints, projectWithEndpoints.endpoints);
 		} catch (error) {
 			if (error instanceof ProjectNotFoundException) throw error;
-			this._handlePrismaError(error);
+
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to get OpenAPI spec for project ${projectId}.`,
+			);
+
+			handlePrismaError(error);
 		}
 	}
 
@@ -323,7 +349,12 @@ export class ProjectsService {
 				throw error;
 			}
 
-			this._handlePrismaError(error, {
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to import OpenAPI spec for project ${projectId}.`,
+			);
+
+			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
 					spec.info.title,
@@ -351,28 +382,5 @@ export class ProjectsService {
 				},
 			],
 		};
-	}
-
-	private _handlePrismaError(
-		error: unknown,
-		exceptions?: { [key in PrismaErrorCode]?: Error } & { default?: Error },
-	): never {
-		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			const specificError = exceptions?.[error.code as PrismaErrorCode];
-
-			if (specificError) {
-				throw specificError;
-			}
-		}
-
-		if (exceptions?.default) {
-			throw exceptions.default;
-		}
-
-		this.logger.error(
-			{ error: error },
-			'An unexpected database error occurred in ProjectsService.',
-		);
-		throw new InternalServerErrorException('An unexpected error occurred.');
 	}
 }
