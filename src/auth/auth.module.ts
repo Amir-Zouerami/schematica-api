@@ -6,8 +6,8 @@ import type { AllConfigTypes } from 'src/config/config.type';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
 	imports: [
@@ -18,9 +18,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: (configService: ConfigService<AllConfigTypes, true>) => ({
-				secret: configService.get('jwt.secret', { infer: true }),
+				secret: configService.get('auth.secret', { infer: true }),
 				signOptions: {
-					expiresIn: configService.get('jwt.expirationTime', '1h', {
+					expiresIn: configService.get('auth.expirationTime', '1h', {
 						infer: true,
 					}),
 				},
