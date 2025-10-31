@@ -10,10 +10,13 @@ import {
 	Put,
 	Query,
 	UseGuards,
+	UseInterceptors,
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
+	ApiBody,
 	ApiConflictResponse,
+	ApiConsumes,
 	ApiCreatedResponse,
 	ApiForbiddenResponse,
 	ApiNoContentResponse,
@@ -27,7 +30,12 @@ import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
+import {
+	FileInterceptor,
+	UploadedFile as UploadedFileDecorator,
+} from 'src/common/interceptors/file.interceptor';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import type { UploadedFile as UploadedFileType } from 'src/types/fastify';
 import { AdminUsersService } from './admin-users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -41,11 +49,28 @@ export class AdminUsersController {
 	constructor(private readonly adminUsersService: AdminUsersService) {}
 
 	@Post()
+	@UseInterceptors(FileInterceptor)
+	@ApiConsumes('multipart/form-data')
 	@ApiCreatedResponse({ description: 'The user has been successfully created.', type: UserDto })
 	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	@ApiConflictResponse({ description: 'A user with this username already exists.' })
-	create(@Body() createUserDto: CreateUserDto): Promise<UserDto> {
-		return this.adminUsersService.create(createUserDto);
+	@ApiBody({
+		schema: {
+			type: 'object',
+			properties: {
+				username: { type: 'string' },
+				password: { type: 'string' },
+				role: { type: 'string', enum: Object.values(Role) },
+				teams: { type: 'array', items: { type: 'string' } },
+				file: { type: 'string', format: 'binary' },
+			},
+		},
+	})
+	create(
+		@Body() createUserDto: CreateUserDto,
+		@UploadedFileDecorator() file?: UploadedFileType,
+	): Promise<UserDto> {
+		return this.adminUsersService.create(createUserDto, file);
 	}
 
 	@Get()

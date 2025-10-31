@@ -5,22 +5,86 @@
 		"password": "password123",
 		"role": "admin",
 		"teams": ["backend", "leadership"],
-		"profileImage": "/profile-pictures/amir.zouerami.png"
+		"profileImage": "/uploads/avatars/amir.zouerami.png"
 	},
 	{
 		"id": "2",
 		"username": "brooklyn.lee",
 		"password": "password456",
 		"role": "member",
-		"teams": ["UI"],
-		"profileImage": "/profile-pictures/brooklyn.lee.png"
+		"teams": ["ui"],
+		"profileImage": "/uploads/avatars/brooklyn.lee.png"
 	},
 	{
 		"id": "3",
 		"username": "charlie.davis",
 		"password": "password789",
 		"role": "member",
-		"teams": ["UI"],
-		"profileImage": "/profile-pictures/charlie.davis.png"
+		"teams": ["ui"],
+		"profileImage": "/uploads/avatars/charlie.davis.png"
+	},
+	{
+		"id": "4",
+		"username": "david.chen",
+		"password": "password123",
+		"role": "member",
+		"teams": ["backend"],
+		"profileImage": "/uploads/avatars/david.chen.png"
+	},
+	{
+		"id": "5",
+		"username": "emily.wong",
+		"password": "password123",
+		"role": "member",
+		"teams": ["frontend"],
+		"profileImage": "/uploads/avatars/emily.wong.png"
+	},
+	{
+		"id": "6",
+		"username": "frank.miller",
+		"password": "password123",
+		"role": "member",
+		"teams": ["devops"],
+		"profileImage": "/uploads/avatars/frank.miller.png"
+	},
+	{
+		"id": "7",
+		"username": "grace.kim",
+		"password": "password123",
+		"role": "member",
+		"teams": ["qa"],
+		"profileImage": "/uploads/avatars/grace.kim.png"
+	},
+	{
+		"id": "8",
+		"username": "henry.jones",
+		"password": "password123",
+		"role": "member",
+		"teams": ["product", "leadership"],
+		"profileImage": "/uploads/avatars/henry.jones.png"
+	},
+	{
+		"id": "9",
+		"username": "isabella.rossi",
+		"password": "password123",
+		"role": "member",
+		"teams": ["mobile", "ui"],
+		"profileImage": "/uploads/avatars/isabella.rossi.png"
+	},
+	{
+		"id": "10",
+		"username": "jacob.schmidt",
+		"password": "password123",
+		"role": "member",
+		"teams": [],
+		"profileImage": "/uploads/avatars/jacob.schmidt.png"
+	},
+	{
+		"id": "11",
+		"username": "karen.nguyen",
+		"password": "password123",
+		"role": "member",
+		"teams": ["frontend"],
+		"profileImage": null
 	}
 ]

@@ -1,11 +1,13 @@
+import multipart from '@fastify/multipart';
+import fastifyStatic from '@fastify/static';
 import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { Logger } from 'nestjs-pino';
+import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
 import { AppModule } from './app.module';
 import type { AllConfigTypes } from './config/config.type';
 import { setupSwagger } from './swagger';
@@ -24,18 +26,18 @@ function setupPipes(app: INestApplication): void {
 	);
 }
 
-function configureApp(
+async function configureApp(
 	app: NestFastifyApplication,
 	configService: ConfigService<AllConfigTypes, true>,
-): void {
+): Promise<void> {
 	const globalPrefix = configService.get('app.globalPrefix', { infer: true });
 	const corsOrigin = configService.get('app.corsOrigin', { infer: true });
 	const appVersion = configService.get('app.version', { infer: true });
 	const nodeEnv = configService.get('app.nodeEnv', { infer: true });
 	const version = appVersion.split('.')[0];
 
-	app.useStaticAssets({
-		root: join(__dirname, '..', 'public'),
+	await app.register(fastifyStatic, {
+		root: join(process.cwd(), 'public'),
 		prefix: '/',
 		setHeaders: (res, path) => {
 			if (path.endsWith('.wasm')) {
@@ -70,18 +72,24 @@ function configureApp(
  */
 async function bootstrap() {
 	const adapter = new FastifyAdapter({
-		genReqId: () => uuidv4(),
+		genReqId: () => randomUUID(),
 	});
 
 	const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
 		bufferLogs: true,
 	});
 
+	await app.register(multipart, {
+		limits: {
+			fileSize: 10 * 1024 * 1024, // 10MB limit
+		},
+	});
+
 	const configService = app.get(ConfigService<AllConfigTypes, true>);
 	const port = configService.get('app.port', { infer: true });
 
 	setupPipes(app);
-	configureApp(app, configService);
+	await configureApp(app, configService);
 
 	await app.listen(port, '0.0.0.0');
 }

@@ -13,16 +13,19 @@ import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
+import fileConfig from './config/file.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
+import { ProfileModule } from './profile/profile.module';
+import { FilesService } from './common/files/files.service';
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [databaseConfig, appConfig, authConfig],
+			load: [databaseConfig, appConfig, authConfig, fileConfig],
 		}),
 
 		LoggerModule.forRootAsync({
@@ -59,6 +62,7 @@ import { UsersModule } from './users/users.module';
 		TeamsModule,
 		ProjectsModule,
 		AdminModule,
+		ProfileModule,
 	],
 	controllers: [],
 	providers: [
@@ -74,6 +78,7 @@ import { UsersModule } from './users/users.module';
 			provide: APP_FILTER,
 			useClass: AllExceptionsFilter,
 		},
+		FilesService,
 	],
 })
 export class AppModule {}
