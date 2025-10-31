@@ -31,9 +31,10 @@ import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.int
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateAccessDto } from './dto/update-access.dto';
 import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ProjectOwnerGuard } from './guards/project-owner.guard';
+import { ProjectOwnerGuard } from '../common/guards/project-owner.guard';
 import { ProjectsService } from './projects.service';
 
 @ApiTags('Projects')
@@ -149,5 +150,25 @@ export class ProjectsController {
 		@CurrentUser() user: UserDto,
 	): Promise<ProjectDetailDto> {
 		return this.projectsService.importOpenApiSpec(projectId, updateOpenApiSpecDto, user);
+	}
+
+	@Put(':projectId/access')
+	@UseGuards(ProjectOwnerGuard)
+	@ApiOkResponse({
+		description: 'Project access control list updated successfully.',
+		type: ProjectDetailDto,
+	})
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+	})
+	@ApiConflictResponse({
+		description: 'A concurrency conflict occurred.',
+	})
+	updateAccess(
+		@Param('projectId') projectId: string,
+		@Body() updateAccessDto: UpdateAccessDto,
+		@CurrentUser() user: UserDto,
+	): Promise<ProjectDetailDto> {
+		return this.projectsService.updateAccess(projectId, updateAccessDto, user);
 	}
 }

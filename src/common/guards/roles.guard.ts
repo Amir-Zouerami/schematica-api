@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { FastifyRequest } from 'fastify';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import { ROLES_KEY } from '../../auth/decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

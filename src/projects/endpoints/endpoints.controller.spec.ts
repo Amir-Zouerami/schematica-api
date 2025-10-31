@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { AccessControlService } from 'src/access-control/access-control.service';
-import { ProjectOwnerGuard } from '../guards/project-owner.guard';
-import { ProjectViewerGuard } from '../guards/project-viewer.guard';
+import { ProjectOwnerGuard } from '../../common/guards/project-owner.guard';
+import { ProjectViewerGuard } from '../../common/guards/project-viewer.guard';
 import { EndpointsController } from './endpoints.controller';
 import { EndpointsService } from './endpoints.service';
 

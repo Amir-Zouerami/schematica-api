@@ -31,13 +31,16 @@ async function seedTeams() {
 		{ id: 'UI', name: 'UI' },
 	];
 
-	for (const teamData of teamsToCreate) {
-		await prisma.team.upsert({
-			where: { id: teamData.id },
-			update: { name: teamData.name },
-			create: teamData,
-		});
-	}
+	await Promise.all(
+		teamsToCreate.map((teamData) =>
+			prisma.team.upsert({
+				where: { id: teamData.id },
+				update: { name: teamData.name },
+				create: teamData,
+			}),
+		),
+	);
+
 	console.log('Teams seeded successfully.');
 }
 
@@ -54,26 +57,28 @@ async function seedUsers() {
 	const usersRaw = await readFile(usersPath, 'utf-8');
 	const usersData = JSON.parse(usersRaw) as SeedUser[];
 
-	for (const userData of usersData) {
-		const hashedPassword = await hash(userData.password, SALT_ROUNDS);
+	await Promise.all(
+		usersData.map(async (userData) => {
+			const hashedPassword = await hash(userData.password, SALT_ROUNDS);
 
-		await prisma.user.upsert({
-			where: { username: userData.username },
-			update: {},
-			create: {
-				id: userData.id,
-				username: userData.username,
-				password: hashedPassword,
-				role: userData.role === 'admin' ? Role.admin : Role.member,
-				profileImage: userData.profileImage,
-				teamMemberships: {
-					create: userData.teams.map((teamId: string) => ({
-						team: { connect: { id: teamId } },
-					})),
+			return prisma.user.upsert({
+				where: { username: userData.username },
+				update: {},
+				create: {
+					id: userData.id,
+					username: userData.username,
+					password: hashedPassword,
+					role: userData.role === 'admin' ? Role.admin : Role.member,
+					profileImage: userData.profileImage,
+					teamMemberships: {
+						create: userData.teams.map((teamId: string) => ({
+							team: { connect: { id: teamId } },
+						})),
+					},
 				},
-			},
-		});
-	}
+			});
+		}),
+	);
 	console.log('Users seeded successfully.');
 }
 
