@@ -8,6 +8,7 @@ import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-con
 import { EndpointConflictException } from 'src/common/exceptions/endpoint-conflict.exception';
 import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
 import { EndpointDto } from '../endpoints/dto/endpoint.dto';
@@ -66,32 +67,23 @@ export class EndpointsService {
 	async findOneById(projectId: string, endpointId: string): Promise<EndpointDto> {
 		try {
 			const endpoint = await this.prisma.endpoint.findUniqueOrThrow({
-				where: { id: endpointId },
+				where: { id: endpointId, projectId: projectId },
 				include: {
 					creator: true,
 					updatedBy: true,
 				},
 			});
 
-			if (endpoint.projectId !== projectId) {
-				throw new EndpointNotFoundException(endpointId);
-			}
-
 			return new EndpointDto(endpoint);
 		} catch (error) {
-			if (error instanceof EndpointNotFoundException) {
-				throw error;
-			}
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to find endpoint by ID ${endpointId} for project ${projectId}.`,
+			);
 
-			if (
-				error instanceof Prisma.PrismaClientKnownRequestError &&
-				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
-			) {
-				throw new EndpointNotFoundException(endpointId);
-			}
-
-			this.logger.error({ error: error as unknown }, 'Failed to find endpoint by ID.');
-			throw new InternalServerErrorException('Failed to retrieve endpoint.');
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new EndpointNotFoundException(endpointId),
+			});
 		}
 	}
 

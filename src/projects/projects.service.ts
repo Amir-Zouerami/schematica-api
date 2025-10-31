@@ -164,13 +164,6 @@ export class ProjectsService {
 		const { name, lastKnownUpdatedAt, links, ...otherData } = updateProjectDto;
 
 		try {
-			const projectExists = await this.prisma.project.findUnique({
-				where: { id: projectId },
-			});
-			if (!projectExists) {
-				throw new ProjectNotFoundException(projectId);
-			}
-
 			const updatedProject = await this.prisma.$transaction(async (tx) => {
 				await tx.project.findUniqueOrThrow({
 					where: {
@@ -206,10 +199,6 @@ export class ProjectsService {
 
 			return new ProjectDetailDto(updatedProject);
 		} catch (error) {
-			if (error instanceof ProjectNotFoundException) {
-				throw error;
-			}
-
 			this.logger.error(
 				{ error: error as unknown },
 				`Failed to update project ${projectId}.`,

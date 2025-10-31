@@ -34,7 +34,7 @@ import { ProjectSummaryDto } from './dto/project-summary.dto';
 import { UpdateAccessDto } from './dto/update-access.dto';
 import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ProjectOwnerGuard } from '../common/guards/project-owner.guard';
+import { ProjectOwnerGuard } from './guards/project-owner.guard';
 import { ProjectsService } from './projects.service';
 
 @ApiTags('Projects')
