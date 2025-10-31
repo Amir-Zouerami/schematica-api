@@ -4,14 +4,15 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AccessControlModule } from './access-control/access-control.module';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
 import appConfig from './config/app.config';
+import authConfig from './config/auth.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
-import jwtConfig from './config/jwt.config';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
@@ -21,7 +22,7 @@ import { UsersModule } from './users/users.module';
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [databaseConfig, appConfig, jwtConfig],
+			load: [databaseConfig, appConfig, authConfig],
 		}),
 
 		LoggerModule.forRootAsync({
@@ -57,6 +58,7 @@ import { UsersModule } from './users/users.module';
 		UsersModule,
 		TeamsModule,
 		ProjectsModule,
+		AdminModule,
 	],
 	controllers: [],
 	providers: [

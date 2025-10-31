@@ -1,5 +1,5 @@
 import type { AppConfig } from './app.config';
+import type { AuthConfig } from './auth.config';
 import type { DbConfig } from './database.config';
-import type { JwtConfig } from './jwt.config';
 
-export type AllConfigTypes = AppConfig & DbConfig & JwtConfig;
+export type AllConfigTypes = AppConfig & DbConfig & AuthConfig;
