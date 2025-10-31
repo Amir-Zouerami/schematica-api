@@ -1,5 +1,3 @@
-// Path: src/projects/projects.module.ts
-
 import { Module } from '@nestjs/common';
 import { AccessControlModule } from 'src/access-control/access-control.module';
 import { AuthModule } from 'src/auth/auth.module';

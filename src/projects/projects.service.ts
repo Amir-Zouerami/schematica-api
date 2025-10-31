@@ -1,6 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { AccessType, Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { type OpenAPIV3 } from 'openapi-types';
 import { UserDto } from 'src/auth/dto/user.dto';
@@ -17,10 +17,20 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { ProjectDetailDto } from './dto/project-detail.dto';
 import { ProjectSummaryDto } from './dto/project-summary.dto';
+import { UpdateAccessDto } from './dto/update-access.dto';
 import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
 import { SpecReconciliationService } from './spec-reconciliation/spec-reconciliation.service';
+
+const projectDetailInclude = {
+	creator: true,
+	updatedBy: true,
+	links: true,
+	userAccesses: { select: { userId: true, type: true } },
+	teamAccesses: { select: { teamId: true, type: true } },
+	deniedUsers: { select: { id: true } },
+} satisfies Prisma.ProjectInclude;
 
 @Injectable()
 export class ProjectsService {
@@ -37,7 +47,7 @@ export class ProjectsService {
 		const { name, description, serverUrl, links } = createProjectDto;
 
 		try {
-			return await this.prisma.$transaction(async (tx) => {
+			const newProject = await this.prisma.$transaction(async (tx) => {
 				const project = await tx.project.create({
 					data: {
 						name,
@@ -61,21 +71,17 @@ export class ProjectsService {
 					data: {
 						userId: creator.id,
 						projectId: project.id,
-						type: 'OWNER',
+						type: AccessType.OWNER,
 					},
 				});
 
-				const newProjectDetail = await tx.project.findUniqueOrThrow({
+				return tx.project.findUniqueOrThrow({
 					where: { id: project.id },
-					include: {
-						creator: true,
-						updatedBy: true,
-						links: true,
-					},
+					include: projectDetailInclude,
 				});
-
-				return new ProjectDetailDto(newProjectDetail);
 			});
+
+			return new ProjectDetailDto(newProject);
 		} catch (error) {
 			this.logger.error({ error: error as unknown }, 'Failed to create project.');
 
@@ -129,12 +135,8 @@ export class ProjectsService {
 		try {
 			const where = this._createAccessControlWhereClause(user);
 			const project = await this.prisma.project.findFirst({
-				include: {
-					creator: true,
-					updatedBy: true,
-					links: true,
-				},
 				where: { AND: [{ id: projectId }, where] },
+				include: projectDetailInclude,
 			});
 
 			if (!project) {
@@ -165,7 +167,6 @@ export class ProjectsService {
 			const projectExists = await this.prisma.project.findUnique({
 				where: { id: projectId },
 			});
-
 			if (!projectExists) {
 				throw new ProjectNotFoundException(projectId);
 			}
@@ -199,17 +200,15 @@ export class ProjectsService {
 									}
 								: undefined,
 					},
-					include: {
-						creator: true,
-						updatedBy: true,
-						links: true,
-					},
+					include: projectDetailInclude,
 				});
 			});
 
 			return new ProjectDetailDto(updatedProject);
 		} catch (error) {
-			if (error instanceof ProjectNotFoundException) throw error;
+			if (error instanceof ProjectNotFoundException) {
+				throw error;
+			}
 
 			this.logger.error(
 				{ error: error as unknown },
@@ -225,6 +224,112 @@ export class ProjectsService {
 		}
 	}
 
+	async updateAccess(
+		projectId: string,
+		updateAccessDto: UpdateAccessDto,
+		currentUser: UserDto,
+	): Promise<ProjectDetailDto> {
+		const { owners, viewers, deniedUsers, lastKnownUpdatedAt } = updateAccessDto;
+
+		if (currentUser.role !== Role.admin && !owners.users.includes(currentUser.id)) {
+			throw new ForbiddenException(
+				'Project owners cannot remove themselves from the owner list.',
+			);
+		}
+
+		try {
+			const projectExists = await this.prisma.project.findUnique({
+				where: { id: projectId },
+			});
+			if (!projectExists) {
+				throw new ProjectNotFoundException(projectId);
+			}
+
+			const updatedProject = await this.prisma.$transaction(async (tx) => {
+				await tx.project.findFirstOrThrow({
+					where: { id: projectId, updatedAt: new Date(lastKnownUpdatedAt) },
+				});
+
+				await Promise.all([
+					tx.userProjectAccess.deleteMany({ where: { projectId } }),
+					tx.teamProjectAccess.deleteMany({ where: { projectId } }),
+				]);
+
+				const createOwnerUsers =
+					owners.users.length > 0
+						? tx.userProjectAccess.createMany({
+								data: owners.users.map((userId) => ({
+									projectId,
+									userId,
+									type: AccessType.OWNER,
+								})),
+							})
+						: Promise.resolve();
+				const createOwnerTeams =
+					owners.teams.length > 0
+						? tx.teamProjectAccess.createMany({
+								data: owners.teams.map((teamId) => ({
+									projectId,
+									teamId,
+									type: AccessType.OWNER,
+								})),
+							})
+						: Promise.resolve();
+				const createViewerUsers =
+					viewers.users.length > 0
+						? tx.userProjectAccess.createMany({
+								data: viewers.users.map((userId) => ({
+									projectId,
+									userId,
+									type: AccessType.VIEWER,
+								})),
+							})
+						: Promise.resolve();
+				const createViewerTeams =
+					viewers.teams.length > 0
+						? tx.teamProjectAccess.createMany({
+								data: viewers.teams.map((teamId) => ({
+									projectId,
+									teamId,
+									type: AccessType.VIEWER,
+								})),
+							})
+						: Promise.resolve();
+
+				await Promise.all([
+					createOwnerUsers,
+					createOwnerTeams,
+					createViewerUsers,
+					createViewerTeams,
+				]);
+
+				return tx.project.update({
+					where: { id: projectId },
+					data: {
+						deniedUsers: { set: deniedUsers.map((userId) => ({ id: userId })) },
+						updatedById: currentUser.id,
+					},
+					include: projectDetailInclude,
+				});
+			});
+
+			return new ProjectDetailDto(updatedProject);
+		} catch (error) {
+			if (error instanceof ProjectNotFoundException || error instanceof ForbiddenException) {
+				throw error;
+			}
+
+			this.logger.error(
+				{ error: error as unknown },
+				`Failed to update access for project ${projectId}.`,
+			);
+
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
+			});
+		}
+	}
+
 	async delete(projectId: string): Promise<void> {
 		try {
 			await this.prisma.project.delete({ where: { id: projectId } });
@@ -233,6 +338,7 @@ export class ProjectsService {
 				{ error: error as unknown },
 				`Failed to delete project ${projectId}.`,
 			);
+
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectNotFoundException(projectId),
 			});
@@ -291,7 +397,7 @@ export class ProjectsService {
 				throw new SpecValidationException('An unknown validation error occurred.');
 			}
 
-			return await this.prisma.$transaction(async (tx) => {
+			const updatedProject = await this.prisma.$transaction(async (tx) => {
 				const project = await tx.project.findUniqueOrThrow({
 					where: { id: projectId, updatedAt: new Date(lastKnownUpdatedAt) },
 					include: { endpoints: true },
@@ -306,7 +412,6 @@ export class ProjectsService {
 					);
 
 				if (toDeleteIds.length > 0) {
-					await tx.note.deleteMany({ where: { endpointId: { in: toDeleteIds } } });
 					await tx.endpoint.deleteMany({ where: { id: { in: toDeleteIds } } });
 				}
 
@@ -326,7 +431,7 @@ export class ProjectsService {
 				}
 
 				const serverUrl = dereferencedSpec.servers?.[0]?.url ?? null;
-				const updatedProject = await tx.project.update({
+				return tx.project.update({
 					where: { id: projectId },
 					data: {
 						name: dereferencedSpec.info.title,
@@ -335,19 +440,13 @@ export class ProjectsService {
 						serverUrl,
 						updatedById: user.id,
 					},
-					include: {
-						creator: true,
-						updatedBy: true,
-						links: true,
-					},
+					include: projectDetailInclude,
 				});
-
-				return new ProjectDetailDto(updatedProject);
 			});
+
+			return new ProjectDetailDto(updatedProject);
 		} catch (error) {
-			if (error instanceof SpecValidationException) {
-				throw error;
-			}
+			if (error instanceof SpecValidationException) throw error;
 
 			this.logger.error(
 				{ error: error as unknown },
