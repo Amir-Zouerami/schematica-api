@@ -65,15 +65,19 @@ export class FileInterceptor implements NestInterceptor {
 				}
 			}
 		} catch (error: unknown) {
-			this.logger.error({ error: error }, 'Failed parsing multipart form.');
+			this.logger.error({ error }, 'Failed parsing multipart form.');
 
 			if (uploadedFile?.path) {
 				try {
 					await fs.unlink(uploadedFile.path);
-				} catch (e: unknown) {
-					this.logger.warn({ error: e }, 'Failed to cleanup temp file on error.');
+				} catch (cleanupError: unknown) {
+					this.logger.warn(
+						{ error: cleanupError },
+						'Failed to cleanup temp file on error.',
+					);
 				}
 			}
+
 			throw new BadRequestException('Error processing multipart form data.');
 		}
 
