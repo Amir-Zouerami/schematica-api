@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Project } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 
-export class ProjectSummaryDto
-	implements
-		Omit<Project, 'openApiSpec' | 'serverUrl' | 'creatorId' | 'updatedById' | 'nameNormalized'>
-{
+type ProjectSummaryWithUsers = Prisma.ProjectGetPayload<{
+	include: {
+		creator: true;
+		updatedBy: true;
+	};
+}>;
+
+export class ProjectSummaryDto {
 	@ApiProperty()
 	id: string;
 
@@ -26,4 +30,14 @@ export class ProjectSummaryDto
 
 	@ApiProperty({ type: SanitizedUserDto })
 	updatedBy: SanitizedUserDto;
+
+	constructor(project: ProjectSummaryWithUsers) {
+		this.id = project.id;
+		this.name = project.name;
+		this.description = project.description;
+		this.createdAt = project.createdAt;
+		this.updatedAt = project.updatedAt;
+		this.creator = new SanitizedUserDto(project.creator);
+		this.updatedBy = new SanitizedUserDto(project.updatedBy);
+	}
 }

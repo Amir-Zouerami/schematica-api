@@ -10,4 +10,10 @@ export class SanitizedUserDto implements SanitizedUser {
 
 	@ApiProperty({ nullable: true })
 	profileImage: string | null;
+
+	constructor(user: SanitizedUser) {
+		this.id = user.id;
+		this.username = user.username;
+		this.profileImage = user.profileImage;
+	}
 }

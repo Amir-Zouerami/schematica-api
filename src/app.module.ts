@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
+import { AccessControlModule } from './access-control/access-control.module';
 import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
@@ -50,6 +51,7 @@ import { UsersModule } from './users/users.module';
 			},
 		}),
 
+		AccessControlModule,
 		PrismaModule,
 		AuthModule,
 		UsersModule,

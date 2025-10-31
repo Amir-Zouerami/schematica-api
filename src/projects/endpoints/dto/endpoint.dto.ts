@@ -1,8 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Endpoint, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 
-export class EndpointDto implements Omit<Endpoint, 'creatorId' | 'updatedById' | 'projectId'> {
+type EndpointWithUsers = Prisma.EndpointGetPayload<{
+	include: {
+		creator: true;
+		updatedBy: true;
+	};
+}>;
+
+export class EndpointDto {
 	@ApiProperty()
 	id: string;
 
@@ -32,4 +39,15 @@ export class EndpointDto implements Omit<Endpoint, 'creatorId' | 'updatedById' |
 
 	@ApiProperty({ type: () => SanitizedUserDto })
 	updatedBy: SanitizedUserDto;
+
+	constructor(endpoint: EndpointWithUsers) {
+		this.id = endpoint.id;
+		this.path = endpoint.path;
+		this.method = endpoint.method;
+		this.operation = endpoint.operation;
+		this.createdAt = endpoint.createdAt;
+		this.updatedAt = endpoint.updatedAt;
+		this.creator = new SanitizedUserDto(endpoint.creator);
+		this.updatedBy = new SanitizedUserDto(endpoint.updatedBy);
+	}
 }

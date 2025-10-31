@@ -13,4 +13,11 @@ export class TeamDto implements Team {
 
 	@ApiProperty()
 	updatedAt: Date;
+
+	constructor(team: Team) {
+		this.id = team.id;
+		this.name = team.name;
+		this.createdAt = team.createdAt;
+		this.updatedAt = team.updatedAt;
+	}
 }

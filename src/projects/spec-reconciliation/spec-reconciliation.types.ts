@@ -1,28 +1,33 @@
-export interface EndpointNote {
-	content: string;
-	createdBy: string;
-	createdAt: string;
-}
+import { Prisma } from '@prisma/client';
 
 export interface EndpointAppMetadata {
-	createdBy?: string;
-	createdAt?: string;
-	lastEditedBy?: string;
-	lastEditedAt?: string;
-	notes?: EndpointNote[];
+	createdBy: string;
+	createdAt: string;
+	lastEditedBy: string;
+	lastEditedAt: string;
+	[key: string]: Prisma.JsonValue | undefined;
 }
 
 /**
- * Type guard to check if an object conforms to our metadata structure.
+ * A strict type guard to check if a generic JsonValue from Prisma conforms
+ * to our required EndpointAppMetadata structure.
  *
- * @param obj potential endpoint metadata
- * @returns { boolean }
+ * @param obj The JsonValue to check.
+ * @returns `true` if the object is valid EndpointAppMetadata.
  */
-export function isEndpointAppMetadata(obj: unknown): obj is EndpointAppMetadata {
-	// for now a simple object check is enough
-	if (typeof obj !== 'object' || obj === null) {
+export function isEndpointAppMetadata(obj: Prisma.JsonValue): obj is EndpointAppMetadata {
+	if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
 		return false;
 	}
 
-	return true;
+	return (
+		'createdBy' in obj &&
+		typeof obj.createdBy === 'string' &&
+		'createdAt' in obj &&
+		typeof obj.createdAt === 'string' &&
+		'lastEditedBy' in obj &&
+		typeof obj.lastEditedBy === 'string' &&
+		'lastEditedAt' in obj &&
+		typeof obj.lastEditedAt === 'string'
+	);
 }
