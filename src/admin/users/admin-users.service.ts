@@ -8,10 +8,12 @@ import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constan
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { UserConflictException } from 'src/common/exceptions/user-conflict.exception';
 import { UserNotFoundException } from 'src/common/exceptions/user-not-found.exception';
+import { FilesService } from 'src/common/files/files.service';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { AllConfigTypes } from 'src/config/config.type';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UploadedFile } from 'src/types/fastify';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -27,22 +29,33 @@ export class AdminUsersService {
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
 		private readonly configService: ConfigService<AllConfigTypes, true>,
+		private readonly filesService: FilesService,
 	) {
 		this.logger.setContext(AdminUsersService.name);
 		this.SALT_ROUNDS = this.configService.get('auth.saltRounds', { infer: true });
 	}
 
-	async create(createUserDto: CreateUserDto): Promise<UserDto> {
+	async create(createUserDto: CreateUserDto, file?: UploadedFile): Promise<UserDto> {
 		const { username, password, role, teams = [] } = createUserDto;
 		const normalizedUsername = username.toLowerCase();
 		const hashedPassword = await hash(password, this.SALT_ROUNDS);
 
+		let profileImagePath: string | null = null;
+
 		try {
+			if (file) {
+				profileImagePath = await this.filesService.saveProfilePicture(
+					file,
+					normalizedUsername,
+				);
+			}
+
 			const newUser = await this.prisma.user.create({
 				data: {
 					username: normalizedUsername,
 					password: hashedPassword,
 					role,
+					profileImage: profileImagePath,
 					teamMemberships: {
 						create: teams.map((teamId) => ({
 							team: { connect: { id: teamId } },
@@ -53,12 +66,13 @@ export class AdminUsersService {
 			});
 
 			const { password: _, teamMemberships, ...result } = newUser;
-			return new UserDto({
-				...result,
-				teams: teamMemberships.map((m) => m.team),
-			});
+			return new UserDto({ ...result, teams: teamMemberships.map((m) => m.team) });
 		} catch (error) {
 			this.logger.error({ error: error as unknown }, 'Failed to create user.');
+
+			if (profileImagePath) {
+				await this.filesService.deleteFile(profileImagePath);
+			}
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.UniqueConstraintFailed]: new UserConflictException(

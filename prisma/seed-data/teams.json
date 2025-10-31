@@ -1,0 +1,10 @@
+[
+	{ "id": "backend", "name": "backend" },
+	{ "id": "devops", "name": "devops" },
+	{ "id": "frontend", "name": "frontend" },
+	{ "id": "leadership", "name": "leadership" },
+	{ "id": "mobile", "name": "mobile" },
+	{ "id": "product", "name": "product" },
+	{ "id": "qa", "name": "qa" },
+	{ "id": "ui", "name": "ui" }
+]

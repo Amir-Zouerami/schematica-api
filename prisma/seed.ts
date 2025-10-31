@@ -6,6 +6,11 @@ import { hash } from 'bcrypt';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+type SeedTeam = {
+	id: string;
+	name: string;
+};
+
 type SeedUser = {
 	id: string;
 	username: string;
@@ -19,20 +24,17 @@ const prisma = new PrismaClient();
 const SALT_ROUNDS = 10;
 
 /**
- * Create or update the initial teams in the database.
- *
- * Upserts three teams with ids "backend", "leadership", and "UI", ensuring their names are set to "Backend", "Leadership", and "UI" respectively.
+ * Reads team data from seed-data/teams.json and upserts them into the database.
+ * This makes the JSON file the single source of truth for the initial team set.
  */
 async function seedTeams() {
 	console.log('Seeding teams...');
-	const teamsToCreate = [
-		{ id: 'backend', name: 'Backend' },
-		{ id: 'leadership', name: 'Leadership' },
-		{ id: 'UI', name: 'UI' },
-	];
+	const teamsPath = join(__dirname, 'seed-data', 'teams.json');
+	const teamsRaw = await readFile(teamsPath, 'utf-8');
+	const teamsData = JSON.parse(teamsRaw) as SeedTeam[];
 
 	await Promise.all(
-		teamsToCreate.map((teamData) =>
+		teamsData.map((teamData) =>
 			prisma.team.upsert({
 				where: { id: teamData.id },
 				update: { name: teamData.name },
@@ -46,10 +48,6 @@ async function seedTeams() {
 
 /**
  * Seed initial users from seed-data/users.json into the database.
- *
- * Reads the JSON file, hashes each user's password, and upserts user records by username.
- * New users are created with the provided id, username, hashed password, role, profile image,
- * and team memberships connected to the specified team IDs.
  */
 async function seedUsers() {
 	console.log('Seeding users...');
@@ -84,10 +82,6 @@ async function seedUsers() {
 
 /**
  * Seed the "Project Nova" project along with its related records and access rules.
- *
- * Creates the project (including a link and a denied user), configures team access
- * (leadership as OWNER, UI as VIEWER), adds two endpoints for the project, and
- * attaches a note to one endpoint — all executed inside a database transaction.
  */
 async function seedProjects() {
 	console.log('Seeding projects...');
@@ -100,7 +94,7 @@ async function seedProjects() {
 		const leadershipTeam = await tx.team.findUniqueOrThrow({
 			where: { id: 'leadership' },
 		});
-		const uiTeam = await tx.team.findUniqueOrThrow({ where: { id: 'UI' } });
+		const uiTeam = await tx.team.findUniqueOrThrow({ where: { id: 'ui' } });
 
 		const projectNova = await tx.project.upsert({
 			where: { nameNormalized: 'project nova' },
@@ -204,9 +198,7 @@ async function seedProjects() {
 }
 
 /**
- * Orchestrates the full database seeding process by running team, user, and project seed tasks in order.
- *
- * Executes seedTeams, seedUsers, and seedProjects sequentially to populate initial data.
+ * Orchestrates the full database seeding process.
  */
 async function main() {
 	console.log('Starting seed process...');
