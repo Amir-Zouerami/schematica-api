@@ -18,7 +18,6 @@ on:
             - "*.md"
             - "*.txt"
             # ⚙️ GitHub & meta files
-            - ".github/**"
             - ".gitignore"
             - ".gitattributes"
             # 🎨 Assets and static files
@@ -43,7 +42,6 @@ on:
             - "*.md"
             - "*.txt"
             # ⚙️ GitHub & meta files
-            - ".github/**"
             - ".gitignore"
             - ".gitattributes"
             # 🎨 Assets and static files
@@ -105,6 +103,7 @@ jobs:
             APP_GLOBAL_PREFIX: "api"
             APP_DOCS_PATH: "docs"
             CORS_ORIGIN: "*"
+            UPLOAD_DESTINATION: "./public/uploads"
 
         steps:
             - name: Checkout repository

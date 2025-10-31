@@ -1,5 +1,3 @@
-import { getEnv } from './env.helper';
-
 export interface FileConfig {
 	file: {
 		destination: string;
@@ -9,7 +7,7 @@ export interface FileConfig {
 export default (): FileConfig => {
 	return {
 		file: {
-			destination: getEnv('UPLOAD_DESTINATION') || './public/uploads',
+			destination: process.env.UPLOAD_DESTINATION || './public/uploads',
 		},
 	};
 };

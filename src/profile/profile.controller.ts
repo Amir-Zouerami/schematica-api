@@ -1,4 +1,4 @@
-import { Controller, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
@@ -35,8 +35,11 @@ export class ProfileController {
 	})
 	updateProfilePicture(
 		@CurrentUser() user: UserDto,
-		@UploadedFile() file: UploadedFileType,
+		@UploadedFile() file?: UploadedFileType,
 	): Promise<UserDto> {
+		if (!file) {
+			throw new BadRequestException('Profile picture file is required.');
+		}
 		return this.profileService.updateProfilePicture(user.id, file);
 	}
 }

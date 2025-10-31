@@ -21,10 +21,11 @@ export class ProfileService {
 	}
 
 	async updateProfilePicture(userId: string, file: UploadedFile): Promise<UserDto> {
-		try {
-			const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+		const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+		let newPublicPath: string | undefined;
 
-			const newPublicPath = await this.filesService.saveProfilePicture(
+		try {
+			newPublicPath = await this.filesService.saveProfilePicture(
 				file,
 				user.username,
 				user.profileImage,
@@ -38,13 +39,13 @@ export class ProfileService {
 
 			const { password: _, teamMemberships, ...result } = updatedUser;
 			return new UserDto({ ...result, teams: teamMemberships.map((m) => m.team) });
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to update profile picture for user ${userId}.`,
-			);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to update profile picture for user ${userId}.`);
 
-			await this.filesService.deleteFile(file.path);
+			if (newPublicPath) {
+				await this.filesService.deleteFile(newPublicPath);
+			}
+
 			throw new InternalServerErrorException('Failed to update profile picture.');
 		}
 	}

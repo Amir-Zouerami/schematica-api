@@ -1,3 +1,4 @@
+import type { Multipart, MultipartFile, MultipartValue } from '@fastify/multipart';
 import {
 	BadRequestException,
 	CallHandler,
@@ -10,7 +11,7 @@ import type { FastifyRequest } from 'fastify';
 import { PinoLogger } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { UploadedFile as UploadedFileType } from 'src/types/fastify';
 
 @Injectable()
@@ -26,54 +27,51 @@ export class FileInterceptor implements NestInterceptor {
 			throw new BadRequestException('Request is not multipart/form-data.');
 		}
 
-		const parts = req.parts();
+		const parts: AsyncIterableIterator<Multipart> = req.parts();
 		const body: Record<string, string | string[]> = {};
 		let uploadedFile: UploadedFileType | undefined;
 
 		try {
 			for await (const part of parts) {
-				if (part.type === 'file') {
+				if (isFilePart(part)) {
 					const tempDir = resolve(process.cwd(), 'public', 'uploads', 'tmp');
 					await fs.mkdir(tempDir, { recursive: true });
 
-					const tempPath = join(tempDir, `${randomUUID()}-${part.filename}`);
+					const originalName = part.filename ?? 'upload';
+					const safeName = basename(originalName).replace(/[^A-Za-z0-9._-]/g, '_');
+					const tempPath = join(tempDir, `${randomUUID()}-${safeName}`);
 					const buffer = await part.toBuffer();
 					await fs.writeFile(tempPath, buffer);
 
 					uploadedFile = {
 						fieldname: part.fieldname,
-						originalname: part.filename,
+						originalname: originalName,
 						mimetype: part.mimetype,
 						path: tempPath,
 						size: buffer.length,
 					};
-				} else {
-					if ('value' in part && typeof part.value === 'string') {
-						const fieldname = part.fieldname;
-						const value = part.value;
+				} else if (isFieldPart(part)) {
+					const fieldname = part.fieldname;
+					const value = String(part.value);
 
-						if (body[fieldname]) {
-							if (!Array.isArray(body[fieldname])) {
-								body[fieldname] = [body[fieldname]];
-							}
-							body[fieldname].push(value);
-						} else {
-							body[fieldname] = value;
-						}
+					const existing = body[fieldname];
+					if (Array.isArray(existing)) {
+						existing.push(value);
+					} else if (typeof existing === 'string') {
+						body[fieldname] = [existing, value];
+					} else {
+						body[fieldname] = value;
 					}
 				}
 			}
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed parsing multipart form.');
+		} catch (error: unknown) {
+			this.logger.error({ error: error }, 'Failed parsing multipart form.');
 
 			if (uploadedFile?.path) {
 				try {
 					await fs.unlink(uploadedFile.path);
-				} catch (e) {
-					this.logger.warn(
-						{ error: e as unknown },
-						'Failed to cleanup temp file on error.',
-					);
+				} catch (e: unknown) {
+					this.logger.warn({ error: e }, 'Failed to cleanup temp file on error.');
 				}
 			}
 			throw new BadRequestException('Error processing multipart form data.');
@@ -92,3 +90,11 @@ export const UploadedFile = createParamDecorator(
 		return request.uploadedFile;
 	},
 );
+
+function isFilePart(part: Multipart): part is MultipartFile {
+	return part.type === 'file';
+}
+
+function isFieldPart(part: Multipart): part is MultipartValue {
+	return part.type === 'field' && typeof part.value === 'string';
+}

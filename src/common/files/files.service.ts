@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PinoLogger } from 'nestjs-pino';
 import { promises as fs } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { extname, isAbsolute, join, resolve } from 'node:path';
 import { AllConfigTypes } from 'src/config/config.type';
 import { UploadedFile } from 'src/types/fastify';
+
+const NORMALIZED_FILE_NAME_TO_DELETE = /^[/\\]+/;
 
 @Injectable()
 export class FilesService {
@@ -58,15 +60,18 @@ export class FilesService {
 	async deleteFile(publicPath: string): Promise<void> {
 		if (!publicPath) return;
 
-		const fullPath = join(process.cwd(), 'public', publicPath);
+		const normalized = publicPath.replace(NORMALIZED_FILE_NAME_TO_DELETE, '');
+		const fullPath = isAbsolute(publicPath)
+			? publicPath
+			: join(process.cwd(), 'public', normalized);
 
 		try {
 			await fs.unlink(fullPath);
 			this.logger.info(`Successfully deleted file: ${fullPath}`);
-		} catch (error) {
+		} catch (error: unknown) {
 			if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
 				this.logger.warn(
-					{ error: error as unknown },
+					{ error },
 					`Could not delete file at ${fullPath}, but continuing operation.`,
 				);
 			}
