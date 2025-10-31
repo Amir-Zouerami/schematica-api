@@ -4,7 +4,7 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { SanitizedUser } from './users.types';
+import { SanitizedUserDto } from './dto/sanitized-user.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -17,7 +17,7 @@ export class UsersService {
 	 */
 	async findAllPaginated(
 		paginationQuery: PaginationQueryDto,
-	): Promise<PaginatedServiceResponse<SanitizedUser>> {
+	): Promise<PaginatedServiceResponse<SanitizedUserDto>> {
 		const { limit, skip } = paginationQuery;
 
 		const [users, total] = await this.prisma.$transaction([
@@ -37,7 +37,7 @@ export class UsersService {
 		]);
 
 		return {
-			data: users,
+			data: users.map((user) => new SanitizedUserDto(user)),
 			meta: {
 				total,
 				page: paginationQuery.page,

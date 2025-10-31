@@ -5,8 +5,8 @@ import {
 	ForbiddenException,
 	Injectable,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
 import { FastifyRequest } from 'fastify';
+import { AccessControlService } from 'src/access-control/access-control.service';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
 import { NoteNotFoundException } from 'src/common/exceptions/note-not-found.exception';
@@ -15,22 +15,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class NotePermissionGuard implements CanActivate {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly accessControlService: AccessControlService,
+	) {}
 
 	async canActivate(context: ExecutionContext): Promise<boolean> {
 		const request = context.switchToHttp().getRequest<FastifyRequest>();
 		const user = request.user as UserDto;
 		const params = request.params as { endpointId?: string; noteId?: string };
 
-		if (user.role === Role.admin) return true;
+		if (user.role === 'admin') return true;
 
 		const projectId = await this.getProjectIdFromRequest(params);
-
-		const isReadOperation = request.method === 'GET';
+		const isReadOperation = request.method.toUpperCase() === 'GET';
 
 		const hasPermission = isReadOperation
-			? await this.canViewProject(user, projectId)
-			: await this.isProjectOwner(user, projectId);
+			? await this.accessControlService.canViewProject(user, projectId)
+			: await this.accessControlService.canOwnProject(user, projectId);
 
 		if (!hasPermission) {
 			throw new NotePermissionException();
@@ -51,7 +53,8 @@ export class NotePermissionGuard implements CanActivate {
 				where: { id: noteId },
 				select: { endpoint: { select: { projectId: true } } },
 			});
-			if (!note || !note.endpoint) throw new NoteNotFoundException(params.noteId);
+
+			if (!note?.endpoint) throw new NoteNotFoundException(params.noteId);
 			return note.endpoint.projectId;
 		}
 
@@ -60,54 +63,11 @@ export class NotePermissionGuard implements CanActivate {
 				where: { id: params.endpointId },
 				select: { projectId: true },
 			});
+
 			if (!endpoint) throw new EndpointNotFoundException(params.endpointId);
 			return endpoint.projectId;
 		}
 
 		throw new ForbiddenException('Could not determine the project for this resource.');
-	}
-
-	private async isProjectOwner(user: UserDto, projectId: string): Promise<boolean> {
-		const userAccess = await this.prisma.userProjectAccess.findFirst({
-			where: { userId: user.id, projectId, type: 'OWNER' },
-		});
-
-		if (userAccess) {
-			return true;
-		}
-
-		const userTeamIds = user.teams?.map((t) => t.id) ?? [];
-
-		if (userTeamIds.length > 0) {
-			const teamAccess = await this.prisma.teamProjectAccess.findFirst({
-				where: {
-					teamId: { in: userTeamIds },
-					projectId,
-					type: 'OWNER',
-				},
-			});
-
-			if (teamAccess) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private async canViewProject(user: UserDto, projectId: string): Promise<boolean> {
-		const projectAccess = await this.prisma.project.findFirst({
-			where: {
-				id: projectId,
-				deniedUsers: { none: { id: user.id } },
-				OR: [
-					{ userAccesses: { some: { userId: user.id } } },
-					{ teamAccesses: { some: { teamId: { in: user.teams?.map((t) => t.id) } } } },
-				],
-			},
-			select: { id: true },
-		});
-
-		return !!projectAccess;
 	}
 }
