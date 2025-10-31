@@ -12,8 +12,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
 import { EndpointDto } from '../endpoints/dto/endpoint.dto';
 import { UpdateEndpointDto } from '../endpoints/dto/update-endpoint.dto';
-import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
 import { EndpointAppMetadata } from '../spec-reconciliation/spec-reconciliation.types';
+import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
 
 @Injectable()
 export class EndpointsService {
@@ -103,7 +103,6 @@ export class EndpointsService {
 		const { path, method, operation } = createEndpointDto;
 		const now = new Date().toISOString();
 
-		// Create the metadata object
 		const metadata: EndpointAppMetadata = {
 			createdBy: creator.username,
 			createdAt: now,
@@ -121,7 +120,7 @@ export class EndpointsService {
 				data: {
 					path,
 					method,
-					operation: operationWithMetadata as unknown as Prisma.JsonObject, // Cast is safe here
+					operation: operationWithMetadata as unknown as Prisma.JsonObject,
 					projectId,
 					creatorId: creator.id,
 					updatedById: creator.id,
@@ -131,6 +130,7 @@ export class EndpointsService {
 					updatedBy: true,
 				},
 			});
+
 			return new EndpointDto(newEndpoint);
 		} catch (error) {
 			if (
@@ -156,9 +156,9 @@ export class EndpointsService {
 		const now = new Date().toISOString();
 
 		try {
-			// First, get the existing endpoint to preserve its original metadata
 			const existingEndpoint = await this.prisma.endpoint.findUniqueOrThrow({
 				where: { id: endpointId, projectId },
+				include: { creator: true },
 			});
 
 			const existingMetadata = (existingEndpoint.operation as Prisma.JsonObject)?.[
@@ -166,8 +166,8 @@ export class EndpointsService {
 			] as EndpointAppMetadata | undefined;
 
 			const newMetadata: EndpointAppMetadata = {
-				createdBy: existingMetadata?.createdBy ?? updater.username,
-				createdAt: existingMetadata?.createdAt ?? now,
+				createdBy: existingMetadata?.createdBy ?? existingEndpoint.creator.username,
+				createdAt: existingMetadata?.createdAt ?? existingEndpoint.createdAt.toISOString(),
 				lastEditedBy: updater.username,
 				lastEditedAt: now,
 			};
@@ -194,6 +194,7 @@ export class EndpointsService {
 					updatedBy: true,
 				},
 			});
+
 			return new EndpointDto(updatedEndpoint);
 		} catch (error) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
