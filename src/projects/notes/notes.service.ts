@@ -6,19 +6,11 @@ import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constan
 import { NoteNotFoundException } from 'src/common/exceptions/note-not-found.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateNoteDto } from './dto/create-note.dto';
-import { NoteDto } from './dto/note.dto';
+import { NoteDto, noteDtoInclude } from './dto/note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NotesService {
-	private readonly noteSelect = {
-		id: true,
-		content: true,
-		createdAt: true,
-		updatedAt: true,
-		author: { select: { id: true, username: true, profileImage: true } },
-	};
-
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
@@ -30,10 +22,11 @@ export class NotesService {
 		try {
 			const notes = await this.prisma.note.findMany({
 				where: { endpointId },
-				select: this.noteSelect,
+				include: noteDtoInclude,
 				orderBy: { createdAt: 'asc' },
 			});
-			return notes;
+
+			return notes.map((note) => new NoteDto(note));
 		} catch (error) {
 			this.logger.error({ error: error as unknown }, 'Failed to find notes for endpoint.');
 			throw new InternalServerErrorException('Failed to retrieve notes.');
@@ -52,9 +45,10 @@ export class NotesService {
 					endpointId: endpointId,
 					authorId: user.id,
 				},
-				select: this.noteSelect,
+				include: noteDtoInclude,
 			});
-			return newNote;
+
+			return new NoteDto(newNote);
 		} catch (error) {
 			this.logger.error({ error: error as unknown }, 'Failed to create note.');
 			throw new InternalServerErrorException('Failed to create note.');
@@ -70,9 +64,10 @@ export class NotesService {
 				data: {
 					content: updateNoteDto.content,
 				},
-				select: this.noteSelect,
+				include: noteDtoInclude,
 			});
-			return updatedNote;
+
+			return new NoteDto(updatedNote);
 		} catch (error) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&

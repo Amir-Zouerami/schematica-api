@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Team } from '@prisma/client';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TeamDto } from './dto/team.dto';
 
 @Injectable()
 export class TeamsService {
@@ -13,7 +13,7 @@ export class TeamsService {
 	 */
 	async findAllPaginated(
 		paginationQuery: PaginationQueryDto,
-	): Promise<PaginatedServiceResponse<Team>> {
+	): Promise<PaginatedServiceResponse<TeamDto>> {
 		const { limit, skip, page } = paginationQuery;
 
 		const [teams, total] = await this.prisma.$transaction([
@@ -28,7 +28,7 @@ export class TeamsService {
 		]);
 
 		return {
-			data: teams,
+			data: teams.map((team) => new TeamDto(team)),
 			meta: {
 				total,
 				page,
