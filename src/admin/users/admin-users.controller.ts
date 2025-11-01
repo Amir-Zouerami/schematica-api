@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	Body,
 	Controller,
 	Delete,
@@ -103,5 +104,32 @@ export class AdminUsersController {
 	@ApiNotFoundResponse({ description: 'The specified user was not found.' })
 	async remove(@Param('userId') userId: string): Promise<void> {
 		await this.adminUsersService.remove(userId);
+	}
+
+	@Put(':userId/picture')
+	@UseInterceptors(FileInterceptor)
+	@ApiConsumes('multipart/form-data')
+	@ApiOkResponse({
+		description: 'The user profile picture has been successfully updated.',
+		type: UserDto,
+	})
+	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
+	@ApiNotFoundResponse({ description: 'The specified user was not found.' })
+	@ApiBody({
+		schema: {
+			type: 'object',
+			required: ['file'],
+			properties: { file: { type: 'string', format: 'binary' } },
+		},
+	})
+	updateProfilePicture(
+		@Param('userId') userId: string,
+		@UploadedFileDecorator() file?: UploadedFileType,
+	): Promise<UserDto> {
+		if (!file) {
+			throw new BadRequestException('Profile picture file is required.');
+		}
+
+		return this.adminUsersService.updateProfilePicture(userId, file);
 	}
 }

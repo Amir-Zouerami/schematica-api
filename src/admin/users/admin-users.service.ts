@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { hash } from 'bcrypt';
@@ -180,6 +180,46 @@ export class AdminUsersService {
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new UserNotFoundException(userId),
+			});
+		}
+	}
+
+	async updateProfilePicture(userId: string, file: UploadedFile): Promise<UserDto> {
+		let newPublicPath: string | undefined;
+
+		try {
+			const user = await this.prisma.user.findUniqueOrThrow({
+				where: { id: userId },
+			});
+
+			newPublicPath = await this.filesService.saveProfilePicture(
+				file,
+				user.username,
+				user.profileImage,
+			);
+
+			const updatedUser = await this.prisma.user.update({
+				where: { id: userId },
+				data: { profileImage: newPublicPath },
+				include: userWithTeamsInclude,
+			});
+
+			const { password: _, teamMemberships, ...result } = updatedUser;
+
+			return new UserDto({
+				...result,
+				teams: teamMemberships.map((m) => m.team),
+			});
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to update profile picture for user ${userId}.`);
+
+			if (newPublicPath) {
+				await this.filesService.deleteFile(newPublicPath);
+			}
+
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new UserNotFoundException(userId),
+				default: new InternalServerErrorException('Failed to update profile picture.'),
 			});
 		}
 	}
