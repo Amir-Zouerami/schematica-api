@@ -30,6 +30,7 @@ model User {
   // Access control relations
   projectAccesses UserProjectAccess[]
   deniedProjects  Project[]           @relation("DeniedProjectAccess")
+  AuditLog        AuditLog[]
 }
 
 model Team {
@@ -135,9 +136,26 @@ model TeamProjectAccess {
   @@id([teamId, projectId])
 }
 
+model AuditLog {
+  id            Int      @id @default(autoincrement())
+  actorId       String?
+  actorUsername String
+  action        String
+  targetId      String
+  details       Json?
+  createdAt     DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetId])
+  @@index([createdAt])
+}
+
 enum Role {
   admin
   member
+  guest
 }
 
 enum AccessType {

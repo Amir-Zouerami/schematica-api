@@ -103,6 +103,18 @@ CREATE TABLE "TeamProjectAccess" (
 );
 
 -- CreateTable
+CREATE TABLE "AuditLog" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "actorId" TEXT,
+    "actorUsername" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "details" JSONB,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "AuditLog_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "_DeniedProjectAccess" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -124,6 +136,15 @@ CREATE UNIQUE INDEX "ProjectLink_projectId_url_key" ON "ProjectLink"("projectId"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Endpoint_projectId_path_method_key" ON "Endpoint"("projectId", "path", "method");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_actorId_idx" ON "AuditLog"("actorId");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_targetId_idx" ON "AuditLog"("targetId");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_DeniedProjectAccess_AB_unique" ON "_DeniedProjectAccess"("A", "B");
