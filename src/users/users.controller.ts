@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UsersService } from './users.service';
 
@@ -17,7 +17,7 @@ export class UsersController {
 
 	@Get()
 	@ApiOkResponse({ description: 'A paginated list of sanitized users.' })
-	findAllPaginated(@Query() paginationQuery: PaginationQueryDto) {
+	findAllPaginated(@Query() paginationQuery: PaginationSearchQueryDto) {
 		return this.usersService.findAllPaginated(paginationQuery);
 	}
 

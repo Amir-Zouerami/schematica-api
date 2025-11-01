@@ -1,27 +1,44 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { compare, hash } from 'bcrypt';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { AllConfigTypes } from 'src/config/config.type';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SanitizedUserDto } from './dto/sanitized-user.dto';
 
-const SALT_ROUNDS = 10;
-
 @Injectable()
 export class UsersService {
-	constructor(private readonly prisma: PrismaService) {}
+	private readonly SALT_ROUNDS: number;
+
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly configService: ConfigService<AllConfigTypes, true>,
+	) {
+		this.SALT_ROUNDS = this.configService.get('auth.saltRounds', { infer: true });
+	}
 
 	/**
 	 * Retrieves a paginated list of all users with sensitive information removed.
 	 */
 	async findAllPaginated(
-		paginationQuery: PaginationQueryDto,
+		paginationQuery: PaginationSearchQueryDto,
 	): Promise<PaginatedServiceResponse<SanitizedUserDto>> {
-		const { limit, skip } = paginationQuery;
+		const { limit, skip, search } = paginationQuery;
+
+		const where: Prisma.UserWhereInput = search
+			? {
+					username: {
+						contains: search.toLowerCase(),
+					},
+				}
+			: {};
 
 		const [users, total] = await this.prisma.$transaction([
 			this.prisma.user.findMany({
+				where,
 				select: {
 					id: true,
 					username: true,
@@ -33,7 +50,7 @@ export class UsersService {
 					username: 'asc',
 				},
 			}),
-			this.prisma.user.count(),
+			this.prisma.user.count({ where }),
 		]);
 
 		return {
@@ -42,7 +59,7 @@ export class UsersService {
 				total,
 				page: paginationQuery.page,
 				limit: paginationQuery.limit,
-				lastPage: Math.ceil(total / limit),
+				lastPage: Math.ceil(total / limit) || 1,
 			},
 		};
 	}
@@ -74,7 +91,7 @@ export class UsersService {
 			throw new BadRequestException('Incorrect current password.');
 		}
 
-		const newHashedPassword = await hash(changePasswordDto.newPassword, SALT_ROUNDS);
+		const newHashedPassword = await hash(changePasswordDto.newPassword, this.SALT_ROUNDS);
 
 		await this.prisma.user.update({
 			where: { id: userId },

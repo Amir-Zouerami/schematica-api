@@ -29,7 +29,7 @@ import { Role } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import {
 	FileInterceptor,
@@ -81,7 +81,7 @@ export class AdminUsersController {
 	})
 	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	findAll(
-		@Query() paginationQuery: PaginationQueryDto,
+		@Query() paginationQuery: PaginationSearchQueryDto,
 	): Promise<PaginatedServiceResponse<UserDto>> {
 		return this.adminUsersService.findAll(paginationQuery);
 	}

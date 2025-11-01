@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { Prisma } from '@prisma/client';
+import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TeamDto } from './dto/team.dto';
@@ -12,19 +13,28 @@ export class TeamsService {
 	 * Retrieves a paginated list of all teams.
 	 */
 	async findAllPaginated(
-		paginationQuery: PaginationQueryDto,
+		paginationQuery: PaginationSearchQueryDto,
 	): Promise<PaginatedServiceResponse<TeamDto>> {
-		const { limit, skip, page } = paginationQuery;
+		const { limit, skip, page, search } = paginationQuery;
+
+		const where: Prisma.TeamWhereInput = search
+			? {
+					name: {
+						contains: search.toLowerCase(),
+					},
+				}
+			: {};
 
 		const [teams, total] = await this.prisma.$transaction([
 			this.prisma.team.findMany({
+				where,
 				skip: skip,
 				take: limit,
 				orderBy: {
 					name: 'asc',
 				},
 			}),
-			this.prisma.team.count(),
+			this.prisma.team.count({ where }),
 		]);
 
 		return {
@@ -33,7 +43,7 @@ export class TeamsService {
 				total,
 				page,
 				limit,
-				lastPage: Math.ceil(total / limit),
+				lastPage: Math.ceil(total / limit) || 1,
 			},
 		};
 	}

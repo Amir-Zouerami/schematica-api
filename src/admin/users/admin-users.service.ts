@@ -5,7 +5,7 @@ import { hash } from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { UserConflictException } from 'src/common/exceptions/user-conflict.exception';
 import { UserNotFoundException } from 'src/common/exceptions/user-not-found.exception';
 import { FilesService } from 'src/common/files/files.service';
@@ -82,18 +82,29 @@ export class AdminUsersService {
 		}
 	}
 
-	async findAll(paginationQuery: PaginationQueryDto): Promise<PaginatedServiceResponse<UserDto>> {
-		const { skip, limit, page } = paginationQuery;
+	async findAll(
+		paginationQuery: PaginationSearchQueryDto,
+	): Promise<PaginatedServiceResponse<UserDto>> {
+		const { skip, limit, page, search } = paginationQuery;
+
+		const where: Prisma.UserWhereInput = search
+			? {
+					username: {
+						contains: search.toLowerCase(),
+					},
+				}
+			: {};
 
 		try {
 			const [users, total] = await this.prisma.$transaction([
 				this.prisma.user.findMany({
+					where,
 					include: userWithTeamsInclude,
 					skip,
 					take: limit,
 					orderBy: { username: 'asc' },
 				}),
-				this.prisma.user.count(),
+				this.prisma.user.count({ where }),
 			]);
 
 			const userDtos = users.map((user) => {
