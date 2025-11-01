@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PinoLogger } from 'nestjs-pino';
+import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
+import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { TeamConflictException } from 'src/common/exceptions/team-conflict.exception';
 import { TeamNotFoundException } from 'src/common/exceptions/team-not-found.exception';
@@ -14,11 +17,12 @@ export class AdminTeamsService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		this.logger.setContext(AdminTeamsService.name);
 	}
 
-	async create(createTeamDto: CreateTeamDto): Promise<TeamDto> {
+	async create(createTeamDto: CreateTeamDto, actor: UserDto): Promise<TeamDto> {
 		const teamName = createTeamDto.name.toLowerCase();
 
 		try {
@@ -29,9 +33,16 @@ export class AdminTeamsService {
 				},
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.TEAM_CREATED,
+				targetId: newTeam.id,
+				details: { name: newTeam.name },
+			} satisfies AuditLogEvent);
+
 			return new TeamDto(newTeam);
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to create team.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to create team.');
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.UniqueConstraintFailed]: new TeamConflictException(teamName),
@@ -39,7 +50,7 @@ export class AdminTeamsService {
 		}
 	}
 
-	async update(teamId: string, updateTeamDto: UpdateTeamDto): Promise<TeamDto> {
+	async update(teamId: string, updateTeamDto: UpdateTeamDto, actor: UserDto): Promise<TeamDto> {
 		const newTeamName = updateTeamDto.name.toLowerCase();
 
 		try {
@@ -51,12 +62,16 @@ export class AdminTeamsService {
 				},
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.TEAM_UPDATED,
+				targetId: updatedTeam.id,
+				details: { oldId: teamId, newName: updatedTeam.name },
+			} satisfies AuditLogEvent);
+
 			return new TeamDto(updatedTeam);
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to update team with ID ${teamId}.`,
-			);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to update team with ID ${teamId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new TeamNotFoundException(teamId),
@@ -65,16 +80,19 @@ export class AdminTeamsService {
 		}
 	}
 
-	async remove(teamId: string): Promise<void> {
+	async remove(teamId: string, actor: UserDto): Promise<void> {
 		try {
 			await this.prisma.team.delete({
 				where: { id: teamId },
 			});
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to delete team with ID ${teamId}.`,
-			);
+
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.TEAM_DELETED,
+				targetId: teamId,
+			} satisfies AuditLogEvent);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to delete team with ID ${teamId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new TeamNotFoundException(teamId),

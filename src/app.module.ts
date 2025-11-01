@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AccessControlModule } from './access-control/access-control.module';
 import { AdminModule } from './admin/admin.module';
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { FilesService } from './common/files/files.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
@@ -15,11 +18,10 @@ import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
 import fileConfig from './config/file.config';
 import { PrismaModule } from './prisma/prisma.module';
+import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
-import { ProfileModule } from './profile/profile.module';
-import { FilesService } from './common/files/files.service';
 
 @Module({
 	imports: [
@@ -27,6 +29,8 @@ import { FilesService } from './common/files/files.service';
 			isGlobal: true,
 			load: [databaseConfig, appConfig, authConfig, fileConfig],
 		}),
+
+		EventEmitterModule.forRoot(),
 
 		LoggerModule.forRootAsync({
 			imports: [ConfigModule],
@@ -63,6 +67,7 @@ import { FilesService } from './common/files/files.service';
 		ProjectsModule,
 		AdminModule,
 		ProfileModule,
+		AuditModule,
 	],
 	controllers: [],
 	providers: [

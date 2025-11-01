@@ -20,7 +20,9 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { TeamDto } from 'src/teams/dto/team.dto';
@@ -40,8 +42,8 @@ export class AdminTeamsController {
 	@ApiCreatedResponse({ description: 'The team has been successfully created.', type: TeamDto })
 	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	@ApiConflictResponse({ description: 'A team with this name already exists.' })
-	create(@Body() createTeamDto: CreateTeamDto): Promise<TeamDto> {
-		return this.adminTeamsService.create(createTeamDto);
+	create(@Body() createTeamDto: CreateTeamDto, @CurrentUser() user: UserDto): Promise<TeamDto> {
+		return this.adminTeamsService.create(createTeamDto, user);
 	}
 
 	@Put(':teamId')
@@ -52,8 +54,9 @@ export class AdminTeamsController {
 	update(
 		@Param('teamId') teamId: string,
 		@Body() updateTeamDto: UpdateTeamDto,
+		@CurrentUser() user: UserDto,
 	): Promise<TeamDto> {
-		return this.adminTeamsService.update(teamId, updateTeamDto);
+		return this.adminTeamsService.update(teamId, updateTeamDto, user);
 	}
 
 	@Delete(':teamId')
@@ -61,7 +64,7 @@ export class AdminTeamsController {
 	@ApiNoContentResponse({ description: 'The team has been successfully deleted.' })
 	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	@ApiNotFoundResponse({ description: 'The specified team was not found.' })
-	async remove(@Param('teamId') teamId: string): Promise<void> {
-		await this.adminTeamsService.remove(teamId);
+	async remove(@Param('teamId') teamId: string, @CurrentUser() user: UserDto): Promise<void> {
+		await this.adminTeamsService.remove(teamId, user);
 	}
 }

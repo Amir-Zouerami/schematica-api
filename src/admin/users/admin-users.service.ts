@@ -1,8 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { hash } from 'bcrypt';
 import { PinoLogger } from 'nestjs-pino';
+import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
@@ -30,12 +32,17 @@ export class AdminUsersService {
 		private readonly logger: PinoLogger,
 		private readonly configService: ConfigService<AllConfigTypes, true>,
 		private readonly filesService: FilesService,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		this.logger.setContext(AdminUsersService.name);
 		this.SALT_ROUNDS = this.configService.get('auth.saltRounds', { infer: true });
 	}
 
-	async create(createUserDto: CreateUserDto, file?: UploadedFile): Promise<UserDto> {
+	async create(
+		createUserDto: CreateUserDto,
+		actor: UserDto,
+		file?: UploadedFile,
+	): Promise<UserDto> {
 		const { username, password, role, teams = [] } = createUserDto;
 		const normalizedUsername = username.toLowerCase();
 		const hashedPassword = await hash(password, this.SALT_ROUNDS);
@@ -65,10 +72,17 @@ export class AdminUsersService {
 				include: userWithTeamsInclude,
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.USER_CREATED,
+				targetId: newUser.id,
+				details: { username: newUser.username, role: newUser.role },
+			} satisfies AuditLogEvent);
+
 			const { password: _, teamMemberships, ...result } = newUser;
 			return new UserDto({ ...result, teams: teamMemberships.map((m) => m.team) });
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to create user.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to create user.');
 
 			if (profileImagePath) {
 				await this.filesService.deleteFile(profileImagePath);
@@ -124,13 +138,13 @@ export class AdminUsersService {
 					lastPage: Math.ceil(total / limit) || 1,
 				},
 			};
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to find all users.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to find all users.');
 			handlePrismaError(error);
 		}
 	}
 
-	async update(userId: string, updateUserDto: UpdateUserDto): Promise<UserDto> {
+	async update(userId: string, updateUserDto: UpdateUserDto, actor: UserDto): Promise<UserDto> {
 		const { role, teams } = updateUserDto;
 
 		try {
@@ -160,17 +174,21 @@ export class AdminUsersService {
 				return user;
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.USER_UPDATED,
+				targetId: updatedUser.id,
+				details: { role: updatedUser.role },
+			} satisfies AuditLogEvent);
+
 			const { password: _, teamMemberships, ...result } = updatedUser;
 
 			return new UserDto({
 				...result,
 				teams: teamMemberships.map((m) => m.team),
 			});
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to update user with ID ${userId}.`,
-			);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to update user with ID ${userId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new UserNotFoundException(userId),
@@ -178,16 +196,19 @@ export class AdminUsersService {
 		}
 	}
 
-	async remove(userId: string): Promise<void> {
+	async remove(userId: string, actor: UserDto): Promise<void> {
 		try {
 			await this.prisma.user.delete({
 				where: { id: userId },
 			});
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to delete user with ID ${userId}.`,
-			);
+
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.USER_DELETED,
+				targetId: userId,
+			} satisfies AuditLogEvent);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to delete user with ID ${userId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new UserNotFoundException(userId),
@@ -195,7 +216,11 @@ export class AdminUsersService {
 		}
 	}
 
-	async updateProfilePicture(userId: string, file: UploadedFile): Promise<UserDto> {
+	async updateProfilePicture(
+		userId: string,
+		file: UploadedFile,
+		actor: UserDto,
+	): Promise<UserDto> {
 		let newPublicPath: string | undefined;
 
 		try {
@@ -214,6 +239,12 @@ export class AdminUsersService {
 				data: { profileImage: newPublicPath },
 				include: userWithTeamsInclude,
 			});
+
+			this.eventEmitter.emit(AuditEvent, {
+				actor,
+				action: AuditAction.USER_PICTURE_UPDATED,
+				targetId: updatedUser.id,
+			} satisfies AuditLogEvent);
 
 			const { password: _, teamMemberships, ...result } = updatedUser;
 

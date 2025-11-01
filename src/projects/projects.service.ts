@@ -1,8 +1,10 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AccessType, Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { type OpenAPIV3 } from 'openapi-types';
+import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -39,6 +41,7 @@ export class ProjectsService {
 		private readonly logger: PinoLogger,
 		private readonly specBuilder: OpenApiSpecBuilder,
 		private readonly specReconciliationService: SpecReconciliationService,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		this.logger.setContext(ProjectsService.name);
 	}
@@ -81,9 +84,16 @@ export class ProjectsService {
 				});
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor: creator,
+				action: AuditAction.PROJECT_CREATED,
+				targetId: newProject.id,
+				details: { name: newProject.name },
+			} satisfies AuditLogEvent);
+
 			return new ProjectDetailDto(newProject);
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to create project.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to create project.');
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.UniqueConstraintFailed]: new ProjectConflictException(
@@ -125,8 +135,8 @@ export class ProjectsService {
 					lastPage: Math.ceil(total / limit) || 1,
 				},
 			};
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to find projects for user.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to find projects for user.');
 			handlePrismaError(error);
 		}
 	}
@@ -144,13 +154,10 @@ export class ProjectsService {
 			}
 
 			return new ProjectDetailDto(project);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof ProjectNotFoundException) throw error;
 
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to find project by ID ${projectId}.`,
-			);
+			this.logger.error({ error }, `Failed to find project by ID ${projectId}.`);
 
 			handlePrismaError(error);
 		}
@@ -197,12 +204,16 @@ export class ProjectsService {
 				});
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor: updater,
+				action: AuditAction.PROJECT_UPDATED,
+				targetId: updatedProject.id,
+				details: { name: updatedProject.name },
+			} satisfies AuditLogEvent);
+
 			return new ProjectDetailDto(updatedProject);
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to update project ${projectId}.`,
-			);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to update project ${projectId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
@@ -316,16 +327,19 @@ export class ProjectsService {
 				});
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor: currentUser,
+				action: AuditAction.PROJECT_ACCESS_UPDATED,
+				targetId: updatedProject.id,
+			} satisfies AuditLogEvent);
+
 			return new ProjectDetailDto(updatedProject);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof ProjectNotFoundException || error instanceof ForbiddenException) {
 				throw error;
 			}
 
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to update access for project ${projectId}.`,
-			);
+			this.logger.error({ error }, `Failed to update access for project ${projectId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
@@ -333,14 +347,17 @@ export class ProjectsService {
 		}
 	}
 
-	async delete(projectId: string): Promise<void> {
+	async delete(projectId: string, user: UserDto): Promise<void> {
 		try {
 			await this.prisma.project.delete({ where: { id: projectId } });
-		} catch (error) {
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to delete project ${projectId}.`,
-			);
+
+			this.eventEmitter.emit(AuditEvent, {
+				actor: user,
+				action: AuditAction.PROJECT_DELETED,
+				targetId: projectId,
+			} satisfies AuditLogEvent);
+		} catch (error: unknown) {
+			this.logger.error({ error }, `Failed to delete project ${projectId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectNotFoundException(projectId),
@@ -366,13 +383,10 @@ export class ProjectsService {
 			}
 
 			return this.specBuilder.build(projectWithEndpoints, projectWithEndpoints.endpoints);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof ProjectNotFoundException) throw error;
 
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to get OpenAPI spec for project ${projectId}.`,
-			);
+			this.logger.error({ error }, `Failed to get OpenAPI spec for project ${projectId}.`);
 
 			handlePrismaError(error);
 		}
@@ -447,14 +461,17 @@ export class ProjectsService {
 				});
 			});
 
+			this.eventEmitter.emit(AuditEvent, {
+				actor: user,
+				action: AuditAction.PROJECT_SPEC_IMPORTED,
+				targetId: updatedProject.id,
+			} satisfies AuditLogEvent);
+
 			return new ProjectDetailDto(updatedProject);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof SpecValidationException) throw error;
 
-			this.logger.error(
-				{ error: error as unknown },
-				`Failed to import OpenAPI spec for project ${projectId}.`,
-			);
+			this.logger.error({ error }, `Failed to import OpenAPI spec for project ${projectId}.`);
 
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new ProjectConcurrencyException(),
