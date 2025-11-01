@@ -27,8 +27,8 @@ export class NotesService {
 			});
 
 			return notes.map((note) => new NoteDto(note));
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to find notes for endpoint.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to find notes for endpoint.');
 			throw new InternalServerErrorException('Failed to retrieve notes.');
 		}
 	}
@@ -49,8 +49,8 @@ export class NotesService {
 			});
 
 			return new NoteDto(newNote);
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to create note.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to create note.');
 			throw new InternalServerErrorException('Failed to create note.');
 		}
 	}
@@ -68,7 +68,7 @@ export class NotesService {
 			});
 
 			return new NoteDto(updatedNote);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
@@ -76,7 +76,7 @@ export class NotesService {
 				throw new NoteNotFoundException(noteIdStr);
 			}
 
-			this.logger.error({ error: error as unknown }, 'Failed to update note.');
+			this.logger.error({ error }, 'Failed to update note.');
 			throw new InternalServerErrorException('Failed to update note.');
 		}
 	}
@@ -88,7 +88,7 @@ export class NotesService {
 			await this.prisma.note.delete({
 				where: { id: noteId },
 			});
-		} catch (error) {
+		} catch (error: unknown) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
@@ -96,7 +96,7 @@ export class NotesService {
 				throw new NoteNotFoundException(noteIdStr);
 			}
 
-			this.logger.error({ error: error as unknown }, 'Failed to delete note.');
+			this.logger.error({ error }, 'Failed to delete note.');
 			throw new InternalServerErrorException('Failed to delete note.');
 		}
 	}

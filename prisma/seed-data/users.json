@@ -86,5 +86,13 @@
 		"role": "member",
 		"teams": ["frontend"],
 		"profileImage": null
+	},
+	{
+		"id": "12",
+		"username": "guest.user",
+		"password": "password123",
+		"role": "guest",
+		"teams": [],
+		"profileImage": null
 	}
 ]

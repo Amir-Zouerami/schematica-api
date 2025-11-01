@@ -58,8 +58,8 @@ export class EndpointsService {
 					lastPage: Math.ceil(total / limit) || 1,
 				},
 			};
-		} catch (error) {
-			this.logger.error({ error: error as unknown }, 'Failed to find endpoints for project.');
+		} catch (error: unknown) {
+			this.logger.error({ error }, 'Failed to find endpoints for project.');
 			throw new InternalServerErrorException('Failed to retrieve endpoints.');
 		}
 	}
@@ -75,9 +75,9 @@ export class EndpointsService {
 			});
 
 			return new EndpointDto(endpoint);
-		} catch (error) {
+		} catch (error: unknown) {
 			this.logger.error(
-				{ error: error as unknown },
+				{ error },
 				`Failed to find endpoint by ID ${endpointId} for project ${projectId}.`,
 			);
 
@@ -124,7 +124,7 @@ export class EndpointsService {
 			});
 
 			return new EndpointDto(newEndpoint);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (
 				error instanceof Prisma.PrismaClientKnownRequestError &&
 				(error.code as PrismaErrorCode) === PrismaErrorCode.UniqueConstraintFailed
@@ -132,7 +132,7 @@ export class EndpointsService {
 				throw new EndpointConflictException(method, path);
 			}
 
-			this.logger.error({ error: error as unknown }, 'Failed to create endpoint.');
+			this.logger.error({ error }, 'Failed to create endpoint.');
 
 			throw new InternalServerErrorException('Failed to create endpoint.');
 		}
@@ -188,7 +188,7 @@ export class EndpointsService {
 			});
 
 			return new EndpointDto(updatedEndpoint);
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof Prisma.PrismaClientKnownRequestError) {
 				if ((error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound) {
 					throw new EndpointConcurrencyException();
@@ -198,7 +198,7 @@ export class EndpointsService {
 					throw new EndpointConflictException(method, path);
 				}
 			}
-			this.logger.error({ error: error as unknown }, 'Failed to update endpoint.');
+			this.logger.error({ error }, 'Failed to update endpoint.');
 			throw new InternalServerErrorException('Failed to update endpoint.');
 		}
 	}
@@ -215,10 +215,10 @@ export class EndpointsService {
 			if (result.count === 0) {
 				throw new EndpointNotFoundException(endpointId);
 			}
-		} catch (error) {
+		} catch (error: unknown) {
 			if (error instanceof EndpointNotFoundException) throw error;
 
-			this.logger.error({ error: error as unknown }, 'Failed to delete endpoint.');
+			this.logger.error({ error }, 'Failed to delete endpoint.');
 			throw new InternalServerErrorException('Failed to delete endpoint.');
 		}
 	}

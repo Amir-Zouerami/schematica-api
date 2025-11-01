@@ -26,6 +26,7 @@ import {
 	ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -69,9 +70,10 @@ export class AdminUsersController {
 	})
 	create(
 		@Body() createUserDto: CreateUserDto,
+		@CurrentUser() user: UserDto,
 		@UploadedFileDecorator() file?: UploadedFileType,
 	): Promise<UserDto> {
-		return this.adminUsersService.create(createUserDto, file);
+		return this.adminUsersService.create(createUserDto, user, file);
 	}
 
 	@Get()
@@ -93,8 +95,9 @@ export class AdminUsersController {
 	update(
 		@Param('userId') userId: string,
 		@Body() updateUserDto: UpdateUserDto,
+		@CurrentUser() user: UserDto,
 	): Promise<UserDto> {
-		return this.adminUsersService.update(userId, updateUserDto);
+		return this.adminUsersService.update(userId, updateUserDto, user);
 	}
 
 	@Delete(':userId')
@@ -102,8 +105,8 @@ export class AdminUsersController {
 	@ApiNoContentResponse({ description: 'The user has been successfully deleted.' })
 	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	@ApiNotFoundResponse({ description: 'The specified user was not found.' })
-	async remove(@Param('userId') userId: string): Promise<void> {
-		await this.adminUsersService.remove(userId);
+	async remove(@Param('userId') userId: string, @CurrentUser() user: UserDto): Promise<void> {
+		await this.adminUsersService.remove(userId, user);
 	}
 
 	@Put(':userId/picture')
@@ -124,12 +127,13 @@ export class AdminUsersController {
 	})
 	updateProfilePicture(
 		@Param('userId') userId: string,
+		@CurrentUser() user: UserDto,
 		@UploadedFileDecorator() file?: UploadedFileType,
 	): Promise<UserDto> {
 		if (!file) {
 			throw new BadRequestException('Profile picture file is required.');
 		}
 
-		return this.adminUsersService.updateProfilePicture(userId, file);
+		return this.adminUsersService.updateProfilePicture(userId, file, user);
 	}
 }

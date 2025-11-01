@@ -34,6 +34,7 @@ import { ProjectSummaryDto } from './dto/project-summary.dto';
 import { UpdateAccessDto } from './dto/update-access.dto';
 import { UpdateOpenApiSpecDto } from './dto/update-openapi-spec.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { ProjectCreationGuard } from './guards/project-creation.guard';
 import { ProjectOwnerGuard } from './guards/project-owner.guard';
 import { ProjectsService } from './projects.service';
 
@@ -45,11 +46,13 @@ export class ProjectsController {
 	constructor(private readonly projectsService: ProjectsService) {}
 
 	@Post()
+	@UseGuards(ProjectCreationGuard)
 	@ApiCreatedResponse({
 		description: 'The project has been successfully created.',
 		type: ProjectDetailDto,
 	})
 	@ApiConflictResponse({ description: 'A project with this name already exists.' })
+	@ApiForbiddenResponse({ description: 'You do not have permission to create a new project.' })
 	create(
 		@Body() createProjectDto: CreateProjectDto,
 		@CurrentUser() user: UserDto,
@@ -112,8 +115,11 @@ export class ProjectsController {
 		description: 'User does not have ownership of this project.',
 	})
 	@ApiNotFoundResponse({ description: 'Project not found.' })
-	async delete(@Param('projectId') projectId: string): Promise<void> {
-		await this.projectsService.delete(projectId);
+	async delete(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	): Promise<void> {
+		await this.projectsService.delete(projectId, user);
 	}
 
 	@Get(':projectId/openapi')
