@@ -73,12 +73,16 @@ export class ChangelogListener {
 		await this.createChangelogEntry(project.id, endpoint.id, message, actor.id);
 	}
 
+	/**
+	 * Attempts to create a changelog entry. Logs errors but does not throw.
+	 * This is a fire-and-forget operation - failures will not propagate to callers.
+	 */
 	private createChangelogEntry(
 		projectId: string,
 		relatedId: string,
 		message: string,
 		actorId: string,
-	): Promise<unknown> {
+	): Promise<void> {
 		return this.prisma.changelog
 			.create({
 				data: {
@@ -88,6 +92,7 @@ export class ChangelogListener {
 					actorId,
 				},
 			})
+			.then(() => undefined)
 			.catch((error: unknown) => {
 				this.logger.error(
 					{ error, projectId, relatedId, actorId },
