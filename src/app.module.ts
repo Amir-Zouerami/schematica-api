@@ -8,6 +8,7 @@ import { AccessControlModule } from './access-control/access-control.module';
 import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { ChangelogModule } from './changelog/changelog.module';
 import { FilesService } from './common/files/files.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
@@ -68,6 +69,7 @@ import { UsersModule } from './users/users.module';
 		AdminModule,
 		ProfileModule,
 		AuditModule,
+		ChangelogModule,
 	],
 	controllers: [],
 	providers: [
