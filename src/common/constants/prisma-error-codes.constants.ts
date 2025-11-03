@@ -11,6 +11,11 @@ export enum PrismaErrorCode {
 	UniqueConstraintFailed = 'P2002',
 
 	/**
+	 * Foreign key constraint failed on one or more fields.
+	 */
+	ForeignKeyConstraintFailed = 'P2003',
+
+	/**
 	 * An operation failed because it depends on one or more records that were required but not found.
 	 * Used for "Record to update not found" or "Record to delete not found".
 	 * This is our key for detecting optimistic concurrency failures and simple "not found" errors.

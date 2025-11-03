@@ -31,6 +31,7 @@ model User {
   projectAccesses UserProjectAccess[]
   deniedProjects  Project[]           @relation("DeniedProjectAccess")
   AuditLog        AuditLog[]
+  Changelog       Changelog[]
 }
 
 model Team {
@@ -71,6 +72,7 @@ model Project {
   userAccesses UserProjectAccess[]
   teamAccesses TeamProjectAccess[]
   deniedUsers  User[]              @relation("DeniedProjectAccess")
+  Changelog    Changelog[]
 }
 
 model ProjectLink {
@@ -150,6 +152,20 @@ model AuditLog {
   @@index([actorId])
   @@index([targetId])
   @@index([createdAt])
+}
+
+model Changelog {
+  id        Int      @id @default(autoincrement())
+  projectId String
+  relatedId String
+  message   String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
 }
 
 enum Role {

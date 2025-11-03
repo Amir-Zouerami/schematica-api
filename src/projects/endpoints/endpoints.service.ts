@@ -1,12 +1,19 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
+import {
+	EndpointChangeEvent,
+	EndpointEvent,
+	EndpointUpdateChangeEvent,
+} from 'src/changelog/changelog.events';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-concurrency.exception';
 import { EndpointConflictException } from 'src/common/exceptions/endpoint-conflict.exception';
 import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
+import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -21,6 +28,7 @@ export class EndpointsService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
+		private readonly eventEmitter: EventEmitter2,
 	) {
 		this.logger.setContext(EndpointsService.name);
 	}
@@ -123,18 +131,29 @@ export class EndpointsService {
 				},
 			});
 
+			this.eventEmitter.emit(EndpointEvent.CREATED, {
+				actor: creator,
+				project: { id: projectId },
+				endpoint: {
+					id: newEndpoint.id,
+					method: newEndpoint.method,
+					path: newEndpoint.path,
+				},
+			} satisfies EndpointChangeEvent);
+
 			return new EndpointDto(newEndpoint);
 		} catch (error: unknown) {
-			if (
-				error instanceof Prisma.PrismaClientKnownRequestError &&
-				(error.code as PrismaErrorCode) === PrismaErrorCode.UniqueConstraintFailed
-			) {
-				throw new EndpointConflictException(method, path);
-			}
-
 			this.logger.error({ error }, 'Failed to create endpoint.');
 
-			throw new InternalServerErrorException('Failed to create endpoint.');
+			handlePrismaError(error, {
+				[PrismaErrorCode.UniqueConstraintFailed]: new EndpointConflictException(
+					method,
+					path,
+				),
+				[PrismaErrorCode.ForeignKeyConstraintFailed]: new ProjectNotFoundException(
+					projectId,
+				),
+			});
 		}
 	}
 
@@ -187,39 +206,51 @@ export class EndpointsService {
 				},
 			});
 
+			this.eventEmitter.emit(EndpointEvent.UPDATED, {
+				actor: updater,
+				project: { id: projectId },
+				before: existingEndpoint,
+				after: updatedEndpoint,
+			} satisfies EndpointUpdateChangeEvent);
+
 			return new EndpointDto(updatedEndpoint);
 		} catch (error: unknown) {
-			if (error instanceof Prisma.PrismaClientKnownRequestError) {
-				if ((error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound) {
-					throw new EndpointConcurrencyException();
-				}
+			this.logger.error({ error }, `Failed to update endpoint ${endpointId}.`);
 
-				if ((error.code as PrismaErrorCode) === PrismaErrorCode.UniqueConstraintFailed) {
-					throw new EndpointConflictException(method, path);
-				}
-			}
-			this.logger.error({ error }, 'Failed to update endpoint.');
-			throw new InternalServerErrorException('Failed to update endpoint.');
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new EndpointConcurrencyException(),
+				[PrismaErrorCode.UniqueConstraintFailed]: new EndpointConflictException(
+					method,
+					path,
+				),
+			});
 		}
 	}
 
-	async remove(projectId: string, endpointId: string): Promise<void> {
+	async remove(projectId: string, endpointId: string, user: UserDto): Promise<void> {
 		try {
-			const result = await this.prisma.endpoint.deleteMany({
+			const deletedEndpoint = await this.prisma.endpoint.delete({
 				where: {
 					id: endpointId,
 					projectId: projectId,
 				},
 			});
 
-			if (result.count === 0) {
-				throw new EndpointNotFoundException(endpointId);
-			}
+			this.eventEmitter.emit(EndpointEvent.DELETED, {
+				actor: user,
+				project: { id: projectId },
+				endpoint: {
+					id: deletedEndpoint.id,
+					method: deletedEndpoint.method,
+					path: deletedEndpoint.path,
+				},
+			} satisfies EndpointChangeEvent);
 		} catch (error: unknown) {
-			if (error instanceof EndpointNotFoundException) throw error;
+			this.logger.error({ error }, `Failed to delete endpoint ${endpointId}.`);
 
-			this.logger.error({ error }, 'Failed to delete endpoint.');
-			throw new InternalServerErrorException('Failed to delete endpoint.');
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new EndpointNotFoundException(endpointId),
+			});
 		}
 	}
 }

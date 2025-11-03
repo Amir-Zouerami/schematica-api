@@ -119,7 +119,8 @@ export class EndpointsController {
 	async remove(
 		@Param('projectId') projectId: string,
 		@Param('endpointId') endpointId: string,
+		@CurrentUser() user: UserDto, // Add this
 	): Promise<void> {
-		await this.endpointsService.remove(projectId, endpointId);
+		await this.endpointsService.remove(projectId, endpointId, user); // Pass the user
 	}
 }
