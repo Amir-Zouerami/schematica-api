@@ -30,8 +30,15 @@ model User {
   // Access control relations
   projectAccesses UserProjectAccess[]
   deniedProjects  Project[]           @relation("DeniedProjectAccess")
-  AuditLog        AuditLog[]
-  Changelog       Changelog[]
+
+  // System-level relations
+  auditLogs  AuditLog[]
+  changelogs Changelog[]
+
+  notificationsAsActor   Notification[]           @relation("NotificationActor")
+  notificationStatuses   UserNotificationStatus[] @relation("UserNotificationStatus")
+  Notification           Notification[]
+  UserNotificationStatus UserNotificationStatus[]
 }
 
 model Team {
@@ -166,6 +173,35 @@ model Changelog {
   actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([projectId, createdAt])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  link      String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  actor        User?                    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  userStatuses UserNotificationStatus[]
+  User         User?                    @relation(fields: [userId], references: [id])
+  userId       String?
+
+  @@index([createdAt])
+}
+
+model UserNotificationStatus {
+  notificationId Int
+  userId         String
+  isRead         Boolean   @default(false)
+  readAt         DateTime?
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User         @relation("UserNotificationStatus", fields: [userId], references: [id], onDelete: Cascade)
+  User         User         @relation(fields: [userId], references: [id])
+
+  @@id([notificationId, userId])
+  @@index([userId, isRead])
 }
 
 enum Role {
