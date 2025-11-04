@@ -1,3 +1,4 @@
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,6 +12,9 @@ describe('NotesService', () => {
 		setContext: jest.fn(),
 		error: jest.fn(),
 	};
+	const mockEventEmitter = {
+		emit: jest.fn(),
+	};
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
@@ -18,6 +22,7 @@ describe('NotesService', () => {
 				NotesService,
 				{ provide: PrismaService, useValue: mockPrismaService },
 				{ provide: PinoLogger, useValue: mockPinoLogger },
+				{ provide: EventEmitter2, useValue: mockEventEmitter },
 			],
 		}).compile();
 

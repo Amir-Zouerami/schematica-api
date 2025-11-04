@@ -1,11 +1,27 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+	IsArray,
+	IsEnum,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	Matches,
+	MinLength,
+} from 'class-validator';
+import {
+	USERNAME_REGEX,
+	USERNAME_VALIDATION_MESSAGE,
+} from 'src/common/constants/validation.constants';
 
 export class CreateUserDto {
-	@ApiProperty({ example: 'jane.doe' })
+	@ApiProperty({
+		example: 'jane.doe',
+		pattern: USERNAME_REGEX.source,
+	})
 	@IsString()
 	@IsNotEmpty()
+	@Matches(USERNAME_REGEX, { message: USERNAME_VALIDATION_MESSAGE })
 	username: string;
 
 	@ApiProperty({ minLength: 8, example: 'Str0ngP@ssw0rd!' })

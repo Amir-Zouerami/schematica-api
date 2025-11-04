@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AccessControlModule } from './access-control/access-control.module';
@@ -9,6 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { ChangelogModule } from './changelog/changelog.module';
+import { CleanupModule } from './cleanup/cleanup.module';
 import { FilesService } from './common/files/files.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
@@ -18,6 +20,7 @@ import authConfig from './config/auth.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
 import fileConfig from './config/file.config';
+import { NotificationModule } from './notifications/notification.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
@@ -32,6 +35,8 @@ import { UsersModule } from './users/users.module';
 		}),
 
 		EventEmitterModule.forRoot(),
+
+		ScheduleModule.forRoot(),
 
 		LoggerModule.forRootAsync({
 			imports: [ConfigModule],
@@ -70,6 +75,8 @@ import { UsersModule } from './users/users.module';
 		ProfileModule,
 		AuditModule,
 		ChangelogModule,
+		CleanupModule,
+		NotificationModule,
 	],
 	controllers: [],
 	providers: [

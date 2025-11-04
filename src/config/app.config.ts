@@ -12,6 +12,8 @@ export interface AppConfig {
 		globalPrefix: string;
 		docsPath: string;
 		corsOrigin: string;
+		logRetentionDays: number;
+		websocketPath: string;
 	};
 }
 
@@ -28,6 +30,8 @@ export default (): AppConfig => {
 			globalPrefix: getEnv('APP_GLOBAL_PREFIX'),
 			docsPath: getEnv('APP_DOCS_PATH'),
 			corsOrigin: getEnv('CORS_ORIGIN'),
+			logRetentionDays: getEnvInt('LOG_RETENTION_DAYS', 90),
+			websocketPath: getEnv('WEBSOCKET_PATH'),
 		},
 	};
 };

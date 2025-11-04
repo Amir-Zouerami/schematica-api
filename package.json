@@ -31,7 +31,10 @@
 		"@nestjs/jwt": "^11.0.1",
 		"@nestjs/passport": "^11.0.5",
 		"@nestjs/platform-fastify": "^11.1.8",
+		"@nestjs/platform-socket.io": "^11.1.8",
+		"@nestjs/schedule": "^6.0.1",
 		"@nestjs/swagger": "^11.2.1",
+		"@nestjs/websockets": "^11.1.8",
 		"@prisma/client": "^6.18.0",
 		"bcrypt": "^6.0.0",
 		"class-transformer": "^0.5.1",
@@ -45,7 +48,8 @@
 		"pino-http": "^11.0.0",
 		"pino-pretty": "^13.1.2",
 		"reflect-metadata": "^0.2.2",
-		"rxjs": "^7.8.2"
+		"rxjs": "^7.8.2",
+		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.1",

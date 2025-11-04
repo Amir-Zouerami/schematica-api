@@ -9,6 +9,7 @@ import { Logger } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { AppModule } from './app.module';
+import { SocketIoAdapter } from './common/adapters/socket-io.adapter';
 import type { AllConfigTypes } from './config/config.type';
 import { setupSwagger } from './swagger';
 
@@ -92,6 +93,8 @@ async function bootstrap() {
 	await configureApp(app, configService);
 
 	await app.listen(port, '0.0.0.0');
+
+	app.useWebSocketAdapter(new SocketIoAdapter(app));
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-floating-promises */
