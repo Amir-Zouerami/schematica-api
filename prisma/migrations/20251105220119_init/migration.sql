@@ -115,6 +115,40 @@ CREATE TABLE "AuditLog" (
 );
 
 -- CreateTable
+CREATE TABLE "Changelog" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "projectId" TEXT NOT NULL,
+    "relatedId" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "actorId" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Changelog_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Changelog_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "message" TEXT NOT NULL,
+    "link" TEXT NOT NULL,
+    "actorId" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Notification_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "UserNotificationStatus" (
+    "notificationId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "readAt" DATETIME,
+
+    PRIMARY KEY ("notificationId", "userId"),
+    CONSTRAINT "UserNotificationStatus_notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES "Notification" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "UserNotificationStatus_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- CreateTable
 CREATE TABLE "_DeniedProjectAccess" (
     "A" TEXT NOT NULL,
     "B" TEXT NOT NULL,
@@ -145,6 +179,15 @@ CREATE INDEX "AuditLog_targetId_idx" ON "AuditLog"("targetId");
 
 -- CreateIndex
 CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "Changelog_projectId_createdAt_idx" ON "Changelog"("projectId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "Notification_createdAt_idx" ON "Notification"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "UserNotificationStatus_userId_isRead_idx" ON "UserNotificationStatus"("userId", "isRead");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_DeniedProjectAccess_AB_unique" ON "_DeniedProjectAccess"("A", "B");

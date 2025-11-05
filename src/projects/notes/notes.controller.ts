@@ -80,8 +80,9 @@ export class NotesController {
 	update(
 		@Param('noteId') noteId: string,
 		@Body() updateNoteDto: UpdateNoteDto,
+		@CurrentUser() user: UserDto,
 	): Promise<NoteDto> {
-		return this.notesService.update(noteId, updateNoteDto);
+		return this.notesService.update(noteId, updateNoteDto, user);
 	}
 
 	@Delete('notes/:noteId')

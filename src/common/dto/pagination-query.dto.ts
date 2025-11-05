@@ -9,7 +9,7 @@ export class PaginationQueryDto {
 		minimum: 1,
 		maximum: 100,
 	})
-	@Type(() => Number) // Transform the query param from string to number
+	@Type(() => Number)
 	@IsInt()
 	@Min(1)
 	@Max(100)
@@ -27,7 +27,6 @@ export class PaginationQueryDto {
 	@IsOptional()
 	page = 1;
 
-	// This getter is a convenience for calculating the offset in the service.
 	get skip(): number {
 		return (this.page - 1) * this.limit;
 	}

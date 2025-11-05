@@ -104,6 +104,7 @@ jobs:
             APP_DOCS_PATH: "docs"
             CORS_ORIGIN: "*"
             UPLOAD_DESTINATION: "./public/uploads"
+            WEBSOCKET_PATH: "/socket.io"
 
         steps:
             - name: Checkout repository
