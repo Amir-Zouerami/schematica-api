@@ -32,13 +32,10 @@ model User {
   deniedProjects  Project[]           @relation("DeniedProjectAccess")
 
   // System-level relations
-  auditLogs  AuditLog[]
-  changelogs Changelog[]
-
-  notificationsAsActor   Notification[]           @relation("NotificationActor")
-  notificationStatuses   UserNotificationStatus[] @relation("UserNotificationStatus")
-  Notification           Notification[]
-  UserNotificationStatus UserNotificationStatus[]
+  auditLogs            AuditLog[]
+  changelogs           Changelog[]
+  notificationsAsActor Notification[]           @relation("NotificationActor")
+  notificationStatuses UserNotificationStatus[] @relation("UserNotificationStatus")
 }
 
 model Team {
@@ -184,8 +181,6 @@ model Notification {
 
   actor        User?                    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
   userStatuses UserNotificationStatus[]
-  User         User?                    @relation(fields: [userId], references: [id])
-  userId       String?
 
   @@index([createdAt])
 }
@@ -198,7 +193,6 @@ model UserNotificationStatus {
 
   notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   user         User         @relation("UserNotificationStatus", fields: [userId], references: [id], onDelete: Cascade)
-  User         User         @relation(fields: [userId], references: [id])
 
   @@id([notificationId, userId])
   @@index([userId, isRead])
