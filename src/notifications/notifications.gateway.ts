@@ -22,7 +22,7 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 	@WebSocketServer()
 	server: Server;
 
-	private readonly userSockets = new Map<string, string>();
+	private readonly userSockets = new Map<string, Set<string>>();
 
 	constructor(
 		private readonly logger: PinoLogger,
@@ -47,12 +47,19 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 			});
 
 			const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+
 			if (!user || user.tokenVersion !== payload.tokenVersion) {
 				return client.disconnect();
 			}
 
-			this.userSockets.set(user.id, client.id);
-			this.logger.info(`Client connected: ${client.id}, user: ${user.username}`);
+			const sockets = this.userSockets.get(user.id) ?? new Set<string>();
+			sockets.add(client.id);
+			this.userSockets.set(user.id, sockets);
+
+			this.logger.info(
+				{ socketCount: sockets.size },
+				`Client connected: ${client.id}, user: ${user.username}`,
+			);
 		} catch (_error: unknown) {
 			this.logger.warn({ error: _error }, 'Disconnecting client due to invalid token.');
 			return client.disconnect();
@@ -60,18 +67,28 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 	}
 
 	handleDisconnect(client: Socket) {
-		for (const [userId, socketId] of this.userSockets.entries()) {
-			if (socketId === client.id) {
-				this.userSockets.delete(userId);
+		for (const [userId, socketIds] of this.userSockets.entries()) {
+			if (socketIds.has(client.id)) {
+				socketIds.delete(client.id);
+
+				if (socketIds.size === 0) {
+					this.userSockets.delete(userId);
+				}
+
 				break;
 			}
 		}
+
 		this.logger.info(`Client disconnected: ${client.id}`);
 	}
 
 	sendNotificationToUser(userId: string, payload: NotificationDto) {
-		const socketId = this.userSockets.get(userId);
-		if (socketId) {
+		const socketIds = this.userSockets.get(userId);
+		if (!socketIds) {
+			return;
+		}
+
+		for (const socketId of socketIds) {
 			this.server.to(socketId).emit('notification', payload);
 		}
 	}

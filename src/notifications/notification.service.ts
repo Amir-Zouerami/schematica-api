@@ -1,10 +1,8 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
-import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { USERNAME_PATTERN } from 'src/common/constants/validation.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
-import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NotificationDto, UserNotificationWithDetails } from './dto/notification.dto';
 import { NoteChangeEvent } from './notifications.events';
@@ -132,10 +130,17 @@ export class NotificationService {
 
 	async markAsRead(notificationId: number, userId: string): Promise<NotificationDto> {
 		try {
+			const status = await this.prisma.userNotificationStatus.findUnique({
+				where: { notificationId_userId: { notificationId, userId } },
+			});
+
+			if (!status || status.isRead) {
+				throw new NotFoundException('Notification not found or already marked as read.');
+			}
+
 			const updatedStatus = await this.prisma.userNotificationStatus.update({
 				where: {
 					notificationId_userId: { notificationId, userId },
-					isRead: false,
 				},
 				data: {
 					isRead: true,
@@ -150,12 +155,12 @@ export class NotificationService {
 
 			return new NotificationDto(updatedStatus);
 		} catch (error: unknown) {
+			if (error instanceof NotFoundException) {
+				throw error;
+			}
+
 			this.logger.error({ error }, 'Failed to mark notification as read.');
-			handlePrismaError(error, {
-				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
-					'Notification not found or already marked as read.',
-				),
-			});
+			throw new NotFoundException('Could not update notification.');
 		}
 	}
 
