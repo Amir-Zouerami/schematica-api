@@ -33,6 +33,7 @@ import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
 import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
 import { EndpointDto } from './dto/endpoint.dto';
+import { UpdateEndpointStatusDto } from './dto/update-endpoint-status.dto';
 import { UpdateEndpointDto } from './dto/update-endpoint.dto';
 import { EndpointsService } from './endpoints.service';
 
@@ -110,6 +111,28 @@ export class EndpointsController {
 		@CurrentUser() user: UserDto,
 	): Promise<EndpointDto> {
 		return this.endpointsService.update(projectId, endpointId, updateEndpointDto, user);
+	}
+
+	@Post(':endpointId/status')
+	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
+	@ApiOkResponse({
+		description: 'The endpoint status has been successfully updated.',
+		type: EndpointDto,
+	})
+	@ApiForbiddenResponse({ description: 'User does not have permission to change the status.' })
+	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	updateStatus(
+		@Param('projectId') projectId: string,
+		@Param('endpointId') endpointId: string,
+		@Body() updateEndpointStatusDto: UpdateEndpointStatusDto,
+		@CurrentUser() user: UserDto,
+	): Promise<EndpointDto> {
+		return this.endpointsService.updateStatus(
+			projectId,
+			endpointId,
+			updateEndpointStatusDto,
+			user,
+		);
 	}
 
 	@Delete(':endpointId')

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { EndpointStatus, Prisma } from '@prisma/client';
 import { OpenAPIV3 } from 'openapi-types';
 
 function isJsonObject(value: Prisma.JsonValue): value is Prisma.JsonObject {
@@ -7,8 +7,10 @@ function isJsonObject(value: Prisma.JsonValue): value is Prisma.JsonObject {
 }
 
 type EndpointSummaryData = Pick<
-	Prisma.EndpointGetPayload<{ select: { id: true; path: true; method: true; operation: true } }>,
-	'id' | 'path' | 'method' | 'operation'
+	Prisma.EndpointGetPayload<{
+		select: { id: true; path: true; method: true; operation: true; status: true };
+	}>,
+	'id' | 'path' | 'method' | 'operation' | 'status'
 >;
 
 export class EndpointSummaryDto {
@@ -20,6 +22,9 @@ export class EndpointSummaryDto {
 
 	@ApiProperty({ example: 'get' })
 	method: string;
+
+	@ApiProperty({ enum: EndpointStatus, example: EndpointStatus.DRAFT })
+	status: EndpointStatus;
 
 	@ApiPropertyOptional({
 		description: 'A short summary of what the endpoint does.',
@@ -38,6 +43,7 @@ export class EndpointSummaryDto {
 		this.id = endpoint.id;
 		this.path = endpoint.path;
 		this.method = endpoint.method;
+		this.status = endpoint.status;
 
 		if (isJsonObject(endpoint.operation)) {
 			const operation = endpoint.operation as unknown as OpenAPIV3.OperationObject;

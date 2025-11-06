@@ -5,7 +5,7 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NotificationDto, UserNotificationWithDetails } from './dto/notification.dto';
-import { NoteChangeEvent } from './notifications.events';
+import { EndpointReviewRequestedEvent, NoteChangeEvent } from './notifications.events';
 import { NotificationsGateway } from './notifications.gateway';
 
 const MENTION_REGEX = new RegExp(`@(${USERNAME_PATTERN})`, 'g');
@@ -41,57 +41,49 @@ export class NotificationService {
 			const message = `User '${actor.username}' mentioned you in a note on an endpoint.`;
 			const link = `/projects/${project.id}/endpoints/${endpoint.id}`;
 
-			await this.prisma.$transaction(async (tx) => {
-				const notification = await tx.notification.create({
-					data: {
-						message,
-						link,
-						actorId: actor.id,
-					},
-					include: { actor: true },
-				});
-
-				const existingStatuses = await tx.userNotificationStatus.findMany({
-					where: {
-						notificationId: notification.id,
-						userId: { in: recipientIds },
-					},
-					select: { userId: true },
-				});
-
-				const existingUserIds = new Set(existingStatuses.map((s) => s.userId));
-				const newUserIdsToNotify = recipientIds.filter(
-					(userId) => !existingUserIds.has(userId),
-				);
-
-				if (newUserIdsToNotify.length > 0) {
-					const statusesToCreate = newUserIdsToNotify.map((userId) => ({
-						notificationId: notification.id,
-						userId,
-					}));
-
-					await tx.userNotificationStatus.createMany({
-						data: statusesToCreate,
-					});
-
-					for (const userId of newUserIdsToNotify) {
-						const statusForPush: UserNotificationWithDetails = {
-							notificationId: notification.id,
-							userId: userId,
-							isRead: false,
-							readAt: null,
-							notification: notification,
-						};
-
-						this.gateway.sendNotificationToUser(
-							userId,
-							new NotificationDto(statusForPush),
-						);
-					}
-				}
-			});
+			await this.createAndBroadcastNotifications(message, link, actor.id, recipientIds);
 		} catch (error: unknown) {
 			this.logger.error({ error, event }, 'Failed to create notifications for mentions.');
+		}
+	}
+
+	async createNotificationForEndpointReview(event: EndpointReviewRequestedEvent): Promise<void> {
+		const { actor, project, endpoint } = event;
+
+		try {
+			const projectOwners = await this.prisma.user.findMany({
+				where: {
+					OR: [
+						{ projectAccesses: { some: { projectId: project.id, type: 'OWNER' } } },
+						{
+							teamMemberships: {
+								some: {
+									team: {
+										projectAccesses: {
+											some: { projectId: project.id, type: 'OWNER' },
+										},
+									},
+								},
+							},
+						},
+					],
+					NOT: { id: actor.id },
+				},
+				select: { id: true },
+			});
+
+			if (projectOwners.length === 0) return;
+
+			const recipientIds = projectOwners.map((u) => u.id);
+			const message = `User '${actor.username}' requested a review for an endpoint in project '${project.name}'.`;
+			const link = `/projects/${project.id}/endpoints/${endpoint.id}`;
+
+			await this.createAndBroadcastNotifications(message, link, actor.id, recipientIds);
+		} catch (error: unknown) {
+			this.logger.error(
+				{ error, event },
+				'Failed to create notifications for endpoint review request.',
+			);
 		}
 	}
 
@@ -162,6 +154,59 @@ export class NotificationService {
 			this.logger.error({ error }, 'Failed to mark notification as read.');
 			throw new NotFoundException('Could not update notification.');
 		}
+	}
+
+	/**
+	 * A reusable helper to create a notification, link it to multiple users,
+	 * and broadcast it via WebSockets.
+	 */
+	private async createAndBroadcastNotifications(
+		message: string,
+		link: string,
+		actorId: string,
+		recipientIds: string[],
+	) {
+		await this.prisma.$transaction(async (tx) => {
+			const notification = await tx.notification.create({
+				data: { message, link, actorId },
+				include: { actor: true },
+			});
+
+			const existingStatuses = await tx.userNotificationStatus.findMany({
+				where: {
+					notificationId: notification.id,
+					userId: { in: recipientIds },
+				},
+				select: { userId: true },
+			});
+
+			const existingUserIds = new Set(existingStatuses.map((s) => s.userId));
+			const newUserIdsToNotify = recipientIds.filter(
+				(userId) => !existingUserIds.has(userId),
+			);
+
+			if (newUserIdsToNotify.length > 0) {
+				const statusesToCreate = newUserIdsToNotify.map((userId) => ({
+					notificationId: notification.id,
+					userId,
+				}));
+
+				await tx.userNotificationStatus.createMany({
+					data: statusesToCreate,
+				});
+
+				for (const userId of newUserIdsToNotify) {
+					const statusForPush: UserNotificationWithDetails = {
+						notificationId: notification.id,
+						userId: userId,
+						isRead: false,
+						readAt: null,
+						notification: notification,
+					};
+					this.gateway.sendNotificationToUser(userId, new NotificationDto(statusForPush));
+				}
+			}
+		});
 	}
 
 	private parseMentions(content: string): Set<string> {

@@ -1,11 +1,18 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+	BadRequestException,
+	ForbiddenException,
+	Injectable,
+	InternalServerErrorException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '@prisma/client';
+import { EndpointStatus, Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
+import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import {
 	EndpointChangeEvent,
 	EndpointEvent,
+	EndpointStatusChangeEvent,
 	EndpointUpdateChangeEvent,
 } from 'src/changelog/changelog.events';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
@@ -16,12 +23,17 @@ import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-fo
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
+import {
+	EndpointLifecycleEvent,
+	EndpointReviewRequestedEvent,
+} from 'src/notifications/notifications.events';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEndpointDto } from '../endpoints/dto/create-endpoint.dto';
 import { EndpointDto } from '../endpoints/dto/endpoint.dto';
 import { UpdateEndpointDto } from '../endpoints/dto/update-endpoint.dto';
 import { EndpointAppMetadata } from '../spec-reconciliation/spec-reconciliation.types';
 import { EndpointSummaryDto } from './dto/endpoint-summary.dto';
+import { UpdateEndpointStatusDto } from './dto/update-endpoint-status.dto';
 
 @Injectable()
 export class EndpointsService {
@@ -49,6 +61,7 @@ export class EndpointsService {
 						path: true,
 						method: true,
 						operation: true,
+						status: true,
 					},
 					skip,
 					take: limit,
@@ -227,6 +240,80 @@ export class EndpointsService {
 		}
 	}
 
+	async updateStatus(
+		projectId: string,
+		endpointId: string,
+		updateEndpointStatusDto: UpdateEndpointStatusDto,
+		user: UserDto,
+	): Promise<EndpointDto> {
+		const { status: newStatus } = updateEndpointStatusDto;
+
+		try {
+			const endpoint = await this.prisma.endpoint.findUniqueOrThrow({
+				where: { id: endpointId, projectId },
+				include: { project: true },
+			});
+
+			const currentStatus = endpoint.status;
+			this.validateStatusTransition(currentStatus, newStatus);
+
+			const updatedEndpoint = await this.prisma.endpoint.update({
+				where: { id: endpointId },
+				data: { status: newStatus, updatedById: user.id },
+				include: { creator: true, updatedBy: true },
+			});
+
+			// --- Emit Events ---
+
+			this.eventEmitter.emit(AuditEvent, {
+				actor: user,
+				action: AuditAction.ENDPOINT_STATUS_UPDATED,
+				targetId: endpoint.id,
+				details: {
+					path: endpoint.path,
+					method: endpoint.method,
+					from: currentStatus,
+					to: newStatus,
+				},
+			} satisfies AuditLogEvent);
+
+			this.eventEmitter.emit(EndpointEvent.STATUS_UPDATED, {
+				actor: user,
+				project: { id: projectId },
+				endpoint: {
+					id: endpoint.id,
+					method: endpoint.method,
+					path: endpoint.path,
+				},
+				fromStatus: currentStatus,
+				toStatus: newStatus,
+			} satisfies EndpointStatusChangeEvent);
+
+			if (newStatus === EndpointStatus.IN_REVIEW) {
+				this.eventEmitter.emit(EndpointLifecycleEvent.REVIEW_REQUESTED, {
+					actor: user,
+					project: endpoint.project,
+					endpoint: endpoint,
+				} satisfies EndpointReviewRequestedEvent);
+			}
+
+			return new EndpointDto(updatedEndpoint);
+		} catch (error: unknown) {
+			if (
+				error instanceof BadRequestException ||
+				error instanceof ForbiddenException ||
+				error instanceof EndpointNotFoundException
+			) {
+				throw error;
+			}
+
+			this.logger.error({ error }, `Failed to update status for endpoint ${endpointId}.`);
+			handlePrismaError(error, {
+				[PrismaErrorCode.RecordNotFound]: new EndpointNotFoundException(endpointId),
+			});
+		}
+	}
+
 	async remove(projectId: string, endpointId: string, user: UserDto): Promise<void> {
 		try {
 			const deletedEndpoint = await this.prisma.endpoint.delete({
@@ -251,6 +338,23 @@ export class EndpointsService {
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new EndpointNotFoundException(endpointId),
 			});
+		}
+	}
+
+	private validateStatusTransition(from: EndpointStatus, to: EndpointStatus): void {
+		if (from === to) {
+			throw new BadRequestException(`Endpoint is already in the '${to}' status.`);
+		}
+
+		const validTransitions: Record<EndpointStatus, EndpointStatus[]> = {
+			[EndpointStatus.DRAFT]: [EndpointStatus.IN_REVIEW],
+			[EndpointStatus.IN_REVIEW]: [EndpointStatus.DRAFT, EndpointStatus.PUBLISHED],
+			[EndpointStatus.PUBLISHED]: [EndpointStatus.DEPRECATED],
+			[EndpointStatus.DEPRECATED]: [EndpointStatus.DRAFT],
+		};
+
+		if (!validTransitions[from]?.includes(to)) {
+			throw new BadRequestException(`Cannot transition endpoint from '${from}' to '${to}'.`);
 		}
 	}
 }
