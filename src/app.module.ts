@@ -19,7 +19,9 @@ import appConfig from './config/app.config';
 import authConfig from './config/auth.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
+import encryptionConfig from './config/encryption.config';
 import fileConfig from './config/file.config';
+import { EncryptionModule } from './encryption/encryption.module';
 import { LockingModule } from './locking/locking.module';
 import { NotificationModule } from './notifications/notification.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,12 +29,13 @@ import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
+import { ResourceRelationsGuard } from './common/guards/resource-relations.guard';
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [databaseConfig, appConfig, authConfig, fileConfig],
+			load: [databaseConfig, appConfig, authConfig, fileConfig, encryptionConfig],
 		}),
 
 		EventEmitterModule.forRoot(),
@@ -79,6 +82,7 @@ import { UsersModule } from './users/users.module';
 		CleanupModule,
 		NotificationModule,
 		LockingModule,
+		EncryptionModule,
 	],
 	controllers: [],
 	providers: [
@@ -95,6 +99,7 @@ import { UsersModule } from './users/users.module';
 			useClass: AllExceptionsFilter,
 		},
 		FilesService,
+		ResourceRelationsGuard,
 	],
 })
 export class AppModule {}

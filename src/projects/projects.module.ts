@@ -3,10 +3,12 @@ import { AccessControlModule } from 'src/access-control/access-control.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
+import { EnvironmentsModule } from './environments/environments.module';
 import { GuardsModule } from './guards/guards.module';
 import { NotesModule } from './notes/notes.module';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { SecretsModule } from './secrets/secrets.module';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
 import { SpecReconciliationService } from './spec-reconciliation/spec-reconciliation.service';
 import { AreLinksUniqueConstraint } from './validators/are-links-unique.validator';
@@ -19,6 +21,8 @@ import { AreLinksUniqueConstraint } from './validators/are-links-unique.validato
 		NotesModule,
 		GuardsModule,
 		AccessControlModule,
+		EnvironmentsModule,
+		SecretsModule,
 	],
 	controllers: [ProjectsController],
 	providers: [
