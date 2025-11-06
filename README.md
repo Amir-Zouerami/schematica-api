@@ -19,15 +19,16 @@ This project is a complete, from-the-ground-up rewrite of an older concept, now 
 
 ## 📚 Table of Contents
 
-- [Introduction](#-introduction)
-- [Core Philosophy](#-core-philosophy)
-- [Key Features](#-key-features-)
-- [API Collection](#-api-collection)
-- [Architectural Overview](#-architectural-overview)
-- [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
-- [Project Roadmap](#-project-roadmap)
-- [Contributing](#-contributing)
+- [Introduction](#introduction)
+- [Core Philosophy](#core-philosophy)
+- [Key Features](#key-features-current)
+- [API Collection](#api-collection)
+- [Architectural Overview](#architectural-overview)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Roadmap](#project-roadmap)
+- [Contributing](#contributing)
+
 
 
 ## 🧠 Core Philosophy
@@ -73,7 +74,7 @@ To get started with the API quickly, you can use the official Postman collection
 
 The Schematica API is built using a modern, modular, and scalable architecture designed for high performance and maintainability.
 
-#### 1. Modular, Hexagonal Design
+### 1. Modular, Hexagonal Design
 
 The application is organized into **feature modules** (e.g., `ProjectsModule`, `AdminModule`, `LockingModule`), each with a clearly defined responsibility. We adhere to principles of **Clean Architecture**, where core business logic is independent of external concerns like the database or web frameworks. Controllers and gateways act as "ports," and services are the "use cases," ensuring a clean separation of concerns.
 
@@ -111,7 +112,7 @@ The platform provides a rich, real-time user experience using secure, namespaced
 
 This project is built with a modern, robust, and scalable technology stack, prioritizing type safety, performance, and developer productivity.
 
-#### Backend
+### Backend
 *   **Framework:** [NestJS](https://nestjs.com/) (v11) - A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
 *   **Runtime:** [Bun](https://bun.sh/) - A fast, all-in-one JavaScript runtime, bundler, and package manager.
 *   **Database ORM:** [Prisma](https://www.prisma.io/) (v5) - A next-generation ORM that makes database access easy with auto-completion and type safety.
@@ -133,7 +134,7 @@ This project is built with a modern, robust, and scalable technology stack, prio
 To get the project up and running on your local machine, follow these steps.
 
 
-#### Prerequisites
+### Prerequisites
 - [Bun](https://bun.sh/docs/installation) installed (`curl -fsSL https://bun.sh/install | bash`)
 - [Git](https://git-scm.com/)
 
@@ -175,11 +176,11 @@ The application will be running on `http://localhost:3000`. The automatically ge
 
 The project has an ambitious and exciting future! The core foundation is now stable, and development is focused on adding powerful new features to make Schematica an indispensable tool for API-first development teams.
 
-#### ✅ Completed
+### ✅ Completed
 *   **Epic 1: Foundational UX & Security:** Full admin CRUD, file uploads, role-based access, and core project/endpoint management.
 *   **Epic 2: Core Collaboration & Auditing:** Event-driven audit trails, changelogs, real-time notifications with @-mentions, and in-memory endpoint locking.
 
-#### 🏗️ Up Next
+### 🏗️ Up Next
 
 The following major epics are planned for development.
 

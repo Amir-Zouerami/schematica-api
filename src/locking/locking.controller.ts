@@ -3,6 +3,8 @@ import {
 	ApiBearerAuth,
 	ApiConflictResponse,
 	ApiForbiddenResponse,
+	ApiNoContentResponse,
+	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
@@ -32,8 +34,9 @@ export class LockingController {
 	@Delete(':endpointId/unlock')
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
-	@ApiOkResponse({ description: 'Lock successfully released.' })
+	@ApiNoContentResponse({ description: 'Lock successfully released.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
+	@ApiNotFoundResponse({ description: 'Project or endpoint not found.' })
 	releaseLock(@Param('endpointId') endpointId: string, @CurrentUser() user: UserDto): void {
 		this.lockingService.releaseLock(endpointId, user.id);
 	}
