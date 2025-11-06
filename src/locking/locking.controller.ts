@@ -10,6 +10,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ProjectOwnerGuard } from 'src/projects/guards/project-owner.guard';
+import { EndpointProjectMatchGuard } from './guards/endpoint-project-match.guard';
 import { type Lock, LockingService } from './locking.service';
 
 @ApiTags('Locking')
@@ -20,7 +21,7 @@ export class LockingController {
 	constructor(private readonly lockingService: LockingService) {}
 
 	@Post(':endpointId/lock')
-	@UseGuards(ProjectOwnerGuard)
+	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
 	@ApiOkResponse({ description: 'Lock status for the resource.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
 	@ApiConflictResponse({ description: 'Resource is already locked by another user.' })
@@ -30,7 +31,7 @@ export class LockingController {
 
 	@Delete(':endpointId/unlock')
 	@HttpCode(HttpStatus.NO_CONTENT)
-	@UseGuards(ProjectOwnerGuard)
+	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
 	@ApiOkResponse({ description: 'Lock successfully released.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
 	releaseLock(@Param('endpointId') endpointId: string, @CurrentUser() user: UserDto): void {
