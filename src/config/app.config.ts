@@ -14,6 +14,8 @@ export interface AppConfig {
 		corsOrigin: string;
 		logRetentionDays: number;
 		websocketPath: string;
+		lockDurationMs: number;
+		lockCleanupIntervalMs: number;
 	};
 }
 
@@ -32,6 +34,8 @@ export default (): AppConfig => {
 			corsOrigin: getEnv('CORS_ORIGIN'),
 			logRetentionDays: getEnvInt('LOG_RETENTION_DAYS', 90),
 			websocketPath: getEnv('WEBSOCKET_PATH'),
+			lockDurationMs: getEnvInt('LOCK_DURATION_MS', 180000),
+			lockCleanupIntervalMs: getEnvInt('LOCK_CLEANUP_INTERVAL_MS', 60000),
 		},
 	};
 };

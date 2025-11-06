@@ -26,6 +26,8 @@ import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { EndpointProjectMatchGuard } from 'src/locking/guards/endpoint-project-match.guard';
+import { LockOwnerGuard } from 'src/locking/guards/lock-owner.guard';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
 import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
@@ -57,7 +59,7 @@ export class EndpointsController {
 	}
 
 	@Get(':endpointId')
-	@UseGuards(ProjectViewerGuard)
+	@UseGuards(EndpointProjectMatchGuard, ProjectViewerGuard)
 	@ApiOkResponse({
 		description: 'The detailed information for a single endpoint.',
 		type: EndpointDto,
@@ -90,7 +92,7 @@ export class EndpointsController {
 	}
 
 	@Put(':endpointId')
-	@UseGuards(ProjectOwnerGuard)
+	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard, LockOwnerGuard)
 	@ApiOkResponse({
 		description: 'The endpoint has been successfully updated.',
 		type: EndpointDto,
@@ -111,7 +113,7 @@ export class EndpointsController {
 	}
 
 	@Delete(':endpointId')
-	@UseGuards(ProjectOwnerGuard)
+	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The endpoint has been successfully deleted.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })

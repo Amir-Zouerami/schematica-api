@@ -151,6 +151,25 @@ async function seedProjects() {
 			},
 		});
 
+		const backendTeam = await tx.team.findUniqueOrThrow({
+			where: { id: 'backend' },
+		});
+
+		await tx.teamProjectAccess.upsert({
+			where: {
+				teamId_projectId: {
+					teamId: backendTeam.id,
+					projectId: projectNova.id,
+				},
+			},
+			update: {},
+			create: {
+				teamId: backendTeam.id,
+				projectId: projectNova.id,
+				type: AccessType.OWNER,
+			},
+		});
+
 		// --- Create Endpoints for Project Nova ---
 		await tx.endpoint.create({
 			data: {
