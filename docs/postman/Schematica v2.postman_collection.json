@@ -1,0 +1,1382 @@
+{
+	"info": {
+		"_postman_id": "cd8e40d0-8313-4c41-986d-8abcbb29e21b",
+		"name": "Schematica v2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();",
+									"",
+									"let token = response.data.access_token;",
+									"",
+									"if (token) {",
+									"    pm.collectionVariables.set(\"authToken\", token);",
+									"} else {",
+									"    console.error(\"❌ No token found in response:\", response);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"amir.zouerami\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/auth/login",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"currentPassword\": \"password123!\",\n    \"newPassword\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/users/change-password",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/auth/me",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Users List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/users?page=1&limit=10",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "la",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Profile Picture",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/media/amirzm/Development/Documents/02-Profile-Pictures/Suit-Min.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/profile/picture",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"profile",
+								"picture"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Teams",
+			"item": [
+				{
+					"name": "Teams List",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/teams?page=1&limit=10&search=ev",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"teams"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "ev"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"test project 01\",\n    \"description\": \"this is the first test project\",\n    \"serverUrl\": \"http://google.com\",\n    \"links\": [\n        {\n            \"name\": \"first link project\",\n            \"url\": \"http://first-project-link.com\"\n        },\n        {\n            \"name\": \"second link project\",\n            \"url\": \"http://second-project-link.com\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects?page=1&limit=10",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhceskgw0001gqkth2oijufi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project OpenAPI Spec",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/openapi",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhceskgw0001gqkth2oijufi",
+								"openapi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Project Nova (edited)\",\n    \"description\": \"A test project for the UI team.\",\n    \"serverUrl\": \"https://api.nova.test\",\n    \"lastKnownUpdatedAt\": \"2025-10-29T17:13:09.606Z\",\n    \"links\": [\n        {\n            \"name\": \"GitLab Milestone\",\n            \"url\": \"https://gitlab.com/example/schematica/-/milestones/1\"\n        },\n        {\n            \"name\": \"Test Link\",\n            \"url\": \"https://test.com\"\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhc8kycf0001gq7rba8zep2f",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhc8kycf0001gq7rba8zep2f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update OpenAPI Specs",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lastKnownUpdatedAt\": \"2025-10-30T16:20:54.348Z\",\n    \"spec\": {\n        \"openapi\": \"3.0.1\",\n        \"info\": {\n            \"title\": \"Project Nova - User & Profile API\",\n            \"description\": \"A comprehensive API for managing users and their profiles within the Nova ecosystem. This replaces the previous simple spec.\",\n            \"version\": \"1.0.0\"\n        },\n        \"servers\": [\n            {\n                \"url\": \"https://api.nova.app/v1\",\n                \"description\": \"Production Server\"\n            }\n        ],\n        \"tags\": [\n            {\n                \"name\": \"Users\",\n                \"description\": \"Operations about users.\"\n            },\n            {\n                \"name\": \"Profiles\",\n                \"description\": \"Operations related to user profiles.\"\n            }\n        ],\n        \"paths\": {\n            \"/users\": {\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"List all users\",\n                    \"description\": \"Retrieves a paginated list of users.\",\n                    \"operationId\": \"listUsers\",\n                    \"parameters\": [\n                        {\n                            \"name\": \"limit\",\n                            \"in\": \"query\",\n                            \"description\": \"How many items to return at one time (max 100).\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"maximum\": 100,\n                                \"default\": 20\n                            }\n                        },\n                        {\n                            \"name\": \"offset\",\n                            \"in\": \"query\",\n                            \"description\": \"The number of items to skip before starting to collect the result set.\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"default\": 0\n                            }\n                        }\n                    ],\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"A paged array of users\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"type\": \"array\",\n                                        \"items\": {\n                                            \"$ref\": \"#/components/schemas/User\"\n                                        }\n                                    }\n                                }\n                            }\n                        }\n                    }\n                },\n                \"post\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Create a user\",\n                    \"description\": \"Creates a new user in the system.\",\n                    \"operationId\": \"createUser\",\n                    \"requestBody\": {\n                        \"description\": \"New user object\",\n                        \"required\": true,\n                        \"content\": {\n                            \"application/json\": {\n                                \"schema\": {\n                                    \"$ref\": \"#/components/schemas/NewUser\"\n                                }\n                            }\n                        }\n                    },\n                    \"responses\": {\n                        \"201\": {\n                            \"description\": \"User created successfully\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"409\": {\n                            \"$ref\": \"#/components/responses/Conflict\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Get user by ID\",\n                    \"operationId\": \"getUserById\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"The user object.\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                },\n                \"delete\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Delete a user\",\n                    \"operationId\": \"deleteUser\",\n                    \"responses\": {\n                        \"204\": {\n                            \"description\": \"User deleted successfully.\"\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}/profile\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Profiles\"\n                    ],\n                    \"summary\": \"Get user profile\",\n                    \"operationId\": \"getUserProfile\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"User profile data.\"\n                        }\n                    }\n                }\n            }\n        },\n        \"components\": {\n            \"schemas\": {\n                \"User\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"id\",\n                        \"username\",\n                        \"email\"\n                    ],\n                    \"properties\": {\n                        \"id\": {\n                            \"type\": \"string\",\n                            \"format\": \"uuid\"\n                        },\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"john_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"createdAt\": {\n                            \"type\": \"string\",\n                            \"format\": \"date-time\"\n                        }\n                    }\n                },\n                \"NewUser\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"username\",\n                        \"email\",\n                        \"password\"\n                    ],\n                    \"properties\": {\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"jane_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"password\": {\n                            \"type\": \"string\",\n                            \"format\": \"password\"\n                        }\n                    }\n                },\n                \"Error\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"code\": {\n                            \"type\": \"string\"\n                        },\n                        \"message\": {\n                            \"type\": \"string\"\n                        }\n                    }\n                }\n            },\n            \"parameters\": {\n                \"UserIdPath\": {\n                    \"name\": \"userId\",\n                    \"in\": \"path\",\n                    \"required\": true,\n                    \"description\": \"The ID of the user.\",\n                    \"schema\": {\n                        \"type\": \"string\",\n                        \"format\": \"uuid\"\n                    }\n                }\n            },\n            \"responses\": {\n                \"NotFound\": {\n                    \"description\": \"The specified resource was not found.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                },\n                \"Conflict\": {\n                    \"description\": \"The resource already exists.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/openapi",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhceskgw0001gqkth2oijufi",
+								"openapi"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/6f156d41-f4e1-43bf-8ae7-bebf7a6c4ccd",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"6f156d41-f4e1-43bf-8ae7-bebf7a6c4ccd"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update ACL",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"owners\": {\n        \"users\": [\n            \"1\"\n        ],\n        \"teams\": [\n            \"leadership\"\n        ]\n    },\n    \"viewers\": {\n        \"users\": [\n            \"2\"\n        ],\n        \"teams\": [\n            \"UI\"\n        ]\n    },\n    \"deniedUsers\": [\n        \"3\"\n    ],\n    \"lastKnownUpdatedAt\": \"2025-10-30T16:45:09.544Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/access",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhceskgw0001gqkth2oijufi",
+								"access"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Endpoints",
+			"item": [
+				{
+					"name": "Create Endpoint",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"path\": \"service/testpath/todelete\",\n    \"method\": \"get\",\n    \"operation\": {\n        \"tags\": [\n            \"test-tag\"\n        ],\n        \"summary\": \"test summary for test endpoint\",\n        \"description\": \"this is the description for test endpoint\",\n        \"responses\": {\n            \"default\": {\n                \"description\": \"this is the default response\"\n            }\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints",
+								"cmhnchzqw0003gqvxpwkqectt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Endpoints",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints?limit=10&page=1",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Endpoint",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"path\": \"/\",\n    \"method\": \"get\",\n    \"operation\": {\n        \"summary\": \"List API versions\",\n        \"responses\": {\n            \"200\": {\n                \"description\": \"A list of API versions.\"\n            }\n        }\n    },\n    \"lastKnownUpdatedAt\": \"2025-11-06T11:30:26.744Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints",
+								"cmhnchzqw0003gqvxpwkqectt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Endpoint",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/projects/cmhgq1m1s0001gqlw9hgsgx2s/endpoints/cmhji77fd0001gq2aregpecup",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhgq1m1s0001gqlw9hgsgx2s",
+								"endpoints",
+								"cmhji77fd0001gq2aregpecup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt/lock",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints",
+								"cmhnchzqw0003gqvxpwkqectt",
+								"lock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unlock",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt/unlock",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhnchzqq0001gqvxh86yhxa3",
+								"endpoints",
+								"cmhnchzqw0003gqvxpwkqectt",
+								"unlock"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notes",
+			"item": [
+				{
+					"name": "Create Note",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"This is a test note. @brooklyn.lee This endpoint will be deprecated in the next quarter.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/endpoints/cmhgq1m1w0003gqlw1lgeef8i/notes",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"endpoints",
+								"cmhgq1m1w0003gqlw1lgeef8i",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Endpoint Notes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/endpoints/cmhgq1m1w0003gqlw1lgeef8i/notes",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"endpoints",
+								"cmhgq1m1w0003gqlw1lgeef8i",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Note",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Update: The deprecation date has been moved to end-of-year.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:3000/api/v2/notes/3",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"notes",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "localhost:3000/api/v2/notes/8",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"notes",
+								"8"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Teams",
+					"item": [
+						{
+							"name": "Create Team",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"new-devops-team\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/teams",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"teams"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Team Name",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"site-reliability\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/teams/new-devops-team",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"teams",
+										"new-devops-team"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Team",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/teams/site-reliability",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"teams",
+										"site-reliability"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "Create User",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "username",
+											"value": "diana.prince",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "Password123!",
+											"type": "text"
+										},
+										{
+											"key": "role",
+											"value": "member",
+											"type": "text"
+										},
+										{
+											"key": "teams",
+											"value": "ui",
+											"type": "text"
+										},
+										{
+											"key": "teams",
+											"value": "backend",
+											"type": "text"
+										},
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/media/amirzm/Development/Documents/02-Profile-Pictures/LinkedIn-Profile-Altered.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Users (Detailed)",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/users?page=1&limit=20",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"users"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										},
+										{
+											"key": "search",
+											"value": "da",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update User Role",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"role\": \"admin\",\n    \"teams\": [\n        \"leadership\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/users/user-id-to-update",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"users",
+										"user-id-to-update"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Change Avatar",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/media/amirzm/Development/Documents/02-Profile-Pictures/Suit-Extremely-Min.jpg"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/users/4/picture",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"users",
+										"4",
+										"picture"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete User",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{authToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/v2/admin/users/cmhf8k5vh0000gq19i1clnms5",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"v2",
+										"admin",
+										"users",
+										"cmhf8k5vh0000gq19i1clnms5"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Audit & ChangeLog",
+			"item": [
+				{
+					"name": "Get Changelog",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/cmhgq1m1s0001gqlw9hgsgx2s/changelog?limit=10",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"cmhgq1m1s0001gqlw9hgsgx2s",
+								"changelog"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Trail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/admin/audit-logs?limit=5",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"admin",
+								"audit-logs"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "5"
+								},
+								{
+									"key": "targetId",
+									"value": "site-reliability",
+									"disabled": true
+								},
+								{
+									"key": "action",
+									"value": "TEAM_DELETED",
+									"description": "PROJECT_CREATED, etc",
+									"disabled": true
+								},
+								{
+									"key": "actorId",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notification",
+			"item": [
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/notifications",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"notifications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Read",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/notifications/2/read",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"notifications",
+								"2",
+								"read"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "authToken",
+			"value": ""
+		}
+	]
+}
