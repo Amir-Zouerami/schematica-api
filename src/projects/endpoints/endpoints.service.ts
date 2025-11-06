@@ -274,8 +274,6 @@ export class EndpointsService {
 				});
 			});
 
-			// --- Emit Events ---
-
 			this.eventEmitter.emit(AuditEvent, {
 				actor: user,
 				action: AuditAction.ENDPOINT_STATUS_UPDATED,

@@ -27,6 +27,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CheckResourceRelations } from 'src/common/guards/check-resource-relations.decorator';
 import { ResourceRelationsGuard } from 'src/common/guards/resource-relations.guard';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
+import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateSecretDto } from './dto/create-secret.dto';
 import { SecretDto } from './dto/secret.dto';
 import { UpdateSecretDto } from './dto/update-secret.dto';
@@ -34,12 +35,20 @@ import { SecretsService } from './secrets.service';
 
 @ApiTags('Projects - Secrets')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, ProjectOwnerGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('projects/:projectId/environments/:environmentId/secrets')
 export class SecretsController {
 	constructor(private readonly secretsService: SecretsService) {}
 
 	@Post()
+	@CheckResourceRelations({
+		parentModel: 'Project',
+		parentParam: 'projectId',
+		relationName: 'environments',
+		childParam: 'environmentId',
+		childModelName: 'Environment',
+	})
+	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@ApiCreatedResponse({
 		description: 'The secret has been successfully created.',
 		type: SecretDto,
@@ -55,11 +64,19 @@ export class SecretsController {
 	}
 
 	@Get()
+	@CheckResourceRelations({
+		parentModel: 'Project',
+		parentParam: 'projectId',
+		relationName: 'environments',
+		childParam: 'environmentId',
+		childModelName: 'Environment',
+	})
+	@UseGuards(ProjectViewerGuard, ResourceRelationsGuard)
 	@ApiOkResponse({
 		description: 'A list of all decrypted secrets for the environment.',
 		type: [SecretDto],
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
+	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
 	findAll(@Param('environmentId') environmentId: string): Promise<SecretDto[]> {
 		return this.secretsService.findAllForEnvironment(environmentId);
 	}
@@ -73,7 +90,7 @@ export class SecretsController {
 		childModelName: 'Secret',
 		childParamIsInt: true,
 	})
-	@UseGuards(ResourceRelationsGuard)
+	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@ApiOkResponse({ description: 'The secret has been successfully updated.', type: SecretDto })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
 	@ApiNotFoundResponse({ description: 'The specified secret was not found.' })
@@ -95,7 +112,7 @@ export class SecretsController {
 		childModelName: 'Secret',
 		childParamIsInt: true,
 	})
-	@UseGuards(ResourceRelationsGuard)
+	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The secret has been successfully deleted.' })
 	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })

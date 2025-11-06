@@ -50,7 +50,7 @@ export class EnvironmentsService {
 			this.logger.error({ error }, 'Failed to create environment.');
 			handlePrismaError(error, {
 				[PrismaErrorCode.UniqueConstraintFailed]: new ConflictException(
-					'An environment with this name already exists in this project.',
+					`An environment with the name '${createEnvironmentDto.name}' already exists in this project.`,
 				),
 			});
 		}
@@ -77,9 +77,19 @@ export class EnvironmentsService {
 		actor: UserDto,
 	): Promise<EnvironmentDto> {
 		try {
-			const updatedEnvironment = await this.prisma.environment.update({
+			const result = await this.prisma.environment.updateMany({
 				where: { id: environmentId, projectId: projectId },
 				data: updateEnvironmentDto,
+			});
+
+			if (result.count === 0) {
+				throw new NotFoundException(
+					`Environment with ID '${environmentId}' not found in this project.`,
+				);
+			}
+
+			const updatedEnvironment = await this.prisma.environment.findUniqueOrThrow({
+				where: { id: environmentId },
 			});
 
 			this.eventEmitter.emit(AuditEvent, {
@@ -91,11 +101,11 @@ export class EnvironmentsService {
 
 			return new EnvironmentDto(updatedEnvironment);
 		} catch (error: unknown) {
+			if (error instanceof NotFoundException) {
+				throw error;
+			}
 			this.logger.error({ error }, `Failed to update environment ${environmentId}.`);
 			handlePrismaError(error, {
-				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
-					`Environment with ID '${environmentId}' not found in this project.`,
-				),
 				[PrismaErrorCode.UniqueConstraintFailed]: new ConflictException(
 					'An environment with this name already exists in this project.',
 				),
@@ -105,9 +115,15 @@ export class EnvironmentsService {
 
 	async remove(projectId: string, environmentId: string, actor: UserDto): Promise<void> {
 		try {
-			await this.prisma.environment.delete({
+			const result = await this.prisma.environment.deleteMany({
 				where: { id: environmentId, projectId: projectId },
 			});
+
+			if (result.count === 0) {
+				throw new NotFoundException(
+					`Environment with ID '${environmentId}' not found in this project.`,
+				);
+			}
 
 			this.eventEmitter.emit(AuditEvent, {
 				actor,
@@ -115,12 +131,12 @@ export class EnvironmentsService {
 				targetId: environmentId,
 			} satisfies AuditLogEvent);
 		} catch (error: unknown) {
+			if (error instanceof NotFoundException) {
+				throw error;
+			}
+
 			this.logger.error({ error }, `Failed to delete environment ${environmentId}.`);
-			handlePrismaError(error, {
-				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
-					`Environment with ID '${environmentId}' not found in this project.`,
-				),
-			});
+			throw new InternalServerErrorException('Failed to delete environment.');
 		}
 	}
 }

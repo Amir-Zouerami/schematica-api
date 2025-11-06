@@ -1,5 +1,3 @@
-// Path: src/common/guards/resource-relations.guard.ts
-
 import { CanActivate, ExecutionContext, Injectable, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { FastifyRequest } from 'fastify';
@@ -8,10 +6,6 @@ import {
 	RESOURCE_RELATIONS_KEY,
 	type ResourceRelationsConfig,
 } from './check-resource-relations.decorator';
-
-type PrismaModelWithCount = {
-	count(args: { where: Record<string, unknown> }): Promise<number>;
-};
 
 @Injectable()
 export class ResourceRelationsGuard implements CanActivate {
@@ -43,8 +37,10 @@ export class ResourceRelationsGuard implements CanActivate {
 		}
 
 		let childId: string | number = childIdStr;
+
 		if (config.childParamIsInt) {
 			childId = parseInt(childIdStr, 10);
+
 			if (Number.isNaN(childId)) {
 				throw new NotFoundException(
 					`Invalid ID format for parameter "${config.childParam}".`,
@@ -52,25 +48,33 @@ export class ResourceRelationsGuard implements CanActivate {
 			}
 		}
 
-		const model = this.prisma[config.parentModel] as PrismaModelWithCount;
-
-		const count = await model.count({
-			where: {
-				id: parentId,
-				[config.relationName]: {
-					some: {
-						id: childId,
-					},
+		let count = 0;
+		const whereClause = {
+			id: parentId,
+			[config.relationName]: {
+				some: {
+					id: childId,
 				},
 			},
-		});
+		};
+
+		switch (config.parentModel) {
+			case 'Project':
+				count = await this.prisma.project.count({ where: whereClause });
+				break;
+			case 'Environment':
+				count = await this.prisma.environment.count({ where: whereClause });
+				break;
+			default:
+				throw new Error(
+					`ResourceRelationsGuard is not configured for the model: '${config.parentModel}'. Please update the guard.`,
+				);
+		}
 
 		if (count === 0) {
 			const childResourceName = config.childModelName || 'Resource';
 			const parentResourceName = config.parentModel;
-
 			const message = `${childResourceName} with ID '${childId}' was not found in ${parentResourceName} '${parentId}'.`;
-
 			throw new NotFoundException(message);
 		}
 

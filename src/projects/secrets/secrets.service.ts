@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+	ConflictException,
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PinoLogger } from 'nestjs-pino';
 import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
@@ -47,7 +52,7 @@ export class SecretsService {
 				details: { key: newSecret.key, environment: environmentId },
 			} satisfies AuditLogEvent);
 
-			return new SecretDto(newSecret, value); // Return with plaintext value
+			return new SecretDto(newSecret, value);
 		} catch (error: unknown) {
 			this.logger.error({ error }, 'Failed to create secret.');
 			handlePrismaError(error, {
@@ -59,15 +64,20 @@ export class SecretsService {
 	}
 
 	async findAllForEnvironment(environmentId: string): Promise<SecretDto[]> {
-		const secrets = await this.prisma.secret.findMany({
-			where: { environmentId },
-			orderBy: { key: 'asc' },
-		});
+		try {
+			const secrets = await this.prisma.secret.findMany({
+				where: { environmentId },
+				orderBy: { key: 'asc' },
+			});
 
-		return secrets.map((secret) => {
-			const decryptedValue = this.encryptionService.decrypt(secret.value);
-			return new SecretDto(secret, decryptedValue);
-		});
+			return secrets.map((secret) => {
+				const decryptedValue = this.encryptionService.decrypt(secret.value);
+				return new SecretDto(secret, decryptedValue);
+			});
+		} catch (error: unknown) {
+			this.logger.error({ error, environmentId }, 'Failed to find secrets for environment.');
+			throw new InternalServerErrorException('Failed to retrieve secrets.');
+		}
 	}
 
 	async update(
@@ -78,19 +88,23 @@ export class SecretsService {
 	): Promise<SecretDto> {
 		const { value, description } = updateSecretDto;
 
-		if (!value && !description) {
-			const secret = await this.prisma.secret.findUniqueOrThrow({ where: { id: secretId } });
-			const decryptedValue = this.encryptionService.decrypt(secret.value);
-			return new SecretDto(secret, decryptedValue);
-		}
-
 		try {
-			const updatedSecret = await this.prisma.secret.update({
+			const result = await this.prisma.secret.updateMany({
 				where: { id: secretId, environmentId: environmentId },
 				data: {
 					value: value ? this.encryptionService.encrypt(value) : undefined,
 					description,
 				},
+			});
+
+			if (result.count === 0) {
+				throw new NotFoundException(
+					`Secret with ID '${secretId}' not found in this environment.`,
+				);
+			}
+
+			const updatedSecret = await this.prisma.secret.findUniqueOrThrow({
+				where: { id: secretId },
 			});
 
 			this.eventEmitter.emit(AuditEvent, {
@@ -103,36 +117,38 @@ export class SecretsService {
 			const finalValue = value ?? this.encryptionService.decrypt(updatedSecret.value);
 			return new SecretDto(updatedSecret, finalValue);
 		} catch (error: unknown) {
+			if (error instanceof NotFoundException) {
+				throw error;
+			}
 			this.logger.error({ error }, `Failed to update secret ${secretId}.`);
-
-			handlePrismaError(error, {
-				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
-					`Secret with ID '${secretId}' not found in this environment.`,
-				),
-			});
+			throw new InternalServerErrorException('Failed to update secret.');
 		}
 	}
 
 	async remove(environmentId: string, secretId: number, actor: UserDto): Promise<void> {
 		try {
-			const secret = await this.prisma.secret.delete({
+			const result = await this.prisma.secret.deleteMany({
 				where: { id: secretId, environmentId: environmentId },
 			});
+
+			if (result.count === 0) {
+				throw new NotFoundException(
+					`Secret with ID '${secretId}' not found in this environment.`,
+				);
+			}
 
 			this.eventEmitter.emit(AuditEvent, {
 				actor,
 				action: AuditAction.SECRET_DELETED,
-				targetId: secret.id.toString(),
-				details: { key: secret.key },
+				targetId: secretId.toString(),
+				details: { environmentId },
 			} satisfies AuditLogEvent);
 		} catch (error: unknown) {
+			if (error instanceof NotFoundException) {
+				throw error;
+			}
 			this.logger.error({ error }, `Failed to delete secret ${secretId}.`);
-
-			handlePrismaError(error, {
-				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
-					`Secret with ID '${secretId}' not found in this environment.`,
-				),
-			});
+			throw new InternalServerErrorException('Failed to delete secret.');
 		}
 	}
 }

@@ -60,12 +60,12 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 		const existingLock = this.locks.get(resourceId);
 
 		if (existingLock && existingLock.expiresAt > Date.now()) {
-			// If the current user already holds the lock, refresh its expiration.
 			if (existingLock.userId === user.id) {
 				existingLock.expiresAt = Date.now() + this.lockDurationMs;
 				this.logger.info(
 					`Lock refreshed for resource ${resourceId} by user ${user.username}.`,
 				);
+
 				this.gateway.broadcastLockUpdate(resourceId, existingLock);
 				return existingLock;
 			}
