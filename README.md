@@ -67,7 +67,7 @@ The platform already boasts a rich set of features designed for professional dev
 
 To get started with the API quickly, you can use the official Postman collection. It includes pre-configured requests for all major endpoints, along with environment variables for easy configuration.
 
-<a href="<YOUR_POSTMAN_COLLECTION_LINK>" target="_blank"><img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;"></a>
+<a href="https://raw.githubusercontent.com/Amir-Zouerami/schematica-api/refs/heads/main/docs/postman/Schematica%20v2.postman_collection.json" target="_blank"><img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;"></a>
 
 
 ## 🏗️ Architectural Overview
