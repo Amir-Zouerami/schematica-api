@@ -6,6 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import {
 	type EndpointChangeEvent,
 	EndpointEvent,
+	type EndpointStatusChangeEvent,
 	type EndpointUpdateChangeEvent,
 } from './changelog.events';
 
@@ -61,6 +62,18 @@ export class ChangelogListener {
 		);
 
 		await Promise.all(promises);
+	}
+
+	@OnEvent(EndpointEvent.STATUS_UPDATED, { async: true })
+	async handleEndpointStatusUpdated(payload: EndpointStatusChangeEvent): Promise<void> {
+		const { actor, project, endpoint, fromStatus, toStatus } = payload;
+		const message = `User '${
+			actor.username
+		}' changed status of endpoint ${endpoint.method.toUpperCase()} ${
+			endpoint.path
+		} from '${fromStatus}' to '${toStatus}'.`;
+
+		await this.createChangelogEntry(project.id, endpoint.id, message, actor.id);
 	}
 
 	@OnEvent(EndpointEvent.DELETED, { async: true })

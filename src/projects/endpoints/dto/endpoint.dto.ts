@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { EndpointStatus, Prisma } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
 
 type EndpointWithUsers = Prisma.EndpointGetPayload<{
@@ -18,6 +18,9 @@ export class EndpointDto {
 
 	@ApiProperty({ example: 'get' })
 	method: string;
+
+	@ApiProperty({ enum: EndpointStatus, example: EndpointStatus.DRAFT })
+	status: EndpointStatus;
 
 	@ApiProperty({
 		description: 'The OpenAPI Operation Object for this endpoint.',
@@ -44,6 +47,7 @@ export class EndpointDto {
 		this.id = endpoint.id;
 		this.path = endpoint.path;
 		this.method = endpoint.method;
+		this.status = endpoint.status;
 		this.operation = endpoint.operation;
 		this.createdAt = endpoint.createdAt;
 		this.updatedAt = endpoint.updatedAt;
