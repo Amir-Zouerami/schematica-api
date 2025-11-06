@@ -20,6 +20,7 @@ import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-concurrency.exception';
 import { EndpointConflictException } from 'src/common/exceptions/endpoint-conflict.exception';
 import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
+import { EndpointStatusConcurrencyException } from 'src/common/exceptions/endpoint-status-concurrency.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
@@ -257,10 +258,20 @@ export class EndpointsService {
 			const currentStatus = endpoint.status;
 			this.validateStatusTransition(currentStatus, newStatus);
 
-			const updatedEndpoint = await this.prisma.endpoint.update({
-				where: { id: endpointId },
-				data: { status: newStatus, updatedById: user.id },
-				include: { creator: true, updatedBy: true },
+			const updatedEndpoint = await this.prisma.$transaction(async (tx) => {
+				const result = await tx.endpoint.updateMany({
+					where: { id: endpointId, status: currentStatus },
+					data: { status: newStatus, updatedById: user.id },
+				});
+
+				if (result.count === 0) {
+					throw new EndpointStatusConcurrencyException();
+				}
+
+				return tx.endpoint.findUniqueOrThrow({
+					where: { id: endpointId },
+					include: { creator: true, updatedBy: true },
+				});
 			});
 
 			// --- Emit Events ---
@@ -302,7 +313,8 @@ export class EndpointsService {
 			if (
 				error instanceof BadRequestException ||
 				error instanceof ForbiddenException ||
-				error instanceof EndpointNotFoundException
+				error instanceof EndpointNotFoundException ||
+				error instanceof EndpointStatusConcurrencyException
 			) {
 				throw error;
 			}
