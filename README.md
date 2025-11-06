@@ -16,20 +16,19 @@ This project is a complete, from-the-ground-up rewrite of an older concept, now 
 
 🚧 **This is a living project and a work in progress.** The core foundation is solid, and exciting new features are being added regularly. See the [Project Roadmap](#project-roadmap) for what's coming next!
 
+## 📚 Table of Contents
 
 ## 📚 Table of Contents
 
-- [Introduction](#introduction)
-- [Core Philosophy](#core-philosophy)
-- [Key Features](#key-features-current)
-- [API Collection](#api-collection)
-- [Architectural Overview](#architectural-overview)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Project Roadmap](#project-roadmap)
-- [Contributing](#contributing)
-
-
+- [🚀 Introduction](#-introduction)
+- [🧠 Core Philosophy](#-core-philosophy)
+- [✨ Key Features (Current)](#-key-features-current)
+- [📫 API Collection](#-api-collection)
+- [🏗️ Architectural Overview](#-architectural-overview)
+- [🛠️ Tech Stack](#-tech-stack)
+- [🚀 Getting Started](#-getting-started)
+- [🗺️ Project Roadmap](#-project-roadmap)
+- [🙌 Contributing](#-contributing)
 
 ## 🧠 Core Philosophy
 
