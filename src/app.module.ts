@@ -20,6 +20,7 @@ import authConfig from './config/auth.config';
 import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
 import fileConfig from './config/file.config';
+import { LockingModule } from './locking/locking.module';
 import { NotificationModule } from './notifications/notification.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -77,6 +78,7 @@ import { UsersModule } from './users/users.module';
 		ChangelogModule,
 		CleanupModule,
 		NotificationModule,
+		LockingModule,
 	],
 	controllers: [],
 	providers: [

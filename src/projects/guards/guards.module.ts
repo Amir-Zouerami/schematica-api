@@ -8,6 +8,6 @@ import { ProjectViewerGuard } from './project-viewer.guard';
 @Module({
 	imports: [PrismaModule, AccessControlModule],
 	providers: [ProjectOwnerGuard, ProjectViewerGuard, ProjectCreationGuard],
-	exports: [ProjectOwnerGuard, ProjectViewerGuard, ProjectCreationGuard],
+	exports: [ProjectOwnerGuard, ProjectViewerGuard, ProjectCreationGuard, AccessControlModule],
 })
 export class GuardsModule {}

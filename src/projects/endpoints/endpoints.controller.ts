@@ -26,6 +26,7 @@ import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
+import { LockOwnerGuard } from 'src/locking/guards/lock-owner.guard';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
 import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateEndpointDto } from './dto/create-endpoint.dto';
@@ -90,7 +91,7 @@ export class EndpointsController {
 	}
 
 	@Put(':endpointId')
-	@UseGuards(ProjectOwnerGuard)
+	@UseGuards(ProjectOwnerGuard, LockOwnerGuard)
 	@ApiOkResponse({
 		description: 'The endpoint has been successfully updated.',
 		type: EndpointDto,
