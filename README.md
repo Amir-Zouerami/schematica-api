@@ -115,7 +115,7 @@ This project is built with a modern, robust, and scalable technology stack, prio
 *   **Framework:** [NestJS](https://nestjs.com/) (v11) - A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
 *   **Runtime:** [Bun](https://bun.sh/) - A fast, all-in-one JavaScript runtime, bundler, and package manager.
 *   **Database ORM:** [Prisma](https://www.prisma.io/) (v5) - A next-generation ORM that makes database access easy with auto-completion and type safety.
-*   **Database:** [PostgreSQL](https://www.postgresql.org/) - A powerful, open-source object-relational database system. (Using SQLite for CI/dev environments).
+*   **Database:** [SQLite](https://www.sqlite.org/index.html) - A self-contained, serverless SQL database engine used for the development and CI environments. The use of Prisma ORM makes the project easily portable to other databases like PostgreSQL.
 *   **Authentication:** [Passport.js](http://www.passportjs.org/) with JWT for secure, stateless authentication.
 *   **Real-time:** [Socket.IO](https://socket.io/) for high-performance, bidirectional WebSocket communication.
 *   **API Specification:** [Swagger (OpenAPI)](https://swagger.io/) for automatic API documentation and generation.
