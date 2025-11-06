@@ -109,7 +109,7 @@ model Endpoint {
   notes Note[]
 
   @@unique([projectId, path, method])
-  @@index([status])
+  @@index([projectId, status])
 }
 
 model Note {
