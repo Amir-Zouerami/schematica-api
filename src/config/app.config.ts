@@ -16,6 +16,7 @@ export interface AppConfig {
 		websocketPath: string;
 		lockDurationMs: number;
 		lockCleanupIntervalMs: number;
+		oauthRedirectUrl: string;
 	};
 }
 
@@ -36,6 +37,7 @@ export default (): AppConfig => {
 			websocketPath: getEnv('WEBSOCKET_PATH'),
 			lockDurationMs: getEnvInt('LOCK_DURATION_MS', 180000),
 			lockCleanupIntervalMs: getEnvInt('LOCK_CLEANUP_INTERVAL_MS', 60000),
+			oauthRedirectUrl: getEnv('OAUTH_REDIRECT_SUCCESS_URL'),
 		},
 	};
 };

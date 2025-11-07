@@ -1,5 +1,6 @@
-import type { User } from '@prisma/client';
+import { User } from '@prisma/client';
 import 'fastify';
+import { UserWithTeams } from 'src/users/users.types';
 
 type UserInRequest = Omit<User, 'password'>;
 
@@ -11,11 +12,14 @@ export interface UploadedFile {
 	size: number;
 }
 
-// Use declaration merging to add all our custom properties to the FastifyRequest interface
 declare module 'fastify' {
 	export interface FastifyRequest {
 		id: string;
 		user?: UserInRequest;
 		uploadedFile?: UploadedFile;
+
+		// Methods added by @fastify/passport
+		logIn(user: UserWithTeams): Promise<void>;
+		logOut(): void;
 	}
 }

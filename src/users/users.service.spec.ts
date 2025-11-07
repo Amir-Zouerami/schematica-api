@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from './users.service';
 
@@ -15,6 +16,7 @@ describe('UsersService', () => {
 			return null;
 		}),
 	};
+	const mockPinoLogger = { setContext: jest.fn() };
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
@@ -22,6 +24,7 @@ describe('UsersService', () => {
 				UsersService,
 				{ provide: PrismaService, useValue: mockPrismaService },
 				{ provide: ConfigService, useValue: mockConfigService },
+				{ provide: PinoLogger, useValue: mockPinoLogger },
 			],
 		}).compile();
 

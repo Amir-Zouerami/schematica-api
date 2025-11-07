@@ -1,18 +1,30 @@
+// biome-ignore-all lint/suspicious/useAwait: Passport's type signature requires a Promise
+
+import { fastifyCookie } from '@fastify/cookie';
 import multipart from '@fastify/multipart';
+import fastifyPassport from '@fastify/passport';
+import type { SecureSessionPluginOptions } from '@fastify/secure-session';
+import fastifySecureSession from '@fastify/secure-session';
 import fastifyStatic from '@fastify/static';
 import { INestApplication, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-
 import { Logger } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { AppModule } from './app.module';
+import { GitLabStrategyFastify } from './auth/strategies/gitlab.strategy';
+import { LocalStrategyFastify } from './auth/strategies/local.strategy';
 import { SocketIoAdapter } from './common/adapters/socket-io.adapter';
 import type { AllConfigTypes } from './config/config.type';
+import { PrismaService } from './prisma/prisma.service';
 import { setupSwagger } from './swagger';
+import { UserWithTeams } from './users/users.types';
 
+/**
+ * Adds global validation pipes for DTO transformation and sanitation.
+ */
 function setupPipes(app: INestApplication): void {
 	app.useGlobalPipes(
 		new ValidationPipe({
@@ -27,6 +39,9 @@ function setupPipes(app: INestApplication): void {
 	);
 }
 
+/**
+ * Configure CORS, static assets, versioning, and Swagger.
+ */
 async function configureApp(
 	app: NestFastifyApplication,
 	configService: ConfigService<AllConfigTypes, true>,
@@ -40,11 +55,6 @@ async function configureApp(
 	await app.register(fastifyStatic, {
 		root: join(process.cwd(), 'public'),
 		prefix: '/',
-		setHeaders: (res, path) => {
-			if (path.endsWith('.wasm')) {
-				res.setHeader('Content-Type', 'application/wasm');
-			}
-		},
 	});
 
 	app.setGlobalPrefix(globalPrefix);
@@ -67,11 +77,9 @@ async function configureApp(
 }
 
 /**
- * Bootstraps the NestJS Fastify application and starts the HTTP server.
- *
- * Creates a Fastify-backed Nest application that generates request IDs, reads runtime configuration (including the HTTP port), applies global validation and app configuration, and begins listening on 0.0.0.0 using the configured port.
+ * Main bootstrap — creates and configures the Fastify-based NestJS app.
  */
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
 	const adapter = new FastifyAdapter({
 		genReqId: () => randomUUID(),
 	});
@@ -80,21 +88,72 @@ async function bootstrap() {
 		bufferLogs: true,
 	});
 
-	await app.register(multipart, {
-		limits: {
-			fileSize: 10 * 1024 * 1024, // 10MB limit
+	const configService = app.get(ConfigService<AllConfigTypes, true>);
+	const port = configService.get('app.port', { infer: true });
+	const isProduction = configService.get('app.nodeEnv', { infer: true }) === 'production';
+	const authConfig = configService.getOrThrow('auth', { infer: true });
+	const sessionSecret = Buffer.from(authConfig.sessionSecret, 'utf8');
+	const sessionSalt = Buffer.from(authConfig.sessionSalt, 'utf8');
+
+	// Cookies (required for secure sessions)
+	await app.register(fastifyCookie);
+
+	// Secure sessions (used by fastify-passport)
+	await app.register<SecureSessionPluginOptions>(fastifySecureSession, {
+		secret: sessionSecret,
+		salt: sessionSalt,
+		cookie: {
+			path: '/',
+			httpOnly: true,
+			secure: isProduction,
+			maxAge: 7 * 24 * 60 * 60,
 		},
 	});
 
-	const configService = app.get(ConfigService<AllConfigTypes, true>);
-	const port = configService.get('app.port', { infer: true });
+	// fastify-passport initialization
+	await app.register(fastifyPassport.initialize());
+	await app.register(fastifyPassport.secureSession());
 
+	const prismaService = app.get(PrismaService);
+
+	// eslint-disable-next-line @typescript-eslint/require-await
+	fastifyPassport.registerUserSerializer(async (user: UserWithTeams) => {
+		return user.id;
+	});
+
+	fastifyPassport.registerUserDeserializer(async (id: string) => {
+		const user = await prismaService.user.findUnique({
+			where: { id },
+			include: { teamMemberships: { select: { team: true } } },
+		});
+		if (!user) {
+			return null;
+		}
+
+		const { password: _, ...safeUser } = user;
+		return { ...safeUser, teams: user.teamMemberships.map((m) => m.team) };
+	});
+
+	const localStrategy = app.get(LocalStrategyFastify);
+	fastifyPassport.use('local', localStrategy);
+
+	const gitlabStrategy = app.get(GitLabStrategyFastify);
+	fastifyPassport.use('gitlab', gitlabStrategy);
+
+	// Multipart (file uploads)
+	await app.register(multipart, {
+		limits: { fileSize: 10 * 1024 * 1024 },
+	});
+
+	// Global validation and app config
 	setupPipes(app);
 	await configureApp(app, configService);
 
-	await app.listen(port, '0.0.0.0');
-
+	// WebSocket adapter
 	app.useWebSocketAdapter(new SocketIoAdapter(app));
+
+	// Start server
+	await app.listen(port, '0.0.0.0');
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-floating-promises */

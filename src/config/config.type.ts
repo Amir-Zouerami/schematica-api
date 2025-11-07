@@ -3,5 +3,11 @@ import type { AuthConfig } from './auth.config';
 import type { DbConfig } from './database.config';
 import { EncryptionConfig } from './encryption.config';
 import { FileConfig } from './file.config';
+import { OAuthConfig } from './oauth.config';
 
-export type AllConfigTypes = AppConfig & DbConfig & AuthConfig & FileConfig & EncryptionConfig;
+export type AllConfigTypes = AppConfig &
+	DbConfig &
+	AuthConfig &
+	FileConfig &
+	EncryptionConfig &
+	OAuthConfig;
