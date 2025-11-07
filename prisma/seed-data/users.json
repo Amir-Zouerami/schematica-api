@@ -94,5 +94,12 @@
 		"role": "guest",
 		"teams": [],
 		"profileImage": null
+	},
+	{
+		"id": "13",
+		"username": "oliver.stone",
+		"role": "member",
+		"teams": ["backend"],
+		"profileImage": null
 	}
 ]
