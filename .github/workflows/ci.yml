@@ -114,6 +114,12 @@ jobs:
             ENCRYPTION_IV_LENGTH: 16
             ENCRYPTION_AUTH_TAG_LENGTH: 16
 
+            # --- OAuth ---
+            GITLAB_BASE_URL: "https://gitlab.com"
+            GITLAB_CLIENT_ID: ""
+            GITLAB_CLIENT_SECRET: ""
+            GITLAB_CALLBACK_URL: "http://localhost:3000/api/v2/auth/gitlab/callback"
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v5
