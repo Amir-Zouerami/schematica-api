@@ -33,6 +33,6 @@ export class GitLabAuthGuard implements CanActivate {
 			throw error;
 		}
 
-		return false;
+		return true;
 	}
 }
