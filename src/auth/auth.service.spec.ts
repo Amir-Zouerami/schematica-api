@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { PinoLogger } from 'nestjs-pino'; // <-- IMPORT
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthService } from './auth.service';
 
@@ -8,6 +9,7 @@ describe('AuthService', () => {
 
 	const mockPrismaService = {};
 	const mockJwtService = {};
+	const mockPinoLogger = { setContext: jest.fn() };
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
@@ -15,6 +17,7 @@ describe('AuthService', () => {
 				AuthService,
 				{ provide: PrismaService, useValue: mockPrismaService },
 				{ provide: JwtService, useValue: mockJwtService },
+				{ provide: PinoLogger, useValue: mockPinoLogger },
 			],
 		}).compile();
 

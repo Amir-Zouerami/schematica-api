@@ -13,6 +13,7 @@ import { ChangelogModule } from './changelog/changelog.module';
 import { CleanupModule } from './cleanup/cleanup.module';
 import { FilesService } from './common/files/files.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { ResourceRelationsGuard } from './common/guards/resource-relations.guard';
 import { InjectUserInterceptor } from './common/interceptors/inject-user.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform/transform.interceptor';
 import appConfig from './config/app.config';
@@ -21,6 +22,7 @@ import { AllConfigTypes } from './config/config.type';
 import databaseConfig from './config/database.config';
 import encryptionConfig from './config/encryption.config';
 import fileConfig from './config/file.config';
+import oauthConfig from './config/oauth.config';
 import { EncryptionModule } from './encryption/encryption.module';
 import { LockingModule } from './locking/locking.module';
 import { NotificationModule } from './notifications/notification.module';
@@ -29,13 +31,19 @@ import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
-import { ResourceRelationsGuard } from './common/guards/resource-relations.guard';
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
 			isGlobal: true,
-			load: [databaseConfig, appConfig, authConfig, fileConfig, encryptionConfig],
+			load: [
+				databaseConfig,
+				appConfig,
+				authConfig,
+				fileConfig,
+				encryptionConfig,
+				oauthConfig,
+			],
 		}),
 
 		EventEmitterModule.forRoot(),

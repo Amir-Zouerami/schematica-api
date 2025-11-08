@@ -10,8 +10,8 @@ datasource db {
 model User {
   id           String  @id @default(cuid())
   username     String  @unique
-  password     String
-  role         Role    @default(member)
+  password     String?
+  role         Role    @default(guest)
   profileImage String?
 
   tokenVersion Int      @default(1)
@@ -36,6 +36,7 @@ model User {
   changelogs           Changelog[]
   notificationsAsActor Notification[]           @relation("NotificationActor")
   notificationStatuses UserNotificationStatus[] @relation("UserNotificationStatus")
+  authProviders        AuthProvider[]
 }
 
 model Team {
@@ -149,6 +150,18 @@ model Secret {
   updatedAt     DateTime    @updatedAt
 
   @@unique([environmentId, key])
+}
+
+model AuthProvider {
+  id         Int    @id @default(autoincrement())
+  provider   String // e.g., "gitlab", "github"
+  providerId String // The user's unique ID from the provider
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@unique([provider, providerId])
+  @@index([userId])
 }
 
 // --- Access Control Tables ---
