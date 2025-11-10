@@ -368,21 +368,29 @@ export class ProjectsService {
 	async getOpenApiSpec(projectId: string, user: UserDto): Promise<Prisma.JsonValue> {
 		try {
 			const where = this._createAccessControlWhereClause(user);
-			const projectWithEndpoints = await this.prisma.project.findFirst({
+			const projectWithDetails = await this.prisma.project.findFirst({
 				where: { AND: [{ id: projectId }, where] },
 				include: {
 					endpoints: {
 						select: { path: true, method: true, operation: true },
 						orderBy: { path: 'asc' },
 					},
+					schemaComponents: {
+						select: { name: true, schema: true },
+						orderBy: { name: 'asc' },
+					},
 				},
 			});
 
-			if (!projectWithEndpoints) {
+			if (!projectWithDetails) {
 				throw new ProjectNotFoundException(projectId);
 			}
 
-			return this.specBuilder.build(projectWithEndpoints, projectWithEndpoints.endpoints);
+			return this.specBuilder.build(
+				projectWithDetails,
+				projectWithDetails.endpoints,
+				projectWithDetails.schemaComponents,
+			);
 		} catch (error: unknown) {
 			if (error instanceof ProjectNotFoundException) throw error;
 

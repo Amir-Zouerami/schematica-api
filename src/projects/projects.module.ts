@@ -8,6 +8,7 @@ import { GuardsModule } from './guards/guards.module';
 import { NotesModule } from './notes/notes.module';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { SchemaComponentsModule } from './schema-components/schema-components.module';
 import { SecretsModule } from './secrets/secrets.module';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
 import { SpecReconciliationService } from './spec-reconciliation/spec-reconciliation.service';
@@ -23,6 +24,7 @@ import { AreLinksUniqueConstraint } from './validators/are-links-unique.validato
 		AccessControlModule,
 		EnvironmentsModule,
 		SecretsModule,
+		SchemaComponentsModule,
 	],
 	controllers: [ProjectsController],
 	providers: [
