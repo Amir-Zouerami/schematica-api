@@ -7,6 +7,7 @@ import { ServerResponse } from 'http';
 import { LoggerModule } from 'nestjs-pino';
 import { AccessControlModule } from './access-control/access-control.module';
 import { AdminModule } from './admin/admin.module';
+import { ApiLintingModule } from './api-linting/api-linting.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { ChangelogModule } from './changelog/changelog.module';
@@ -89,6 +90,7 @@ import { UsersModule } from './users/users.module';
 		ChangelogModule,
 		CleanupModule,
 		NotificationModule,
+		ApiLintingModule,
 		LockingModule,
 		EncryptionModule,
 	],

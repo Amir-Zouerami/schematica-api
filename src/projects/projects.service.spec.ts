@@ -1,6 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PinoLogger } from 'nestjs-pino';
+import { ApiLintingService } from 'src/api-linting/api-linting.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProjectsService } from './projects.service';
 import { OpenApiSpecBuilder } from './spec-builder/openapi-spec.builder';
@@ -14,6 +15,7 @@ describe('ProjectsService', () => {
 	const mockSpecBuilder = {};
 	const mockSpecReconciliationService = {};
 	const mockEventEmitter = { emit: jest.fn() };
+	const mockApiLintingService = {};
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +29,7 @@ describe('ProjectsService', () => {
 					useValue: mockSpecReconciliationService,
 				},
 				{ provide: EventEmitter2, useValue: mockEventEmitter },
+				{ provide: ApiLintingService, useValue: mockApiLintingService },
 			],
 		}).compile();
 
