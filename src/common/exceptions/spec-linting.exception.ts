@@ -6,6 +6,7 @@ interface LintingError {
 	path: (string | number)[];
 	message: string;
 	code: string | number;
+	range: ISpectralDiagnostic['range'];
 }
 
 export class SpecLintingException extends BaseAppException {
@@ -14,6 +15,7 @@ export class SpecLintingException extends BaseAppException {
 			path: issue.path,
 			message: issue.message,
 			code: issue.code,
+			range: issue.range,
 		}));
 
 		const responsePayload = {

@@ -12,7 +12,14 @@ const statusToMetaCode = {
 	[HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_SERVER_ERROR',
 } as const;
 
-type KnownMetaCode = (typeof statusToMetaCode)[keyof typeof statusToMetaCode];
+interface NestErrorResponse {
+	message: string | string[] | object;
+	error?: string;
+}
+
+function isNestErrorResponse(value: unknown): value is NestErrorResponse {
+	return typeof value === 'object' && value !== null && 'message' in value;
+}
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -29,16 +36,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
 		const { httpStatus, message, metaCode, type } = this.parseException(exception);
 
 		if (httpStatus >= Number(HttpStatus.INTERNAL_SERVER_ERROR)) {
-			const formattedMessage = Array.isArray(message) ? message.join(', ') : message;
-
 			const logObject = {
-				message: `[Unhandled Exception] HTTP ${httpStatus} - ${formattedMessage}`,
+				message: `[Unhandled Exception] HTTP ${httpStatus}`,
 				request: {
 					id: request.id,
 					url: request.url,
 					method: request.method,
 				},
-
+				errorPayload: message,
 				stack: exception instanceof Error ? exception.stack : undefined,
 				exception,
 			};
@@ -63,42 +68,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
 	}
 
 	private parseException(exception: unknown) {
-		if (exception instanceof BaseAppException) {
-			return {
-				httpStatus: exception.getStatus(),
-				message: exception.message,
-				metaCode: exception.metaCode,
-				type: exception.constructor.name,
-			};
-		}
-
 		if (exception instanceof HttpException) {
 			const httpStatus = exception.getStatus();
 			const response = exception.getResponse();
+			const messagePayload = isNestErrorResponse(response) ? response : { message: response };
 
-			const errorResponse =
-				typeof response === 'string'
-					? { message: response }
-					: (response as {
-							message: string | string[];
-							error?: string;
-						});
+			const metaCode: string =
+				exception instanceof BaseAppException
+					? exception.metaCode
+					: (statusToMetaCode[httpStatus as keyof typeof statusToMetaCode] ??
+						'UNHANDLED_HTTP_EXCEPTION');
 
-			const metaCode: KnownMetaCode =
-				statusToMetaCode[httpStatus as keyof typeof statusToMetaCode] ??
-				'UNHANDLED_HTTP_EXCEPTION';
+			const type =
+				isNestErrorResponse(response) && response.error
+					? response.error
+					: exception.constructor.name;
 
 			return {
 				httpStatus,
-				message: errorResponse.message,
+				message: messagePayload,
 				metaCode,
-				type: errorResponse.error || exception.constructor.name,
+				type,
 			};
 		}
 
 		return {
 			httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
-			message: 'An unexpected internal server error occurred.',
+			message: { message: 'An unexpected internal server error occurred.' },
 			metaCode: 'INTERNAL_SERVER_ERROR',
 			type: exception instanceof Error ? exception.constructor.name : 'UnknownError',
 		};

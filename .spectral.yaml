@@ -1,0 +1,48 @@
+extends:
+    # Use Spectral's built-in OpenAPI ruleset as the base, with the "recommended" subset enabled.
+    - [spectral:oas, recommended]
+
+rules:
+    # ---------------------------------------------------------------------------
+    # Promote existing OAS rules from their default severity (usually "warn")
+    # to "error" so they become hard failures in your project.
+    # ---------------------------------------------------------------------------
+
+    # Every operation should have a non-empty description.
+    operation-description: error
+
+    # Every operation should use at least one tag, and that tag must be defined.
+    operation-tag-defined: error
+
+    # Ensures every operation has at least one 2xx or 3xx success response.
+    operation-success-response: error
+
+    # The top-level `info` object must have a description.
+    info-description: error
+
+    # All path parameters must be defined correctly and consistently with the path template.
+    path-params: error
+
+    # ---------------------------------------------------------------------------
+    # Custom rule: "operation-summary"
+    # Enforces that every HTTP operation (get/put/post/etc.) has a `summary`.
+    # ---------------------------------------------------------------------------
+    operation-summary:
+        description: Every operation must have a summary.
+        message: 'Operation `summary` must be present and non-empty string.'
+        severity: error
+        recommended: true
+        # Target all operation objects under `paths` (one JSONPath per HTTP method).
+        given:
+            - '$.paths.*.get'
+            - '$.paths.*.put'
+            - '$.paths.*.post'
+            - '$.paths.*.delete'
+            - '$.paths.*.options'
+            - '$.paths.*.head'
+            - '$.paths.*.patch'
+            - '$.paths.*.trace'
+        then:
+            # On each matching operation object, assert that `summary` is truthy.
+            field: summary
+            function: truthy
