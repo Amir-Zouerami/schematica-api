@@ -1,6 +1,6 @@
 // biome-ignore-all lint/suspicious/useAwait: Passport's type signature requires a Promise
 
-import { fastifyCookie } from '@fastify/cookie';
+import fastifyCookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
 import fastifyPassport from '@fastify/passport';
 import type { SecureSessionPluginOptions } from '@fastify/secure-session';

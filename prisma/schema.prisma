@@ -37,6 +37,9 @@ model User {
   notificationsAsActor Notification[]           @relation("NotificationActor")
   notificationStatuses UserNotificationStatus[] @relation("UserNotificationStatus")
   authProviders        AuthProvider[]
+
+  createdSchemaComponents SchemaComponent[] @relation("CreatedSchemaComponents")
+  updatedSchemaComponents SchemaComponent[] @relation("UpdatedSchemaComponents")
 }
 
 model Team {
@@ -79,6 +82,8 @@ model Project {
   teamAccesses TeamProjectAccess[]
   deniedUsers  User[]              @relation("DeniedProjectAccess")
   Changelog    Changelog[]
+
+  schemaComponents SchemaComponent[]
 }
 
 model ProjectLink {
@@ -162,6 +167,27 @@ model AuthProvider {
 
   @@unique([provider, providerId])
   @@index([userId])
+}
+
+model SchemaComponent {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  schema      Json
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+
+  creator     User   @relation("CreatedSchemaComponents", fields: [creatorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  creatorId   String
+  updatedBy   User   @relation("UpdatedSchemaComponents", fields: [updatedById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  updatedById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectId, name])
+  @@index([projectId])
 }
 
 // --- Access Control Tables ---
