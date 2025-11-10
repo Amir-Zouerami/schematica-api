@@ -60,8 +60,11 @@ export class SchemaComponentsController {
 		type: [SchemaComponentDto],
 	})
 	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
-	findAll(@Param('projectId') projectId: string): Promise<SchemaComponentDto[]> {
-		return this.schemaComponentsService.findAllForProject(projectId);
+	findAll(
+		@Param('projectId') projectId: string,
+		@CurrentUser() user: UserDto,
+	): Promise<SchemaComponentDto[]> {
+		return this.schemaComponentsService.findAllForProject(projectId, user);
 	}
 
 	@Get(':name')
@@ -75,8 +78,9 @@ export class SchemaComponentsController {
 	findOne(
 		@Param('projectId') projectId: string,
 		@Param('name') name: string,
+		@CurrentUser() user: UserDto,
 	): Promise<SchemaComponentDto> {
-		return this.schemaComponentsService.findOneByName(projectId, name);
+		return this.schemaComponentsService.findOneByName(projectId, name, user);
 	}
 
 	@Put(':name')

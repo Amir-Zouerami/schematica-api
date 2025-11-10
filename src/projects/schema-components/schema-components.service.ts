@@ -7,9 +7,11 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
+import { AccessControlService } from 'src/access-control/access-control.service';
 import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
+import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSchemaComponentDto } from './dto/create-schema-component.dto';
@@ -22,6 +24,7 @@ export class SchemaComponentsService {
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
 		private readonly eventEmitter: EventEmitter2,
+		private readonly accessControlService: AccessControlService,
 	) {
 		this.logger.setContext(SchemaComponentsService.name);
 	}
@@ -31,6 +34,8 @@ export class SchemaComponentsService {
 		createDto: CreateSchemaComponentDto,
 		actor: UserDto,
 	): Promise<SchemaComponentDto> {
+		await this._verifyProjectAccess(projectId, actor, 'owner');
+
 		try {
 			const { name, description, schema } = createDto;
 
@@ -63,37 +68,41 @@ export class SchemaComponentsService {
 		}
 	}
 
-	async findAllForProject(projectId: string): Promise<SchemaComponentDto[]> {
+	async findAllForProject(projectId: string, actor: UserDto): Promise<SchemaComponentDto[]> {
+		await this._verifyProjectAccess(projectId, actor, 'viewer');
+
 		try {
 			const components = await this.prisma.schemaComponent.findMany({
 				where: { projectId },
 				orderBy: { name: 'asc' },
 			});
-
 			return components.map((c) => new SchemaComponentDto(c));
 		} catch (error: unknown) {
 			this.logger.error(
 				{ error, projectId },
 				'Failed to find schema components for project.',
 			);
-
 			throw new InternalServerErrorException('Failed to retrieve schema components.');
 		}
 	}
 
-	async findOneByName(projectId: string, name: string): Promise<SchemaComponentDto> {
+	async findOneByName(
+		projectId: string,
+		name: string,
+		actor: UserDto,
+	): Promise<SchemaComponentDto> {
+		await this._verifyProjectAccess(projectId, actor, 'viewer');
+
 		try {
 			const component = await this.prisma.schemaComponent.findUniqueOrThrow({
 				where: { projectId_name: { projectId, name } },
 			});
-
 			return new SchemaComponentDto(component);
 		} catch (error: unknown) {
 			this.logger.error(
 				{ error, projectId, name },
 				'Failed to find schema component by name.',
 			);
-
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
 					`Schema component with name '${name}' not found in this project.`,
@@ -108,6 +117,8 @@ export class SchemaComponentsService {
 		updateDto: UpdateSchemaComponentDto,
 		actor: UserDto,
 	): Promise<SchemaComponentDto> {
+		await this._verifyProjectAccess(projectId, actor, 'owner');
+
 		try {
 			const { schema, ...restOfDto } = updateDto;
 
@@ -130,19 +141,22 @@ export class SchemaComponentsService {
 			return new SchemaComponentDto(updatedComponent);
 		} catch (error: unknown) {
 			this.logger.error({ error }, `Failed to update schema component '${name}'.`);
-
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
 					`Schema component with name '${name}' not found in this project.`,
 				),
 				[PrismaErrorCode.UniqueConstraintFailed]: new ConflictException(
-					`A schema component with the name '${updateDto.name}' already exists in this project.`,
+					`A schema component with the name '${
+						updateDto.name ?? name
+					}' already exists in this project.`,
 				),
 			});
 		}
 	}
 
 	async remove(projectId: string, name: string, actor: UserDto): Promise<void> {
+		await this._verifyProjectAccess(projectId, actor, 'owner');
+
 		try {
 			const deleted = await this.prisma.schemaComponent.delete({
 				where: { projectId_name: { projectId, name } },
@@ -156,12 +170,26 @@ export class SchemaComponentsService {
 			} satisfies AuditLogEvent);
 		} catch (error: unknown) {
 			this.logger.error({ error }, `Failed to delete schema component '${name}'.`);
-
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new NotFoundException(
 					`Schema component with name '${name}' not found in this project.`,
 				),
 			});
+		}
+	}
+
+	private async _verifyProjectAccess(
+		projectId: string,
+		actor: UserDto,
+		requiredAccess: 'viewer' | 'owner',
+	): Promise<void> {
+		const canAccess =
+			requiredAccess === 'owner'
+				? await this.accessControlService.canOwnProject(actor, projectId)
+				: await this.accessControlService.canViewProject(actor, projectId);
+
+		if (!canAccess) {
+			throw new ProjectNotFoundException(projectId);
 		}
 	}
 }
