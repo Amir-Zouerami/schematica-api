@@ -221,6 +221,44 @@ async function seedProjects() {
 			},
 		});
 
+		// --- Reusable Schema Components for Project Nova ---
+		await tx.schemaComponent.createMany({
+			data: [
+				{
+					name: 'User',
+					description: 'A standard user object.',
+					schema: {
+						type: 'object',
+						properties: {
+							id: { type: 'string', format: 'uuid', example: '...-....-....-....' },
+							username: { type: 'string', example: 'jane.doe' },
+							email: { type: 'string', format: 'email' },
+						},
+						required: ['id', 'username', 'email'],
+					},
+					projectId: projectNova.id,
+					creatorId: amir.id,
+					updatedById: amir.id,
+				},
+				{
+					name: 'ErrorResponse',
+					description: 'A standard error response object.',
+					schema: {
+						type: 'object',
+						properties: {
+							statusCode: { type: 'integer', example: 404 },
+							message: { type: 'string', example: 'Resource not found.' },
+							error: { type: 'string', example: 'Not Found' },
+						},
+						required: ['statusCode', 'message'],
+					},
+					projectId: projectNova.id,
+					creatorId: brooklyn.id,
+					updatedById: brooklyn.id,
+				},
+			],
+		});
+
 		// --- Environments & Secrets for Project Nova ---
 		const novaStaging = await tx.environment.create({
 			data: { name: 'Staging', projectId: projectNova.id },
