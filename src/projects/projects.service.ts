@@ -1,9 +1,11 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { OpenAPIObject } from '@nestjs/swagger';
 import { AccessType, Prisma, Role } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { type OpenAPIV3 } from 'openapi-types';
+import { ApiLintingService } from 'src/api-linting/api-linting.service';
 import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
@@ -12,6 +14,7 @@ import { ProjectConcurrencyException } from 'src/common/exceptions/project-concu
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
 import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
+import { SpecLintingException } from 'src/common/exceptions/spec-linting.exception';
 import { SpecValidationException } from 'src/common/exceptions/spec-validation.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
@@ -42,6 +45,7 @@ export class ProjectsService {
 		private readonly specBuilder: OpenApiSpecBuilder,
 		private readonly specReconciliationService: SpecReconciliationService,
 		private readonly eventEmitter: EventEmitter2,
+		private readonly apiLintingService: ApiLintingService,
 	) {
 		this.logger.setContext(ProjectsService.name);
 	}
@@ -422,6 +426,14 @@ export class ProjectsService {
 				throw new SpecValidationException('An unknown validation error occurred.');
 			}
 
+			const lintingIssues = await this.apiLintingService.lintSpec(
+				dereferencedSpec as OpenAPIObject,
+			);
+
+			if (lintingIssues.length > 0) {
+				throw new SpecLintingException(lintingIssues);
+			}
+
 			const updatedProject = await this.prisma.$transaction(async (tx) => {
 				const project = await tx.project.findUniqueOrThrow({
 					where: { id: projectId, updatedAt: new Date(lastKnownUpdatedAt) },
@@ -477,7 +489,9 @@ export class ProjectsService {
 
 			return new ProjectDetailDto(updatedProject);
 		} catch (error: unknown) {
-			if (error instanceof SpecValidationException) throw error;
+			if (error instanceof SpecValidationException || error instanceof SpecLintingException) {
+				throw error;
+			}
 
 			this.logger.error({ error }, `Failed to import OpenAPI spec for project ${projectId}.`);
 

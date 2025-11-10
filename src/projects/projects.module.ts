@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AccessControlModule } from 'src/access-control/access-control.module';
+import { ApiLintingModule } from 'src/api-linting/api-linting.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
@@ -25,6 +26,7 @@ import { AreLinksUniqueConstraint } from './validators/are-links-unique.validato
 		EnvironmentsModule,
 		SecretsModule,
 		SchemaComponentsModule,
+		ApiLintingModule,
 	],
 	controllers: [ProjectsController],
 	providers: [
