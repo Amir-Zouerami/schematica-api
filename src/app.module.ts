@@ -26,6 +26,7 @@ import fileConfig from './config/file.config';
 import oauthConfig from './config/oauth.config';
 import { EncryptionModule } from './encryption/encryption.module';
 import { LockingModule } from './locking/locking.module';
+import { MockServerModule } from './mock-server/mock-server.module';
 import { NotificationModule } from './notifications/notification.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
@@ -93,6 +94,7 @@ import { UsersModule } from './users/users.module';
 		ApiLintingModule,
 		LockingModule,
 		EncryptionModule,
+		MockServerModule,
 	],
 	controllers: [],
 	providers: [

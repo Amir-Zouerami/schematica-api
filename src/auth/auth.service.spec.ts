@@ -1,6 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { PinoLogger } from 'nestjs-pino'; // <-- IMPORT
+import { PinoLogger } from 'nestjs-pino';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthService } from './auth.service';
 
