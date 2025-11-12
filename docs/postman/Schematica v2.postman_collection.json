@@ -131,6 +131,64 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "OAuth - Gitlab",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/auth/gitlab",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"auth",
+								"gitlab"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OAuth - Set Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newPassword\": \"a-new-strong-password123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/users/set-password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"users",
+								"set-password"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -348,7 +406,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}",
 							"host": [
 								"localhost"
 							],
@@ -357,7 +415,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhceskgw0001gqkth2oijufi"
+								"{{projectNovaId}}"
 							]
 						}
 					},
@@ -375,7 +433,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/openapi",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/openapi",
 							"host": [
 								"localhost"
 							],
@@ -384,7 +442,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhceskgw0001gqkth2oijufi",
+								"{{projectNovaId}}",
 								"openapi"
 							]
 						}
@@ -412,7 +470,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhc8kycf0001gq7rba8zep2f",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}",
 							"host": [
 								"localhost"
 							],
@@ -421,7 +479,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhc8kycf0001gq7rba8zep2f"
+								"{{projectNovaId}}"
 							]
 						}
 					},
@@ -439,7 +497,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"lastKnownUpdatedAt\": \"2025-10-30T16:20:54.348Z\",\n    \"spec\": {\n        \"openapi\": \"3.0.1\",\n        \"info\": {\n            \"title\": \"Project Nova - User & Profile API\",\n            \"description\": \"A comprehensive API for managing users and their profiles within the Nova ecosystem. This replaces the previous simple spec.\",\n            \"version\": \"1.0.0\"\n        },\n        \"servers\": [\n            {\n                \"url\": \"https://api.nova.app/v1\",\n                \"description\": \"Production Server\"\n            }\n        ],\n        \"tags\": [\n            {\n                \"name\": \"Users\",\n                \"description\": \"Operations about users.\"\n            },\n            {\n                \"name\": \"Profiles\",\n                \"description\": \"Operations related to user profiles.\"\n            }\n        ],\n        \"paths\": {\n            \"/users\": {\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"List all users\",\n                    \"description\": \"Retrieves a paginated list of users.\",\n                    \"operationId\": \"listUsers\",\n                    \"parameters\": [\n                        {\n                            \"name\": \"limit\",\n                            \"in\": \"query\",\n                            \"description\": \"How many items to return at one time (max 100).\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"maximum\": 100,\n                                \"default\": 20\n                            }\n                        },\n                        {\n                            \"name\": \"offset\",\n                            \"in\": \"query\",\n                            \"description\": \"The number of items to skip before starting to collect the result set.\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"default\": 0\n                            }\n                        }\n                    ],\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"A paged array of users\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"type\": \"array\",\n                                        \"items\": {\n                                            \"$ref\": \"#/components/schemas/User\"\n                                        }\n                                    }\n                                }\n                            }\n                        }\n                    }\n                },\n                \"post\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Create a user\",\n                    \"description\": \"Creates a new user in the system.\",\n                    \"operationId\": \"createUser\",\n                    \"requestBody\": {\n                        \"description\": \"New user object\",\n                        \"required\": true,\n                        \"content\": {\n                            \"application/json\": {\n                                \"schema\": {\n                                    \"$ref\": \"#/components/schemas/NewUser\"\n                                }\n                            }\n                        }\n                    },\n                    \"responses\": {\n                        \"201\": {\n                            \"description\": \"User created successfully\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"409\": {\n                            \"$ref\": \"#/components/responses/Conflict\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Get user by ID\",\n                    \"operationId\": \"getUserById\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"The user object.\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                },\n                \"delete\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Delete a user\",\n                    \"operationId\": \"deleteUser\",\n                    \"responses\": {\n                        \"204\": {\n                            \"description\": \"User deleted successfully.\"\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}/profile\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Profiles\"\n                    ],\n                    \"summary\": \"Get user profile\",\n                    \"operationId\": \"getUserProfile\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"User profile data.\"\n                        }\n                    }\n                }\n            }\n        },\n        \"components\": {\n            \"schemas\": {\n                \"User\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"id\",\n                        \"username\",\n                        \"email\"\n                    ],\n                    \"properties\": {\n                        \"id\": {\n                            \"type\": \"string\",\n                            \"format\": \"uuid\"\n                        },\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"john_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"createdAt\": {\n                            \"type\": \"string\",\n                            \"format\": \"date-time\"\n                        }\n                    }\n                },\n                \"NewUser\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"username\",\n                        \"email\",\n                        \"password\"\n                    ],\n                    \"properties\": {\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"jane_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"password\": {\n                            \"type\": \"string\",\n                            \"format\": \"password\"\n                        }\n                    }\n                },\n                \"Error\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"code\": {\n                            \"type\": \"string\"\n                        },\n                        \"message\": {\n                            \"type\": \"string\"\n                        }\n                    }\n                }\n            },\n            \"parameters\": {\n                \"UserIdPath\": {\n                    \"name\": \"userId\",\n                    \"in\": \"path\",\n                    \"required\": true,\n                    \"description\": \"The ID of the user.\",\n                    \"schema\": {\n                        \"type\": \"string\",\n                        \"format\": \"uuid\"\n                    }\n                }\n            },\n            \"responses\": {\n                \"NotFound\": {\n                    \"description\": \"The specified resource was not found.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                },\n                \"Conflict\": {\n                    \"description\": \"The resource already exists.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
+							"raw": "{\n    \"lastKnownUpdatedAt\": \"2025-11-10T12:37:50.661Z\",\n    \"spec\": {\n        \"openapi\": \"3.0.1\",\n        \"info\": {\n            \"title\": \"Project Nova - User & Profile API\",\n            \"description\": \"A comprehensive API for managing users and their profiles within the Nova ecosystem. This replaces the previous simple spec.\",\n            \"version\": \"1.0.0\"\n        },\n        \"servers\": [\n            {\n                \"url\": \"https://api.nova.app/v1\",\n                \"description\": \"Production Server\"\n            }\n        ],\n        \"tags\": [\n            {\n                \"name\": \"Users\",\n                \"description\": \"Operations about users.\"\n            },\n            {\n                \"name\": \"Profiles\",\n                \"description\": \"Operations related to user profiles.\"\n            }\n        ],\n        \"paths\": {\n            \"/users\": {\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"List all users\",\n                    \"description\": \"Retrieves a paginated list of users.\",\n                    \"operationId\": \"listUsers\",\n                    \"parameters\": [\n                        {\n                            \"name\": \"limit\",\n                            \"in\": \"query\",\n                            \"description\": \"How many items to return at one time (max 100).\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"maximum\": 100,\n                                \"default\": 20\n                            }\n                        },\n                        {\n                            \"name\": \"offset\",\n                            \"in\": \"query\",\n                            \"description\": \"The number of items to skip before starting to collect the result set.\",\n                            \"schema\": {\n                                \"type\": \"integer\",\n                                \"default\": 0\n                            }\n                        }\n                    ],\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"A paged array of users\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"type\": \"array\",\n                                        \"items\": {\n                                            \"$ref\": \"#/components/schemas/User\"\n                                        }\n                                    }\n                                }\n                            }\n                        }\n                    }\n                },\n                \"post\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Create a user\",\n                    \"description\": \"Creates a new user in the system.\",\n                    \"operationId\": \"createUser\",\n                    \"requestBody\": {\n                        \"description\": \"New user object\",\n                        \"required\": true,\n                        \"content\": {\n                            \"application/json\": {\n                                \"schema\": {\n                                    \"$ref\": \"#/components/schemas/NewUser\"\n                                }\n                            }\n                        }\n                    },\n                    \"responses\": {\n                        \"201\": {\n                            \"description\": \"User created successfully\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"409\": {\n                            \"$ref\": \"#/components/responses/Conflict\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Get user by ID\",\n                    \"operationId\": \"getUserById\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"The user object.\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\n                                        \"$ref\": \"#/components/schemas/User\"\n                                    }\n                                }\n                            }\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                },\n                \"delete\": {\n                    \"tags\": [\n                        \"Users\"\n                    ],\n                    \"summary\": \"Delete a user\",\n                    \"operationId\": \"deleteUser\",\n                    \"responses\": {\n                        \"204\": {\n                            \"description\": \"User deleted successfully.\"\n                        },\n                        \"404\": {\n                            \"$ref\": \"#/components/responses/NotFound\"\n                        }\n                    }\n                }\n            },\n            \"/users/{userId}/profile\": {\n                \"parameters\": [\n                    {\n                        \"$ref\": \"#/components/parameters/UserIdPath\"\n                    }\n                ],\n                \"get\": {\n                    \"tags\": [\n                        \"Profiles\"\n                    ],\n                    \"summary\": \"Get user profile\",\n                    \"operationId\": \"getUserProfile\",\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"User profile data.\"\n                        }\n                    }\n                }\n            }\n        },\n        \"components\": {\n            \"schemas\": {\n                \"User\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"id\",\n                        \"username\",\n                        \"email\"\n                    ],\n                    \"properties\": {\n                        \"id\": {\n                            \"type\": \"string\",\n                            \"format\": \"uuid\"\n                        },\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"john_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"createdAt\": {\n                            \"type\": \"string\",\n                            \"format\": \"date-time\"\n                        }\n                    }\n                },\n                \"NewUser\": {\n                    \"type\": \"object\",\n                    \"required\": [\n                        \"username\",\n                        \"email\",\n                        \"password\"\n                    ],\n                    \"properties\": {\n                        \"username\": {\n                            \"type\": \"string\",\n                            \"example\": \"jane_doe\"\n                        },\n                        \"email\": {\n                            \"type\": \"string\",\n                            \"format\": \"email\"\n                        },\n                        \"password\": {\n                            \"type\": \"string\",\n                            \"format\": \"password\"\n                        }\n                    }\n                },\n                \"Error\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"code\": {\n                            \"type\": \"string\"\n                        },\n                        \"message\": {\n                            \"type\": \"string\"\n                        }\n                    }\n                }\n            },\n            \"parameters\": {\n                \"UserIdPath\": {\n                    \"name\": \"userId\",\n                    \"in\": \"path\",\n                    \"required\": true,\n                    \"description\": \"The ID of the user.\",\n                    \"schema\": {\n                        \"type\": \"string\",\n                        \"format\": \"uuid\"\n                    }\n                }\n            },\n            \"responses\": {\n                \"NotFound\": {\n                    \"description\": \"The specified resource was not found.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                },\n                \"Conflict\": {\n                    \"description\": \"The resource already exists.\",\n                    \"content\": {\n                        \"application/json\": {\n                            \"schema\": {\n                                \"$ref\": \"#/components/schemas/Error\"\n                            }\n                        }\n                    }\n                }\n            }\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -447,7 +505,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/openapi",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/openapi",
 							"host": [
 								"localhost"
 							],
@@ -456,7 +514,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhceskgw0001gqkth2oijufi",
+								"{{projectNovaId}}",
 								"openapi"
 							]
 						}
@@ -510,7 +568,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhceskgw0001gqkth2oijufi/access",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/access",
 							"host": [
 								"localhost"
 							],
@@ -519,7 +577,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhceskgw0001gqkth2oijufi",
+								"{{projectNovaId}}",
 								"access"
 							]
 						}
@@ -552,7 +610,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints",
 							"host": [
 								"localhost"
 							],
@@ -561,7 +619,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints"
 							]
 						}
@@ -580,7 +638,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhnchzqw0003gqvxpwkqectt",
 							"host": [
 								"localhost"
 							],
@@ -589,7 +647,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints",
 								"cmhnchzqw0003gqvxpwkqectt"
 							]
@@ -609,7 +667,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints?limit=10&page=1",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints?limit=10&page=1",
 							"host": [
 								"localhost"
 							],
@@ -618,7 +676,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints"
 							],
 							"query": [
@@ -656,7 +714,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhnchzqw0003gqvxpwkqectt",
 							"host": [
 								"localhost"
 							],
@@ -665,9 +723,48 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints",
 								"cmhnchzqw0003gqvxpwkqectt"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_REVIEW\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhnchzqw0003gqvxpwkqectt/status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"endpoints",
+								"cmhnchzqw0003gqvxpwkqectt",
+								"status"
 							]
 						}
 					},
@@ -685,7 +782,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/projects/cmhgq1m1s0001gqlw9hgsgx2s/endpoints/cmhji77fd0001gq2aregpecup",
+							"raw": "localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhji77fd0001gq2aregpecup",
 							"host": [
 								"localhost"
 							],
@@ -694,7 +791,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhgq1m1s0001gqlw9hgsgx2s",
+								"{{projectNovaId}}",
 								"endpoints",
 								"cmhji77fd0001gq2aregpecup"
 							]
@@ -713,7 +810,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt/lock",
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhnchzqw0003gqvxpwkqectt/lock",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -723,7 +820,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints",
 								"cmhnchzqw0003gqvxpwkqectt",
 								"lock"
@@ -743,7 +840,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/v2/projects/cmhnchzqq0001gqvxh86yhxa3/endpoints/cmhnchzqw0003gqvxpwkqectt/unlock",
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/endpoints/cmhnchzqw0003gqvxpwkqectt/unlock",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -753,7 +850,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhnchzqq0001gqvxh86yhxa3",
+								"{{projectNovaId}}",
 								"endpoints",
 								"cmhnchzqw0003gqvxpwkqectt",
 								"unlock"
@@ -816,7 +913,7 @@
 							}
 						],
 						"url": {
-							"raw": "localhost:3000/api/v2/endpoints/cmhgq1m1w0003gqlw1lgeef8i/notes",
+							"raw": "localhost:3000/api/v2/endpoints/cmhozeb4b0002gqc32ys2145x/notes",
 							"host": [
 								"localhost"
 							],
@@ -825,7 +922,7 @@
 								"api",
 								"v2",
 								"endpoints",
-								"cmhgq1m1w0003gqlw1lgeef8i",
+								"cmhozeb4b0002gqc32ys2145x",
 								"notes"
 							]
 						}
@@ -1239,7 +1336,7 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/api/v2/projects/cmhgq1m1s0001gqlw9hgsgx2s/changelog?limit=10",
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/changelog?limit=10",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -1249,7 +1346,7 @@
 								"api",
 								"v2",
 								"projects",
-								"cmhgq1m1s0001gqlw9hgsgx2s",
+								"{{projectNovaId}}",
 								"changelog"
 							],
 							"query": [
@@ -1371,12 +1468,892 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Environments",
+			"item": [
+				{
+					"name": "Create Environment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Production\",\n    \"description\": \"Primary production environment for Project Nova.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Environments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Environment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnti0ur0001gq7lzofouhtz",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnti0ur0001gq7lzofouhtz"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Environment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Staging (Renamed)\",\n    \"description\": \"The primary staging and QA environment.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnslzj60005gqtst5ow6mgw",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnslzj60005gqtst5ow6mgw"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Secrets",
+			"item": [
+				{
+					"name": "Create Secret",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key\": \"STRIPE_API_KEY\",\n    \"value\": \"sk_live_123abc456def\",\n    \"description\": \"Primary Stripe API key.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnnshzs0001gqwnu7pk320i/secrets",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnnshzs0001gqwnu7pk320i",
+								"secrets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Secrets",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnnshzs0001gqwnu7pk320i/secrets",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnnshzs0001gqwnu7pk320i",
+								"secrets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Secret",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": \"sk_live_rotated_789ghi012jkl\",\n    \"description\": \"Rotated Stripe API key for Q4.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnnshzs0001gqwnu7pk320i/secrets/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnnshzs0001gqwnu7pk320i",
+								"secrets",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Secret",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/environments/cmhnnshzs0001gqwnu7pk320i/secrets/4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"environments",
+								"cmhnnshzs0001gqwnu7pk320i",
+								"secrets",
+								"4"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reusable Schemas",
+			"item": [
+				{
+					"name": "Create Schema",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"ErrorResponse\",\n    \"description\": \"A standard error response object.\",\n    \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"statusCode\": {\n                \"type\": \"integer\",\n                \"example\": 404\n            },\n            \"message\": {\n                \"type\": \"string\",\n                \"example\": \"Resource not found.\"\n            },\n            \"error\": {\n                \"type\": \"string\",\n                \"example\": \"Not Found\"\n            }\n        },\n        \"required\": [\n            \"statusCode\",\n            \"message\"\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/schemas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"schemas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Schemas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/schemas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"schemas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Schema",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/schemas/ErrorResponse",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"schemas",
+								"ErrorResponse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Schema",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"A standardized error response object, now with a machine-readable meta code.\",\n    \"schema\": {\n        \"type\": \"object\",\n        \"properties\": {\n            \"statusCode\": {\n                \"type\": \"integer\"\n            },\n            \"message\": {\n                \"type\": \"string\"\n            },\n            \"error\": {\n                \"type\": \"string\"\n            },\n            \"metaCode\": {\n                \"type\": \"string\",\n                \"example\": \"RESOURCE_NOT_FOUND\"\n            }\n        },\n        \"required\": [\n            \"statusCode\",\n            \"message\"\n        ]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/schemas/ErrorResponse",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"schemas",
+								"ErrorResponse"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Schema",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/projects/{{projectNovaId}}/schemas/ErrorResponse",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"projects",
+								"{{projectNovaId}}",
+								"schemas",
+								"ErrorResponse"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Mock Server Seed Data - Examples",
+			"item": [
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create User [Failure]",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Status-Code",
+								"value": "409",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By Id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users/any-fake-id-works-here",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users",
+								"any-fake-id-works-here"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By Id [Failure]",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Status-Code",
+								"value": "404",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users/any-fake-id-works-here",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users",
+								"any-fake-id-works-here"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Session [Failure]",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectApolloId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/sessions",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"sessions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectApolloId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/profile/settings",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"profile",
+								"settings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Non-Existent Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/this/path/does/not/exist",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"this",
+								"path",
+								"does",
+								"not",
+								"exist"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Non-Existent Status Code",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Project-ID",
+								"value": "{{projectNovaId}}",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Status-Code",
+								"value": "418",
+								"type": "text"
+							},
+							{
+								"key": "X-Mock-Locale",
+								"value": "fa",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Missin ProjectId Header",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/v2/mock/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"v2",
+								"mock",
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"variable": [
 		{
 			"key": "authToken",
 			"value": ""
+		},
+		{
+			"key": "projectNovaId",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "projectApolloId",
+			"value": "",
+			"type": "default"
 		}
 	]
 }
