@@ -56,9 +56,12 @@ rules:
         message: 'All 2xx and 3xx responses must define a `content` object to describe the response body.'
         severity: error
         recommended: true
-        # Target all response objects whose key (the status code) starts with a '2' or '3'.
-        given: '$.paths.*.*.responses[?(@property.match(/^[23]/))]'
+        # FIX: Use a more precise 'given' and allow for '$ref'
+        given:
+            - '$.paths.*.*.responses[?(@property.match(/^2\d{2}$/) && @property != "204" && @property != "205")]'
         then:
-            # On each matching response object, assert that `content` is a truthy value.
-            field: content
-            function: truthy
+            function: or
+            functionOptions:
+                properties:
+                    - content
+                    - $ref

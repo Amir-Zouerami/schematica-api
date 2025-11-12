@@ -24,6 +24,8 @@ const SUPPORTED_LOCALES: Record<string, LocaleDefinition> = {
 	fa,
 };
 
+const THREE_DIGIT_STATUS_CODE_REGEX = /^\d{3}$/;
+
 @Injectable()
 export class MockServerService {
 	constructor(
@@ -86,9 +88,13 @@ export class MockServerService {
 
 			const mockBody = schema ? JSONSchemaFaker.generate(schema as Schema) : null;
 
+			const numericStatus = THREE_DIGIT_STATUS_CODE_REGEX.test(statusCode)
+				? Number(statusCode)
+				: 200;
+
 			return {
 				body: mockBody,
-				statusCode: parseInt(statusCode, 10),
+				statusCode: numericStatus,
 			};
 		} catch (error: unknown) {
 			this.logger.error({ error }, 'Failed to generate mock data from schema.');
@@ -111,7 +117,7 @@ export class MockServerService {
 		if (!spec.paths) return null;
 
 		for (const specPath of Object.keys(spec.paths)) {
-			const parsablePath = specPath.replace(/{(\w+)}/g, ':$1');
+			const parsablePath = specPath.replace(/{([^}]+)}/g, ':$1');
 			const matcher = match(parsablePath, { decode: decodeURIComponent });
 			const isMatch = matcher(requestPath);
 
@@ -158,6 +164,12 @@ export class MockServerService {
 			const res = responses['204'];
 			if ('$ref' in res) return { response: null, statusCode: '204' };
 			return { response: res, statusCode: '204' };
+		}
+
+		if (responses.default) {
+			const res = responses.default;
+			if ('$ref' in res) return { response: null, statusCode: 'default' };
+			return { response: res, statusCode: 'default' };
 		}
 
 		return { response: null, statusCode: '200' };

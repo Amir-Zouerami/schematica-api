@@ -276,7 +276,7 @@ async function seedProjects() {
 					schema: {
 						type: 'object',
 						properties: {
-							id: { type: 'string', format: 'uuid', xfaker: 'string.uuid' },
+							id: { type: 'string', format: 'uuid', 'x-faker': 'string.uuid' },
 							firstName: { type: 'string', 'x-faker': 'person.firstName' },
 							lastName: { type: 'string', 'x-faker': 'person.lastName' },
 							username: { type: 'string', 'x-faker': 'internet.userName' },

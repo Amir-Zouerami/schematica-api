@@ -22,10 +22,6 @@ export class MockServerController {
 
 	@All('*')
 	@ApiParam({
-		name: 'projectId',
-		description: 'The ID of the project to generate a mock response for.',
-	})
-	@ApiParam({
 		name: '*',
 		description: 'The API path to mock (e.g., "users/123/profile").',
 	})
