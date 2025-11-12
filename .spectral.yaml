@@ -46,3 +46,22 @@ rules:
             # On each matching operation object, assert that `summary` is truthy.
             field: summary
             function: truthy
+
+    # ---------------------------------------------------------------------------
+    # Custom rule: "success-response-content-defined"
+    # Enforces that every 2xx or 3xx response has a `content` object.
+    # ---------------------------------------------------------------------------
+    success-response-content-defined:
+        description: Success responses must have a 'content' object.
+        message: 'All 2xx and 3xx responses must define a `content` object to describe the response body.'
+        severity: error
+        recommended: true
+        # FIX: Use a more precise 'given' and allow for '$ref'
+        given:
+            - '$.paths.*.*.responses[?(@property.match(/^2\d{2}$/) && @property != "204" && @property != "205")]'
+        then:
+            function: or
+            functionOptions:
+                properties:
+                    - content
+                    - $ref

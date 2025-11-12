@@ -128,7 +128,7 @@ async function seedProjects() {
 		const backendTeam = await tx.team.findUniqueOrThrow({ where: { id: 'backend' } });
 
 		// =================================================================
-		// --- Project 1: Project Nova ---
+		// --- Project 1: Project Nova (Our "Golden" Spec for Mocking) ---
 		// =================================================================
 		const projectNova = await tx.project.upsert({
 			where: { nameNormalized: 'project nova' },
@@ -136,7 +136,7 @@ async function seedProjects() {
 			create: {
 				name: 'Project Nova',
 				nameNormalized: 'project nova',
-				description: 'A test project for the UI team.',
+				description: 'A comprehensive, public-facing User & Profile API.',
 				serverUrl: 'https://api.nova.test',
 				creatorId: amir.id,
 				updatedById: amir.id,
@@ -158,7 +158,7 @@ async function seedProjects() {
 			},
 		});
 
-		// --- Endpoints for Project Nova (RICH DATA) ---
+		// --- Endpoints for Project Nova (RICH DATA for MOCKING) ---
 		const novaUserListEndpoint = await tx.endpoint.create({
 			data: {
 				path: '/users',
@@ -171,21 +171,19 @@ async function seedProjects() {
 					tags: ['Users'],
 					summary: 'List All Users',
 					description: 'Retrieves a paginated list of all users in the system.',
-					parameters: [
-						{
-							name: 'limit',
-							in: 'query',
-							description: 'Number of users to return.',
-							schema: { type: 'integer', default: 20 },
+					responses: {
+						'200': {
+							description: 'A paginated list of users.',
+							content: {
+								'application/json': {
+									schema: {
+										type: 'array',
+										items: { $ref: '#/components/schemas/User' },
+									},
+								},
+							},
 						},
-						{
-							name: 'page',
-							in: 'query',
-							description: 'Page number for pagination.',
-							schema: { type: 'integer', default: 1 },
-						},
-					],
-					responses: { '200': { description: 'A paginated list of users.' } },
+					},
 				},
 			},
 		});
@@ -193,7 +191,8 @@ async function seedProjects() {
 		// Add a note to the endpoint we just created
 		await tx.note.create({
 			data: {
-				content: 'This endpoint needs to be updated to include a search parameter for Q4.',
+				content:
+					'This endpoint needs to be updated to include a search parameter for Q4. @david.chen can you look into this?',
 				endpointId: novaUserListEndpoint.id,
 				authorId: brooklyn.id,
 			},
@@ -203,7 +202,7 @@ async function seedProjects() {
 			data: {
 				path: '/users/{userId}',
 				method: 'get',
-				status: 'IN_REVIEW',
+				status: 'PUBLISHED',
 				projectId: projectNova.id,
 				creatorId: amir.id,
 				updatedById: amir.id,
@@ -214,14 +213,61 @@ async function seedProjects() {
 						{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
 					],
 					responses: {
-						'200': { description: 'User details.' },
-						'404': { description: 'User not found.' },
+						'200': {
+							description: 'User details found.',
+							content: {
+								'application/json': {
+									schema: { $ref: '#/components/schemas/User' },
+								},
+							},
+						},
+						'404': {
+							description: 'User not found.',
+							content: {
+								'application/json': {
+									schema: { $ref: '#/components/schemas/ErrorResponse' },
+								},
+							},
+						},
 					},
 				},
 			},
 		});
 
-		// --- Reusable Schema Components for Project Nova ---
+		await tx.endpoint.create({
+			data: {
+				path: '/users',
+				method: 'post',
+				status: 'PUBLISHED',
+				projectId: projectNova.id,
+				creatorId: amir.id,
+				updatedById: amir.id,
+				operation: {
+					tags: ['Users'],
+					summary: 'Create a new user',
+					responses: {
+						'201': {
+							description: 'User created successfully.',
+							content: {
+								'application/json': {
+									schema: { $ref: '#/components/schemas/User' },
+								},
+							},
+						},
+						'409': {
+							description: 'User with this username already exists.',
+							content: {
+								'application/json': {
+									schema: { $ref: '#/components/schemas/ErrorResponse' },
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		// --- Reusable Schema Components for Project Nova (with x-faker) ---
 		await tx.schemaComponent.createMany({
 			data: [
 				{
@@ -230,11 +276,12 @@ async function seedProjects() {
 					schema: {
 						type: 'object',
 						properties: {
-							id: { type: 'string', format: 'uuid', example: '...-....-....-....' },
-							username: { type: 'string', example: 'jane.doe' },
-							email: { type: 'string', format: 'email' },
+							id: { type: 'string', format: 'uuid', 'x-faker': 'string.uuid' },
+							firstName: { type: 'string', 'x-faker': 'person.firstName' },
+							lastName: { type: 'string', 'x-faker': 'person.lastName' },
+							username: { type: 'string', 'x-faker': 'internet.userName' },
 						},
-						required: ['id', 'username', 'email'],
+						required: ['id', 'firstName', 'lastName', 'username'],
 					},
 					projectId: projectNova.id,
 					creatorId: amir.id,
@@ -246,9 +293,9 @@ async function seedProjects() {
 					schema: {
 						type: 'object',
 						properties: {
-							statusCode: { type: 'integer', example: 404 },
-							message: { type: 'string', example: 'Resource not found.' },
-							error: { type: 'string', example: 'Not Found' },
+							statusCode: { type: 'integer' },
+							message: { type: 'string', 'x-faker': 'lorem.sentence' },
+							error: { type: 'string' },
 						},
 						required: ['statusCode', 'message'],
 					},
@@ -292,7 +339,7 @@ async function seedProjects() {
 		});
 
 		// =================================================================
-		// --- Project 2: Project Apollo ---
+		// --- Project 2: Project Apollo (Internal API) ---
 		// =================================================================
 		const projectApollo = await tx.project.upsert({
 			where: { nameNormalized: 'project apollo' },
@@ -314,7 +361,7 @@ async function seedProjects() {
 			},
 		});
 
-		// --- Endpoints for Project Apollo (RICH DATA) ---
+		// --- Endpoints for Project Apollo (different structure and statuses) ---
 		await tx.endpoint.createMany({
 			data: [
 				{
@@ -327,77 +374,34 @@ async function seedProjects() {
 					operation: {
 						tags: ['Authentication'],
 						summary: 'Create a Session',
-						requestBody: {
-							required: true,
-							content: {
-								'application/json': {
-									schema: {
-										type: 'object',
-										properties: { deviceId: { type: 'string' } },
-									},
-								},
-							},
-						},
 						responses: { '201': { description: 'Session created.' } },
 					},
 				},
 				{
 					path: '/profile/settings',
 					method: 'put',
-					status: 'DRAFT',
+					status: 'IN_REVIEW',
 					projectId: projectApollo.id,
 					creatorId: brooklyn.id,
 					updatedById: brooklyn.id,
 					operation: {
 						tags: ['Profile'],
 						summary: "Update User's Settings",
-						requestBody: {
-							required: true,
-							content: {
-								'application/json': {
-									schema: {
-										type: 'object',
-										properties: {
-											enablePushNotifications: { type: 'boolean' },
-										},
-									},
-								},
-							},
-						},
 						responses: { '200': { description: 'Settings updated.' } },
 					},
 				},
-			],
-		});
-
-		// --- Environments & Secrets for Project Apollo ---
-		const apolloDev = await tx.environment.create({
-			data: { name: 'Development', projectId: projectApollo.id },
-		});
-		const apolloQA = await tx.environment.create({
-			data: { name: 'QA', projectId: projectApollo.id },
-		});
-		await tx.secret.createMany({
-			data: [
 				{
-					key: 'AUTH_TOKEN_SECRET',
-					value: encrypt('dev-secret-key-for-apollo'),
-					environmentId: apolloDev.id,
-				},
-				{
-					key: 'REDIS_URL',
-					value: encrypt('redis://localhost:6379'),
-					environmentId: apolloDev.id,
-				},
-				{
-					key: 'AUTH_TOKEN_SECRET',
-					value: encrypt('qa-secret-key-for-apollo'),
-					environmentId: apolloQA.id,
-				},
-				{
-					key: 'THIRD_PARTY_API_KEY',
-					value: encrypt('qa-key-12345'),
-					environmentId: apolloQA.id,
+					path: '/diagnostics/health',
+					method: 'get',
+					status: 'DRAFT',
+					projectId: projectApollo.id,
+					creatorId: brooklyn.id,
+					updatedById: brooklyn.id,
+					operation: {
+						tags: ['Diagnostics'],
+						summary: 'Health Check',
+						responses: { '200': { description: 'Service is healthy.' } },
+					},
 				},
 			],
 		});

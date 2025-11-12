@@ -5,8 +5,14 @@ import {
 	InternalServerErrorException,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import type {
+	OpenAPIObject,
+	OperationObject,
+	PathItemObject,
+} from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { EndpointStatus, Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
+import { ApiLintingService } from 'src/api-linting/api-linting.service';
 import { AuditAction, AuditEvent, AuditLogEvent } from 'src/audit/audit.events';
 import { UserDto } from 'src/auth/dto/user.dto';
 import {
@@ -15,6 +21,7 @@ import {
 	EndpointStatusChangeEvent,
 	EndpointUpdateChangeEvent,
 } from 'src/changelog/changelog.events';
+import { VALID_HTTP_METHODS } from 'src/common/constants/http.constants';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { EndpointConcurrencyException } from 'src/common/exceptions/endpoint-concurrency.exception';
@@ -22,6 +29,7 @@ import { EndpointConflictException } from 'src/common/exceptions/endpoint-confli
 import { EndpointNotFoundException } from 'src/common/exceptions/endpoint-not-found.exception';
 import { EndpointStatusConcurrencyException } from 'src/common/exceptions/endpoint-status-concurrency.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
+import { SpecLintingException } from 'src/common/exceptions/spec-linting.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { handlePrismaError } from 'src/common/utils/prisma-error.util';
 import {
@@ -42,6 +50,7 @@ export class EndpointsService {
 		private readonly prisma: PrismaService,
 		private readonly logger: PinoLogger,
 		private readonly eventEmitter: EventEmitter2,
+		private readonly apiLintingService: ApiLintingService,
 	) {
 		this.logger.setContext(EndpointsService.name);
 	}
@@ -115,6 +124,9 @@ export class EndpointsService {
 		creator: UserDto,
 	): Promise<EndpointDto> {
 		const { path, method, operation } = createEndpointDto;
+
+		await this.lintOperation(operation, path, method);
+
 		const now = new Date().toISOString();
 
 		const metadata: EndpointAppMetadata = {
@@ -178,6 +190,9 @@ export class EndpointsService {
 		updater: UserDto,
 	): Promise<EndpointDto> {
 		const { path, method, operation, lastKnownUpdatedAt } = updateEndpointDto;
+
+		await this.lintOperation(operation, path, method);
+
 		const now = new Date().toISOString();
 
 		try {
@@ -365,6 +380,42 @@ export class EndpointsService {
 
 		if (!validTransitions[from]?.includes(to)) {
 			throw new BadRequestException(`Cannot transition endpoint from '${from}' to '${to}'.`);
+		}
+	}
+
+	private async lintOperation(
+		operation: OperationObject,
+		path: string,
+		method: string,
+	): Promise<void> {
+		type HttpMethod = keyof Omit<
+			PathItemObject,
+			'summary' | 'description' | 'servers' | 'parameters'
+		>;
+
+		const normalizedMethod = method.toLowerCase();
+		if (!VALID_HTTP_METHODS.has(normalizedMethod)) {
+			throw new BadRequestException(`Invalid HTTP method: ${method}`);
+		}
+
+		const pathItem: PathItemObject = {
+			[normalizedMethod as HttpMethod]: operation,
+		};
+
+		const minimalSpec: OpenAPIObject = {
+			openapi: '3.0.0',
+			info: {
+				title: 'Validation Spec',
+				version: '1.0.0',
+			},
+			paths: {
+				[path]: pathItem,
+			},
+		};
+
+		const issues = await this.apiLintingService.lintSpec(minimalSpec);
+		if (issues.length > 0) {
+			throw new SpecLintingException(issues);
 		}
 	}
 }

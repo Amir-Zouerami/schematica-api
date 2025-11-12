@@ -6,6 +6,9 @@
 	"transform": {
 		"^.+\\.(t|j)s$": "ts-jest"
 	},
+	"transformIgnorePatterns": [
+		"/node_modules/(?!(@faker-js/faker|@apidevtools/swagger-parser|json-schema-faker|path-to-regexp)/)"
+	],
 	"moduleNameMapper": {
 		"^src/(.*)$": "<rootDir>/src/$1"
 	}

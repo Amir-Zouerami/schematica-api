@@ -35,5 +35,6 @@ import { AreLinksUniqueConstraint } from './validators/are-links-unique.validato
 		AreLinksUniqueConstraint,
 		SpecReconciliationService,
 	],
+	exports: [ProjectsService],
 })
 export class ProjectsModule {}
