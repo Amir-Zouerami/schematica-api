@@ -46,3 +46,19 @@ rules:
             # On each matching operation object, assert that `summary` is truthy.
             field: summary
             function: truthy
+
+    # ---------------------------------------------------------------------------
+    # Custom rule: "success-response-content-defined"
+    # Enforces that every 2xx or 3xx response has a `content` object.
+    # ---------------------------------------------------------------------------
+    success-response-content-defined:
+        description: Success responses must have a 'content' object.
+        message: 'All 2xx and 3xx responses must define a `content` object to describe the response body.'
+        severity: error
+        recommended: true
+        # Target all response objects whose key (the status code) starts with a '2' or '3'.
+        given: '$.paths.*.*.responses[?(@property.match(/^[23]/))]'
+        then:
+            # On each matching response object, assert that `content` is a truthy value.
+            field: content
+            function: truthy
