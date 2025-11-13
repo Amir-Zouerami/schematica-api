@@ -1,7 +1,17 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import {
+	ArgumentsHost,
+	Catch,
+	ExceptionFilter,
+	HttpException,
+	HttpStatus,
+	NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost } from '@nestjs/core';
-import { FastifyRequest } from 'fastify';
+import { FastifyReply, FastifyRequest } from 'fastify';
 import { PinoLogger } from 'nestjs-pino';
+import { join } from 'node:path';
+import { AllConfigTypes } from 'src/config/config.type';
 import { BaseAppException } from '../exceptions/base-app.exception';
 
 const statusToMetaCode = {
@@ -23,15 +33,30 @@ function isNestErrorResponse(value: unknown): value is NestErrorResponse {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+	private readonly globalPrefix: string;
+
 	constructor(
 		private readonly httpAdapterHost: HttpAdapterHost,
 		private readonly logger: PinoLogger,
-	) {}
+		configService: ConfigService<AllConfigTypes, true>,
+	) {
+		this.globalPrefix = configService.get('app.globalPrefix', { infer: true });
+	}
 
 	catch(exception: unknown, host: ArgumentsHost): void {
 		const { httpAdapter } = this.httpAdapterHost;
 		const ctx = host.switchToHttp();
 		const request = ctx.getRequest<FastifyRequest>();
+		const response = ctx.getResponse<FastifyReply>();
+
+		// --- SPA Fallback Logic ---
+		if (exception instanceof NotFoundException) {
+			const url = request.raw.url ?? '';
+			if (!url.startsWith(`/${this.globalPrefix}`)) {
+				response.sendFile('index.html', join(process.cwd(), 'public'));
+				return;
+			}
+		}
 
 		const { httpStatus, message, metaCode, type } = this.parseException(exception);
 

@@ -62,3 +62,8 @@ prisma/*.db
 
 # User-uploaded content
 /public/uploads
+/public/fonts
+/public/assets
+/public/*.html
+/public/*.ico
+/public/*.wasm
