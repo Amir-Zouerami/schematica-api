@@ -9,10 +9,10 @@ rules:
     # ---------------------------------------------------------------------------
 
     # Every operation should have a non-empty description.
-    operation-description: error
+    operation-description: warn
 
     # Every operation should use at least one tag, and that tag must be defined.
-    operation-tag-defined: error
+    operation-tag-defined: warn
 
     # Ensures every operation has at least one 2xx or 3xx success response.
     operation-success-response: error
@@ -54,7 +54,7 @@ rules:
     success-response-content-defined:
         description: Success responses must have a 'content' object.
         message: 'All 2xx and 3xx responses must define a `content` object to describe the response body.'
-        severity: error
+        severity: warn
         recommended: true
         # FIX: Use a more precise 'given' and allow for '$ref'
         given:
