@@ -137,7 +137,12 @@ async function seedProjects() {
 				name: 'Project Nova',
 				nameNormalized: 'project nova',
 				description: 'A comprehensive, public-facing User & Profile API.',
-				serverUrl: 'https://api.nova.test',
+				servers: [
+					{
+						url: 'https://api.nova.test',
+						description: 'Main Server',
+					},
+				],
 				creatorId: amir.id,
 				updatedById: amir.id,
 				links: {
@@ -348,7 +353,12 @@ async function seedProjects() {
 				name: 'Project Apollo',
 				nameNormalized: 'project apollo',
 				description: 'Internal-facing API for the mobile team.',
-				serverUrl: 'https://internal.api.apollo.test',
+				servers: [
+					{
+						url: 'https://internal.api.apollo.test',
+						description: 'Internal Server',
+					},
+				],
 				creatorId: brooklyn.id,
 				updatedById: brooklyn.id,
 				userAccesses: { create: [{ userId: brooklyn.id, type: AccessType.OWNER }] },
