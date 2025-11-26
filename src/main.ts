@@ -52,10 +52,16 @@ async function configureApp(
 	const nodeEnv = configService.get('app.nodeEnv', { infer: true });
 	const version = appVersion.split('.')[0];
 
-	await app.register(fastifyStatic, {
-		root: join(process.cwd(), 'public'),
-		prefix: '/',
-	});
+	// Only serve static files if not in the 'test' environment
+	if (nodeEnv !== 'test') {
+		await app.register(fastifyStatic, {
+			root: join(process.cwd(), 'public'),
+			prefix: '/',
+			maxAge: 31536000000, // 1 year in milliseconds
+			immutable: true,
+			cacheControl: true,
+		});
+	}
 
 	app.setGlobalPrefix(globalPrefix);
 	app.useLogger(app.get(Logger));
@@ -106,6 +112,7 @@ async function bootstrap(): Promise<void> {
 			path: '/',
 			httpOnly: true,
 			secure: isProduction,
+			sameSite: 'none',
 			maxAge: 7 * 24 * 60 * 60,
 		},
 	});

@@ -1,6 +1,13 @@
-export interface RequestMeta {
+import { ApiProperty } from '@nestjs/swagger';
+
+export class RequestMeta {
+	@ApiProperty({ example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' })
 	requestId: string;
+
+	@ApiProperty({ example: '2' })
 	apiVersion: string;
+
+	@ApiProperty({ example: '2025-11-06T12:00:00.000Z' })
 	timestamp: string;
 }
 
