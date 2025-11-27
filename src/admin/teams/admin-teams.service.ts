@@ -40,7 +40,7 @@ export class AdminTeamsService {
 				details: { name: newTeam.name },
 			} satisfies AuditLogEvent);
 
-			return new TeamDto(newTeam);
+			return TeamDto.from(newTeam);
 		} catch (error: unknown) {
 			this.logger.error({ error }, 'Failed to create team.');
 
@@ -69,7 +69,7 @@ export class AdminTeamsService {
 				details: { oldId: teamId, newName: updatedTeam.name },
 			} satisfies AuditLogEvent);
 
-			return new TeamDto(updatedTeam);
+			return TeamDto.from(updatedTeam);
 		} catch (error: unknown) {
 			this.logger.error({ error }, `Failed to update team with ID ${teamId}.`);
 
