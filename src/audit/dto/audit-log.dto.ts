@@ -18,7 +18,13 @@ export class AuditLogDto {
 	@ApiProperty()
 	targetId: string;
 
-	@ApiProperty({ nullable: true })
+	@ApiProperty({
+		nullable: true,
+		type: 'object',
+		additionalProperties: true,
+		description:
+			'A JSON object containing details specific to the action. Its structure depends on the `action` type.',
+	})
 	details: Prisma.JsonValue | null;
 
 	@ApiProperty()
@@ -33,6 +39,6 @@ export class AuditLogDto {
 		this.targetId = log.targetId;
 		this.details = log.details;
 		this.createdAt = log.createdAt;
-		this.actor = log.actor ? new SanitizedUserDto(log.actor) : null;
+		this.actor = log.actor ? SanitizedUserDto.from(log.actor) : null;
 	}
 }

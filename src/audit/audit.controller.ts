@@ -1,8 +1,10 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { AuditService } from './audit.service';
@@ -18,11 +20,11 @@ export class AuditController {
 	constructor(private readonly auditService: AuditService) {}
 
 	@Get()
-	@ApiOkResponse({
-		description: 'A paginated and filterable list of audit log entries.',
-		type: [AuditLogDto],
+	@ApiPaginatedResponse(AuditLogDto)
+	@ApiForbiddenResponse({
+		description: 'User does not have admin privileges.',
+		type: ErrorResponseDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have admin privileges.' })
 	findAll(@Query() query: AuditLogQueryDto): Promise<PaginatedServiceResponse<AuditLogDto>> {
 		return this.auditService.findAllPaginated(query);
 	}
