@@ -55,6 +55,16 @@ export class ChangelogListener {
 			);
 		}
 
+		if (before.status !== after.status) {
+			messages.push(
+				`User '${
+					actor.username
+				}' changed status of endpoint ${after.method.toUpperCase()} ${
+					after.path
+				} from '${before.status}' to '${after.status}'.`,
+			);
+		}
+
 		if (messages.length === 0) return;
 
 		const promises = messages.map((message) =>

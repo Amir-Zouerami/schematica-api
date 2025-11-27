@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiNotFoundResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { ProjectViewerGuard } from 'src/projects/guards/project-viewer.guard';
@@ -16,12 +18,10 @@ export class ChangelogController {
 
 	@Get()
 	@UseGuards(ProjectViewerGuard)
-	@ApiOkResponse({
-		description: 'A paginated list of changelog entries for the project.',
-		type: [ChangelogDto],
-	})
+	@ApiPaginatedResponse(ChangelogDto)
 	@ApiNotFoundResponse({
 		description: 'Project not found or user lacks access.',
+		type: ErrorResponseDto,
 	})
 	findAll(
 		@Param('projectId') projectId: string,
