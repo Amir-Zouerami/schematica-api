@@ -13,7 +13,7 @@ export class UserDto {
 	@ApiProperty({ enum: Role })
 	role: Role;
 
-	@ApiProperty({ required: false, nullable: true })
+	@ApiProperty({ required: false, nullable: true, type: 'string' })
 	profileImage: string | null;
 
 	@ApiProperty({ required: false, type: () => [TeamDto] })
@@ -35,6 +35,6 @@ export class UserDto {
 		this.tokenVersion = user.tokenVersion;
 		this.createdAt = user.createdAt;
 		this.updatedAt = user.updatedAt;
-		this.teams = user.teams.map((team) => new TeamDto(team));
+		this.teams = user.teams.map((team) => TeamDto.from(team));
 	}
 }

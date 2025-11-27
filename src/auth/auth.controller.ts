@@ -1,11 +1,14 @@
 import { Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { FastifyReply } from 'fastify';
 import { AllConfigTypes } from 'src/config/config.type';
+import { UserWithTeams } from 'src/users/users.types';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
+import { MeDto } from './dto/me.dto';
 import { UserDto } from './dto/user.dto';
 import { GitLabAuthGuard } from './guards/gitlab-auth.guard';
 import { GitLabCallbackGuard } from './guards/gitlab-callback.guard';
@@ -29,19 +32,23 @@ export class AuthController {
 
 	@Get('gitlab/callback')
 	@UseGuards(GitLabCallbackGuard)
-	gitlabAuthCallback(@CurrentUser() user: UserDto, @Res() res: FastifyReply) {
+	gitlabAuthCallback(@Res() res: FastifyReply, @CurrentUser() user: UserDto) {
 		const { access_token } = this.authService.login(user);
 		const redirectUrl = this.configService.get('app.oauthRedirectUrl', { infer: true });
 
 		const finalUrl = new URL(redirectUrl);
 		finalUrl.searchParams.set('token', access_token);
 
-		return res.redirect(finalUrl.toString());
+		res.redirect(finalUrl.toString(), 302);
 	}
 
 	@ApiBody({ type: LoginDto })
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
+	@ApiOkResponse({
+		description: 'User successfully logged in.',
+		type: LoginResponseDto,
+	})
 	login(@CurrentUser() user: UserDto) {
 		return this.authService.login(user);
 	}
@@ -49,7 +56,11 @@ export class AuthController {
 	@ApiBearerAuth()
 	@UseGuards(JwtAuthGuard)
 	@Get('me')
-	getProfile(@CurrentUser() user: UserDto): UserDto {
-		return user;
+	@ApiOkResponse({
+		description: 'The authenticated user profile.',
+		type: MeDto,
+	})
+	getProfile(@CurrentUser() user: UserWithTeams & { hasPassword: boolean }): MeDto {
+		return new MeDto(user);
 	}
 }
