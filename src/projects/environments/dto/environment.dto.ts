@@ -8,7 +8,7 @@ export class EnvironmentDto {
 	@ApiProperty()
 	name: string;
 
-	@ApiProperty({ nullable: true })
+	@ApiProperty({ nullable: true, type: 'string' })
 	description: string | null;
 
 	@ApiProperty()

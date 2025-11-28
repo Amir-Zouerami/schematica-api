@@ -66,7 +66,7 @@ model Project {
   name           String
   nameNormalized String   @unique
   description    String?
-  serverUrl      String?
+  servers        Json?    @default("[]")
   creator        User     @relation("ProjectCreator", fields: [creatorId], references: [id], onDelete: Restrict)
   creatorId      String
   updatedBy      User     @relation("ProjectUpdater", fields: [updatedById], references: [id], onDelete: Restrict)

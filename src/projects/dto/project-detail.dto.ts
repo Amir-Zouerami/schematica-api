@@ -1,17 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AccessType, Prisma, ProjectLink } from '@prisma/client';
+import { AccessType, Prisma } from '@prisma/client';
+import { TeamDto } from 'src/teams/dto/team.dto';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
-import { ProjectAccessControlListDto } from './project-access-control-list.dto';
+import { ProjectAccessDetailsResponseDto } from './project-access-details.dto';
 import { ProjectLinkDto } from './project-link.dto';
+import { ProjectServerDto } from './project-server.dto';
 
 export type ProjectDetailWithRelations = Prisma.ProjectGetPayload<{
 	include: {
 		creator: true;
 		updatedBy: true;
 		links: true;
-		userAccesses: { select: { userId: true; type: true } };
-		teamAccesses: { select: { teamId: true; type: true } };
-		deniedUsers: { select: { id: true } };
+		userAccesses: {
+			include: {
+				user: {
+					select: { id: true; username: true; profileImage: true };
+				};
+			};
+		};
+		teamAccesses: {
+			include: {
+				team: true;
+			};
+		};
+		deniedUsers: {
+			select: { id: true; username: true; profileImage: true };
+		};
 	};
 }>;
 
@@ -22,11 +36,11 @@ export class ProjectDetailDto {
 	@ApiProperty()
 	name: string;
 
-	@ApiProperty({ nullable: true })
+	@ApiProperty({ nullable: true, type: String })
 	description: string | null;
 
-	@ApiProperty({ nullable: true })
-	serverUrl: string | null;
+	@ApiProperty({ type: [ProjectServerDto], nullable: true })
+	servers: ProjectServerDto[] | null;
 
 	@ApiProperty({ type: SanitizedUserDto })
 	creator: SanitizedUserDto;
@@ -35,16 +49,13 @@ export class ProjectDetailDto {
 	updatedBy: SanitizedUserDto;
 
 	@ApiProperty({ type: [ProjectLinkDto] })
-	links: ProjectLink[];
+	links: ProjectLinkDto[];
 
 	@ApiPropertyOptional({
 		description: 'The full Access Control List (ACL) for the project.',
+		type: ProjectAccessDetailsResponseDto,
 	})
-	access?: {
-		owners: ProjectAccessControlListDto;
-		viewers: ProjectAccessControlListDto;
-		deniedUsers: string[];
-	};
+	access?: ProjectAccessDetailsResponseDto;
 
 	@ApiProperty()
 	createdAt: Date;
@@ -56,11 +67,11 @@ export class ProjectDetailDto {
 		this.id = project.id;
 		this.name = project.name;
 		this.description = project.description;
-		this.serverUrl = project.serverUrl;
+		this.servers = ProjectServerDto.fromPrisma(project.servers);
 		this.createdAt = project.createdAt;
 		this.updatedAt = project.updatedAt;
-		this.creator = new SanitizedUserDto(project.creator);
-		this.updatedBy = new SanitizedUserDto(project.updatedBy);
+		this.creator = SanitizedUserDto.from(project.creator);
+		this.updatedBy = SanitizedUserDto.from(project.updatedBy);
 		this.links = project.links;
 
 		if (project.userAccesses && project.teamAccesses && project.deniedUsers) {
@@ -68,20 +79,20 @@ export class ProjectDetailDto {
 				owners: {
 					users: project.userAccesses
 						.filter((ua) => ua.type === AccessType.OWNER)
-						.map((ua) => ua.userId),
+						.map((ua) => SanitizedUserDto.from(ua.user)),
 					teams: project.teamAccesses
 						.filter((ta) => ta.type === AccessType.OWNER)
-						.map((ta) => ta.teamId),
+						.map((ta) => TeamDto.from(ta.team)),
 				},
 				viewers: {
 					users: project.userAccesses
 						.filter((ua) => ua.type === AccessType.VIEWER)
-						.map((ua) => ua.userId),
+						.map((ua) => SanitizedUserDto.from(ua.user)),
 					teams: project.teamAccesses
 						.filter((ta) => ta.type === AccessType.VIEWER)
-						.map((ta) => ta.teamId),
+						.map((ta) => TeamDto.from(ta.team)),
 				},
-				deniedUsers: project.deniedUsers.map((u) => u.id),
+				deniedUsers: project.deniedUsers.map((u) => SanitizedUserDto.from(u)),
 			};
 		}
 	}

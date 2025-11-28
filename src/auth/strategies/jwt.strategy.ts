@@ -26,7 +26,7 @@ export class JwtStrategyFastify extends PassportStrategy(JwtStrategy, 'jwt') {
 		});
 	}
 
-	async validate(payload: JwtPayload): Promise<UserWithTeams> {
+	async validate(payload: JwtPayload): Promise<UserWithTeams & { hasPassword: boolean }> {
 		const user = await this.prisma.user.findUnique({
 			where: { id: payload.sub },
 			include: { teamMemberships: { select: { team: true } } },
@@ -39,7 +39,13 @@ export class JwtStrategyFastify extends PassportStrategy(JwtStrategy, 'jwt') {
 			throw new UnauthorizedException('Token is no longer valid');
 		}
 
+		const hasPassword = user.password !== null;
 		const { password: _, teamMemberships, ...safe } = user;
-		return { ...safe, teams: teamMemberships.map((m) => m.team) };
+
+		return {
+			...safe,
+			teams: teamMemberships.map((m) => m.team),
+			hasPassword,
+		};
 	}
 }

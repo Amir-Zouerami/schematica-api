@@ -1,5 +1,4 @@
 import { All, Controller, Headers, Param, Req, Res, UseGuards } from '@nestjs/common';
-import type { FastifyReply, FastifyRequest } from 'fastify';
 import {
 	ApiBearerAuth,
 	ApiHeader,
@@ -8,9 +7,11 @@ import {
 	ApiParam,
 	ApiTags,
 } from '@nestjs/swagger';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { MockServerService } from './mock-server.service';
 
 @ApiTags('Mock Server')
@@ -48,6 +49,7 @@ export class MockServerController {
 	})
 	@ApiNotFoundResponse({
 		description: 'The project or the requested API path was not found in the specification.',
+		type: ErrorResponseDto,
 	})
 	async handleMockRequest(
 		@Param('*') mockPath: string,

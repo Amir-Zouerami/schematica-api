@@ -1,3 +1,4 @@
+import { forwardRef, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
@@ -12,13 +13,12 @@ import { Server, Socket } from 'socket.io';
 import { JwtPayload } from 'src/auth/strategies/jwt.strategy';
 import { AllConfigTypes } from 'src/config/config.type';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Lock } from './locking.service';
+import { Lock, LockingService } from './locking.service';
 
 interface SocketAuth {
 	token: unknown;
 }
 
-// Add userId to the Socket type for internal use after authentication
 interface AuthenticatedSocket extends Socket {
 	userId?: string;
 }
@@ -33,6 +33,8 @@ export class LockingGateway implements OnGatewayConnection, OnGatewayDisconnect 
 		private readonly jwtService: JwtService,
 		private readonly prisma: PrismaService,
 		private readonly configService: ConfigService<AllConfigTypes, true>,
+		@Inject(forwardRef(() => LockingService))
+		private readonly lockingService: LockingService,
 	) {
 		this.logger.setContext(LockingGateway.name);
 	}
@@ -70,8 +72,16 @@ export class LockingGateway implements OnGatewayConnection, OnGatewayDisconnect 
 	@SubscribeMessage('subscribeToResource')
 	async handleSubscribe(client: AuthenticatedSocket, resourceId: string): Promise<void> {
 		if (typeof resourceId === 'string' && resourceId) {
+			const currentLock = this.lockingService.getLockStatus(resourceId);
+			client.emit('lock_updated', {
+				resourceId: resourceId,
+				lock: currentLock,
+			});
+
 			await client.join(`resource:${resourceId}`);
-			this.logger.info(`Client ${client.id} subscribed to resource ${resourceId}`);
+			this.logger.info(
+				`Client ${client.id} subscribed to resource ${resourceId} and received initial state.`,
+			);
 		}
 	}
 
@@ -83,12 +93,10 @@ export class LockingGateway implements OnGatewayConnection, OnGatewayDisconnect 
 		}
 	}
 
-	/**
-	 * Broadcasts the latest lock status for a resource to all subscribed clients.
-	 * @param resourceId The ID of the resource that was updated.
-	 * @param lock The current lock information, or null if the lock was released.
-	 */
 	broadcastLockUpdate(resourceId: string, lock: Lock | null): void {
-		this.server.to(`resource:${resourceId}`).emit('lock_updated', lock);
+		this.server.to(`resource:${resourceId}`).emit('lock_updated', {
+			resourceId: resourceId,
+			lock: lock,
+		});
 	}
 }

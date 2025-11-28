@@ -34,7 +34,7 @@ export class FilesService {
 	): Promise<string> {
 		const avatarSubdirectory = 'avatars';
 		const fileExtension = extname(tempFile.originalname);
-		const newFileName = `${username}${fileExtension}`;
+		const newFileName = `${username}-${Date.now()}${fileExtension}`;
 		const newPublicPath = join('/', 'uploads', avatarSubdirectory, newFileName);
 
 		const finalDirectory = join(this.uploadDestination, avatarSubdirectory);

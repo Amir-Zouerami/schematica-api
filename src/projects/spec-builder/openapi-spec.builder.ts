@@ -40,7 +40,10 @@ export class OpenApiSpecBuilder {
 				description: project.description,
 				version: '1.0.0',
 			},
-			servers: project.serverUrl ? [{ url: project.serverUrl }] : [],
+			servers:
+				project.servers && Array.isArray(project.servers) && project.servers.length > 0
+					? project.servers
+					: [],
 			paths: paths,
 			...(Object.keys(schemaComponents).length > 0 && {
 				components: {

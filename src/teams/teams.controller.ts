@@ -1,6 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
 import { PaginationSearchQueryDto } from 'src/common/dto/pagination-search-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { TeamDto } from './dto/team.dto';
@@ -14,7 +15,7 @@ export class TeamsController {
 	constructor(private readonly teamService: TeamsService) {}
 
 	@Get()
-	@ApiOkResponse({ description: 'a list of all teams', type: [TeamDto] })
+	@ApiPaginatedResponse(TeamDto)
 	async findAll(
 		@Query() paginationQuery: PaginationSearchQueryDto,
 	): Promise<PaginatedServiceResponse<TeamDto>> {

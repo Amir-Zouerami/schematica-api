@@ -1,4 +1,10 @@
-import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+	forwardRef,
+	Inject,
+	Injectable,
+	InternalServerErrorException,
+	NotFoundException,
+} from '@nestjs/common';
 import { PinoLogger } from 'nestjs-pino';
 import { USERNAME_PATTERN } from 'src/common/constants/validation.constants';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -153,6 +159,30 @@ export class NotificationService {
 
 			this.logger.error({ error }, 'Failed to mark notification as read.');
 			throw new NotFoundException('Could not update notification.');
+		}
+	}
+
+	/**
+	 * Marks all unread notifications for a specific user as read.
+	 * Returns the count of updated records.
+	 */
+	async markAllAsRead(userId: string): Promise<{ count: number }> {
+		try {
+			const result = await this.prisma.userNotificationStatus.updateMany({
+				where: {
+					userId: userId,
+					isRead: false,
+				},
+				data: {
+					isRead: true,
+					readAt: new Date(),
+				},
+			});
+
+			return { count: result.count };
+		} catch (error: unknown) {
+			this.logger.error({ error, userId }, 'Failed to mark all notifications as read.');
+			throw new InternalServerErrorException('Could not update notifications.');
 		}
 	}
 

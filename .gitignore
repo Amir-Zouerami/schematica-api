@@ -67,3 +67,4 @@ prisma/*.db
 /public/*.html
 /public/*.ico
 /public/*.wasm
+/public/sounds

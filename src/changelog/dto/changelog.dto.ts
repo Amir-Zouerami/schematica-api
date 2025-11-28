@@ -25,6 +25,6 @@ export class ChangelogDto {
 		this.id = changelog.id;
 		this.message = changelog.message;
 		this.createdAt = changelog.createdAt;
-		this.actor = changelog.actor ? new SanitizedUserDto(changelog.actor) : null;
+		this.actor = changelog.actor ? SanitizedUserDto.from(changelog.actor) : null;
 	}
 }

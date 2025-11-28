@@ -56,6 +56,15 @@ export class SpecReconciliationService {
 				const existing = existingEndpointsByKey.get(key);
 
 				if (existing) {
+					const oldComparable = this.getComparableOperation(existing.operation);
+					const newComparable = this.getComparableOperation(
+						operation as unknown as Prisma.JsonObject,
+					);
+
+					if (JSON.stringify(oldComparable) === JSON.stringify(newComparable)) {
+						continue;
+					}
+
 					const updatedOperation = this.buildUpdatedOperation(
 						operation,
 						existing,
@@ -92,6 +101,18 @@ export class SpecReconciliationService {
 
 	private createEndpointKey(method: string, path: string): string {
 		return `${method.toLowerCase()}:${path}`;
+	}
+
+	/**
+	 * Helper function to remove the 'x-app-metadata' key from an operation object
+	 * so we can perform a clean comparison of its content.
+	 */
+	private getComparableOperation(op: Prisma.JsonValue): object {
+		if (typeof op !== 'object' || op === null || Array.isArray(op)) {
+			return {};
+		}
+		const { 'x-app-metadata': _, ...comparablePart } = op as Record<string, unknown>;
+		return comparablePart;
 	}
 
 	private buildUpdatedOperation(

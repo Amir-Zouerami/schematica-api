@@ -145,7 +145,7 @@ export class AdminUsersService {
 	}
 
 	async update(userId: string, updateUserDto: UpdateUserDto, actor: UserDto): Promise<UserDto> {
-		const { role, teams } = updateUserDto;
+		const { role, teams, password } = updateUserDto;
 
 		try {
 			const updatedUser = await this.prisma.$transaction(async (tx) => {
@@ -155,19 +155,26 @@ export class AdminUsersService {
 					});
 				}
 
+				const data: Prisma.UserUpdateInput = {
+					role,
+					teamMemberships:
+						teams !== undefined
+							? {
+									create: teams.map((teamId) => ({
+										team: { connect: { id: teamId } },
+									})),
+								}
+							: undefined,
+				};
+
+				if (password) {
+					data.password = await hash(password, this.SALT_ROUNDS);
+					data.tokenVersion = { increment: 1 };
+				}
+
 				const user = await tx.user.update({
 					where: { id: userId },
-					data: {
-						role,
-						teamMemberships:
-							teams !== undefined
-								? {
-										create: teams.map((teamId) => ({
-											team: { connect: { id: teamId } },
-										})),
-									}
-								: undefined,
-					},
+					data,
 					include: userWithTeamsInclude,
 				});
 
@@ -180,6 +187,14 @@ export class AdminUsersService {
 				targetId: updatedUser.id,
 				details: { role: updatedUser.role },
 			} satisfies AuditLogEvent);
+
+			if (password) {
+				this.eventEmitter.emit(AuditEvent, {
+					actor,
+					action: AuditAction.USER_PASSWORD_UPDATED_BY_ADMIN,
+					targetId: updatedUser.id,
+				} satisfies AuditLogEvent);
+			}
 
 			const { password: _, teamMemberships, ...result } = updatedUser;
 

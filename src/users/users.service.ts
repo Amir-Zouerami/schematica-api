@@ -58,7 +58,7 @@ export class UsersService {
 		]);
 
 		return {
-			data: users.map((user) => new SanitizedUserDto(user)),
+			data: users.map((user) => SanitizedUserDto.from(user)),
 			meta: {
 				total,
 				page: paginationQuery.page,

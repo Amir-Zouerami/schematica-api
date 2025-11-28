@@ -15,7 +15,7 @@ export class ProjectAccessControlListDto {
 	@ApiPropertyOptional({
 		description: 'A list of team IDs.',
 		type: [String],
-		example: ['backend', 'UI'],
+		example: ['backend', 'ui'],
 	})
 	@IsArray()
 	@IsString({ each: true })

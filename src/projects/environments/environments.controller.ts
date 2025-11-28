@@ -23,6 +23,7 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { CheckResourceRelations } from 'src/common/guards/check-resource-relations.decorator';
 import { ResourceRelationsGuard } from 'src/common/guards/resource-relations.guard';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
@@ -45,8 +46,14 @@ export class EnvironmentsController {
 		description: 'The environment has been successfully created.',
 		type: EnvironmentDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiConflictResponse({ description: 'An environment with this name already exists.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiConflictResponse({
+		description: 'An environment with this name already exists.',
+		type: ErrorResponseDto,
+	})
 	create(
 		@Param('projectId') projectId: string,
 		@Body() createEnvironmentDto: CreateEnvironmentDto,
@@ -61,7 +68,10 @@ export class EnvironmentsController {
 		description: 'A list of all environments for the project.',
 		type: [EnvironmentDto],
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
+	})
 	findAll(@Param('projectId') projectId: string): Promise<EnvironmentDto[]> {
 		return this.environmentsService.findAllForProject(projectId);
 	}
@@ -79,9 +89,18 @@ export class EnvironmentsController {
 		description: 'The environment has been successfully updated.',
 		type: EnvironmentDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified environment was not found.' })
-	@ApiConflictResponse({ description: 'An environment with this name already exists.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified environment was not found.',
+		type: ErrorResponseDto,
+	})
+	@ApiConflictResponse({
+		description: 'An environment with this name already exists.',
+		type: ErrorResponseDto,
+	})
 	update(
 		@Param('projectId') projectId: string,
 		@Param('environmentId') environmentId: string,
@@ -107,8 +126,14 @@ export class EnvironmentsController {
 	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The environment has been successfully deleted.' })
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified environment was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified environment was not found.',
+		type: ErrorResponseDto,
+	})
 	async remove(
 		@Param('projectId') projectId: string,
 		@Param('environmentId') environmentId: string,

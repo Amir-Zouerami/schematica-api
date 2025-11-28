@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Team } from '@prisma/client';
 
-export class TeamDto implements Team {
+export class TeamDto {
 	@ApiProperty()
 	id: string;
 
@@ -14,10 +14,12 @@ export class TeamDto implements Team {
 	@ApiProperty()
 	updatedAt: Date;
 
-	constructor(team: Team) {
-		this.id = team.id;
-		this.name = team.name;
-		this.createdAt = team.createdAt;
-		this.updatedAt = team.updatedAt;
+	static from(team: Team): TeamDto {
+		const dto = new TeamDto();
+		dto.id = team.id;
+		dto.name = team.name;
+		dto.createdAt = team.createdAt;
+		dto.updatedAt = team.updatedAt;
+		return dto;
 	}
 }
