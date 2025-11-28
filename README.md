@@ -1,148 +1,287 @@
-# Schematica API v2
+# 🏗️ Schematica Backend API
+
+![Schematica Backend Cover](https://github.com/user-attachments/assets/e73d72fd-3d32-4300-b8c7-b023c3e687ec)
 
 [![CI](https://github.com/amir-zouerami/schematica-api/actions/workflows/ci.yml/badge.svg?branch=main&style=for-the-badge)](https://github.com/amir-zouerami/schematica-api/actions/workflows/ci.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Runtime](https://img.shields.io/badge/Runtime-Bun_v1.1-black?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
+[![Prisma](https://img.shields.io/badge/Prisma-v6-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 
-> A modern, collaborative platform for designing, documenting, and governing your APIs with confidence.
+> **The high-performance, event-driven engine powering the Schematica platform.**
 
-## 🚀 Introduction
+**Schematica** is a collaborative API design and documentation workspace. This repository contains the **Backend API**, engineered to provide a robust, scalable foundation for managing OpenAPI specifications, handling real-time concurrency, and enforcing granular access control.
 
-In a world of distributed systems, maintaining a consistent, well-documented, and reliable API is harder than ever. Teams struggle with outdated documentation, inconsistent designs, and a lack of a central source of truth, leading to slower development cycles and integration headaches.
+It is built as a showcase of modern backend engineering principles, prioritizing **Type Safety**, **Clean Architecture**, and **Developer Experience**.
 
-Schematica is a backend-first platform, with its source available as a showcase of modern software engineering principles. It provides a single, collaborative environment where teams can design, document, and govern their APIs throughout their entire lifecycle. Think of it as a version-controlled, real-time workspace for your API specifications, built with the developer experience at its core.
+> **Note:** This repository works in tandem with the [Schematica Frontend](https://github.com/Amir-Zouerami/schematica-frontend).
+> This project was originally built as an internal tool to solve specific workflow friction points at my previous company. It is now provided as "source-available" for educational purposes.
 
-Built on a modern, scalable, and robust tech stack powered by **NestJS** and **Prisma**, this project is engineered to meet the demands of professional development teams.
-
-## 📚 Table of Contents
-
-- [🚀 Introduction](#-introduction)
-- [🧠 Core Philosophy](#-core-philosophy)
-- [✨ Key Features](#-key-features)
-- [📫 API Collection](#-api-collection)
-- [🏗️ Architectural Overview](#️-architectural-overview)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [🚀 Getting Started](#-getting-started)
-- [🙌 A Note on Contributions](#-a-note-on-contributions)
-
-## 🧠 Core Philosophy
-
-Schematica is more than just a collection of features; it's an opinionated project built on a foundation of modern software engineering principles. The goal is not just to build a tool, but to build it *the right way*. Every decision is deliberate and guided by the following tenets:
-
-*   **🏛️ Architectural Excellence:** We don't just write code that works; we build systems that last. The application follows SOLID principles and Clean Architecture patterns to ensure a clear separation of concerns. Logic is decoupled, modules are cohesive, and the codebase is designed to be easily maintained and extended.
-
-*   **🤝 Developer Experience First:** A great platform starts with a great API. The Schematica API is designed to be predictable, consistent, and self-documenting. With built-in OpenAPI (Swagger) generation, robust validation, and a clear, standardized response structure, interacting with the API is a seamless experience.
-
-*   **⚡ Decoupled & Event-Driven:** Core business logic is intentionally kept separate from side-effects like auditing, changelog generation, and notifications. We leverage an event-driven system (`@nestjs/event-emitter`) to decouple these concerns, resulting in a more resilient, scalable, and testable application. When a project is updated, the `ProjectsService` simply emits an event; it doesn't need to know or care about what happens next.
-
-*   **🛡️ Robustness & Reliability:** This is a production-grade application. We enforce a zero-`any` policy for absolute type safety, handle errors gracefully with a custom exception hierarchy, and ensure every change passes a comprehensive CI pipeline with linting, formatting, and automated tests.
-
-## ✨ Key Features
-
-The platform boasts a rich set of features designed for professional development teams.
-
-*   **👥 User & Team Management:** Full administrative CRUD for managing users and teams, with support for both local and OAuth-based (GitLab) authentication.
-*   **📂 Project Workspaces:** Create and manage projects as central workspaces for your API specifications.
-*   **📄 OpenAPI Native:** Import and export full OpenAPI 3.0 specifications. The spec is the source of truth for all endpoint documentation.
-*   **🔐 Granular Access Control:** A powerful, hybrid security model combining Role-Based (RBAC) and Attribute-Based (ABAC) controls for both system-wide and resource-specific permissions.
-*   **✍️ Collaborative Endpoint Editing:** Full CRUD for a project's endpoints with real-time notifications to keep teams in sync.
-*   **🔒 Real-time Endpoint Locking:** Prevents concurrent edits by allowing a user to "lock" an endpoint while making changes. Other users are notified in real-time via WebSockets.
-*   **💬 Notes & Mentions:** Attach notes to any endpoint to facilitate discussions. Mention users with `@username` to send them real-time notifications.
-*   **📋 Comprehensive Audit Trail:** A detailed, event-driven log of all critical actions performed in the system, accessible only to administrators.
-*   **📜 Automatic Changelog:** A human-readable changelog is automatically generated for each project, tracking every meaningful change to its endpoints.
-*   **🛡️ Secure Environment Vault:** Create project-specific environments (e.g., `development`, `production`) and store sensitive data like API keys and tokens in a securely encrypted vault.
-*   **🎨 API Governance Suite:**
-    *   **Reusable Schema Registry:** Build a central library of reusable OpenAPI schemas (`User`, `Error`, etc.) within a project to enforce consistency and reduce duplication.
-    *   **Automated API Linting:** Automatically enforce API style guides and best practices on import or update using an integrated Spectral linter with a custom ruleset.
-*   **🚀 Dynamic Mock Server:** Instantly generate a dynamic mock server from any project's OpenAPI specification. This allows frontend teams to develop against realistic, validated API responses before the backend implementation is complete. Supports status code and locale selection.
-
-## 📫 API Collection
-
-To get started with the API quickly, you can use the official Postman collection. It includes pre-configured requests for all major endpoints, along with environment variables for easy configuration.
-
-<a href="https://raw.githubusercontent.com/Amir-Zouerami/schematica-api/refs/heads/main/docs/postman/Schematica%20v2.postman_collection.json" target="_blank"><img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;"></a>
+---
 
 ## 🏗️ Architectural Overview
 
-The Schematica API is built using a modern, modular, and scalable architecture designed for high performance and maintainability.
+The Schematica API avoids the "Spaghetti Monolith" trap by adopting a **Modular, Event-Driven Architecture**.
 
-#### 1. Modular, Hexagonal Design
-The application is organized into **feature modules** (e.g., `ProjectsModule`, `AdminModule`, `LockingModule`), each with a clearly defined responsibility. We adhere to principles of **Clean Architecture**, where core business logic is independent of external concerns like the database or web frameworks. Controllers and gateways act as "ports," and services are the "use cases," ensuring a clean separation of concerns.
+### 1. Domain-Driven Modules
+The application structure mirrors the business domain. Code is organized into cohesive modules (`ProjectsModule`, `LockingModule`) rather than technical layers. This ensures that related logic sits together, making the codebase intuitive to navigate and easy to scale.
 
-#### 2. Decoupling with an Event-Driven Core
-A core principle is the decoupling of primary actions from their side effects. Instead of a single service doing too much, it emits a strongly-typed event, and other modules listen for it. This design makes the system incredibly resilient and extensible. Adding a new side-effect (like sending a webhook) is as simple as creating a new listener, with zero changes to the original service.
+### 2. Decoupled Event-Driven Core
+A core principle of this system is the strict separation of **Primary Business Logic** from **Side Effects**. We utilize `@nestjs/event-emitter` to achieve this decoupling.
 
-#### 3. Hybrid Access Control Model
-Security is implemented in two layers for defense in depth:
+*   **The Problem:** In many apps, a `createProject` service method grows to 100 lines because it has to send emails, write audit logs, and notify Slack.
+*   **Our Solution:** The `ProjectsService` performs **only** the database transaction and emits a typed event (`PROJECT_CREATED`).
+*   **The Benefit:** Independent Listeners handle the side effects. If the Notification Service fails, the Audit Log is still written, and the User's request still succeeds. This results in a highly resilient system.
+
+### 3. Hybrid Access Control (RBAC + ABAC)
+Security is implemented in two layers for defense-in-depth:
 1.  **Coarse-Grained (`RolesGuard`):** Protects entire routes based on a user's system-wide role (e.g., only an `admin` can access `/admin/*`).
-2.  **Fine-Grained (`AccessControlService`):** A dedicated service that handles complex, resource-specific authorization (e.g., "Can this `user` view this `project`?"), providing a powerful, attribute-based access control (ABAC) system.
+2.  **Fine-Grained (`AccessControlService`):** Implements Attribute-Based Access Control (ABAC). It evaluates complex conditions at runtime—checking Project Ownership, Team Membership, and Deny Lists—to authorize specific resources.
 
-#### 4. High-Performance State with In-Memory Services
-For features requiring high-performance, ephemeral state, we use dedicated stateful singletons. The `LockingService` holds the current state of all resource locks in an in-memory `Map`, providing instantaneous reads and writes without database overhead and ensuring a responsive collaborative experience. A background cleanup job ensures this in-memory state is self-healing.
+### 4. High-Performance State Management
+For features requiring high-frequency updates (like **Collaborative Editing Locks**), we bypass the database entirely. The `LockingService` manages ephemeral state using in-memory structures, ensuring the real-time experience remains distinct from persistent storage latency.u
 
-#### 5. Real-Time Collaboration with WebSockets
-A rich, real-time user experience is provided using secure, namespaced WebSocket gateways. The `NotificationsGateway` and `LockingGateway` authenticate clients via JWT and use a room-based model (`socket.join('resource:123')`) to efficiently broadcast updates only to relevant clients, minimizing network traffic.
+---
 
-## 🛠️ Tech Stack
+## ✨ Key Features
 
-This project is built with a modern, robust, and scalable technology stack, prioritizing type safety, performance, and developer productivity.
+### 🔐 Security & Access Control
+*   **Hybrid Auth:** Supports both **Local Strategy** (Bcrypt hashing) and **OAuth2** (GitLab) via Passport.js.
+*   **Secure Sessions:** Uses `fastify-secure-session` with `@fastify/cookie` for robust session management.
+*   **ABAC (Attribute-Based Access Control):** Beyond simple Roles (`admin` vs `user`), we implement fine-grained guards (`ProjectOwnerGuard`, `ProjectViewerGuard`) that evaluate ownership and team membership at runtime.
+*   **Environment Vault:** Project secrets (API Keys, Tokens) are encrypted at rest using `AES-256-GCM` before entering the database.
 
-#### Backend
-*   **Framework:** [NestJS](https://nestjs.com/) (v11)
-*   **Runtime:** [Bun](https://bun.sh/)
-*   **Database ORM:** [Prisma](https://www.prisma.io/) (v5)
-*   **Database:** Utilizes **SQLite** for local development and CI for its simplicity and speed. Prisma's abstraction ensures seamless portability to production-grade databases like **PostgreSQL**, **MySQL**, or **CockroachDB**.
-*   **Authentication:** [Passport.js](http://www.passportjs.org/) with JWT and OAuth 2.0 (GitLab) strategies.
-*   **Real-time:** [Socket.IO](https://socket.io/) for bidirectional WebSocket communication.
-*   **API Specification & Governance:** [Swagger (OpenAPI)](https://swagger.io/) and [Spectral](https://stoplight.io/open-source/spectral).
+### ⚡ Real-Time Collaboration
+*   **Pessimistic Locking:** Prevents "last-write-wins" race conditions. When a user edits an endpoint, a WebSocket event locks that resource globally. Other users see the lock status update instantly via `Socket.IO`.
+*   **Live Notifications:** mentions (`@username`) in notes trigger instant alerts to connected clients.
 
-#### Tooling & Environment
-*   **Language:** [TypeScript](https://www.typescriptlang.org/) (v5) with strict mode enabled.
-*   **Linting & Formatting:** ESLint and Prettier for a consistent, high-quality codebase.
-*   **Testing:** [Jest](https://jestjs.io/) for unit and end-to-end testing.
-*   **CI/CD:** GitHub Actions for automated linting, testing, and building on every push and pull request.
+### 🛠️ API Governance Engine
+*   **Spectral Linting:** Integrated `@stoplight/spectral` engine to lint OpenAPI specs against a custom ruleset (`.spectral.yaml`) on every save or import.
+*   **Spec Reconciliation:** A smart diffing engine that compares an imported OpenAPI JSON against the database state, determining exactly which endpoints to Create, Update, or Delete (Soft Sync).
+
+### 🚀 Dynamic Mock Server
+*   **Zero-Config Mocking:** The API can instantly generate mock responses for *any* endpoint defined in a project.
+*   **Faker Integration:** Leverages `json-schema-faker` and `@faker-js/faker` to generate realistic, schema-compliant data (names, emails, UUIDs) based on the OpenAPI schema definition.
+*   **Locale & State Support:** Clients can request specific HTTP status codes (e.g., test a `404`) or locales (e.g., `fa`, `en`) via headers.
+
+---
+
+## 📚 API Collection
+
+For a quick start, import the official Postman Collection. It includes environment variables and pre-configured requests for Auth, Projects, and Mocking.
+
+<a href="https://raw.githubusercontent.com/Amir-Zouerami/schematica-api/refs/heads/main/docs/postman/Schematica%20v2.postman_collection.json" target="_blank"><img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;"></a>
+
+
+---
+
+## 🛠 Tech Stack
+
+We chose a stack that balances developer ergonomics with raw performance.
+
+| Category          | Technology            | Reasoning                                                                                                                 |
+| :---------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------ |
+| **Runtime**       | **Bun**               | Chosen for its ultra-fast startup time (critical for dev loops) and native TypeScript support.                            |
+| **Framework**     | **NestJS**            | Provides the modular structure and dependency injection container needed for enterprise-grade apps.                       |
+| **HTTP Adapter**  | **Fastify**           | Replaces Express.js to maximize throughput and minimize overhead.                                                         |
+| **Database**      | **SQLite** (Dev)      | Keeping the DB portable allows for zero-setup ease of use. Can be swapped for PostgreSQL in production via Prisma.        |
+| **ORM**           | **Prisma**            | Best-in-class type safety. The generated client ensures DB queries align perfectly with TypeScript interfaces.            |
+| **Real-time**     | **Socket.IO**         | Manages WebSocket namespaces and rooms for granular update broadcasting.                                                  |
+| **Documentation** | **Swagger / OpenAPI** | The API is self-documenting. We use `class-validator` decorators to drive both runtime validation and Swagger generation. |
+| **Linting**       | **Spectral**          | An open-source JSON/YAML linter used to govern API design quality programmatically.                                       |
+
+---
+
+## 📂 Project Structure
+
+The directory structure follows **Domain-Driven Design (DDD)** principles. We avoid grouping files by type (controllers/services) and instead group them by **Module/Domain**.
+
+```text
+src/
+├── access-control/      # 🛡️ ABAC Logic (Permissions service)
+├── api-linting/         # 📏 Spectral wrapper service for OAS validation
+├── audit/               # 📋 Event listeners for Audit Logging
+├── auth/                # 🔐 Passport Strategies (JWT, Local, GitLab)
+├── changelog/           # 📜 Event listeners for Changelog generation
+├── common/              # 🧱 Shared Kernel (Guards, Interceptors, Filters, Utils)
+├── config/              # ⚙️ Type-safe configuration namespace
+├── encryption/          # 🔐 AES-256-GCM encryption service for Secrets
+├── locking/             # 🚦 In-Memory resource locking (Services + Gateway)
+├── mock-server/         # 🎭 Dynamic Mocking Engine (Faker + JSON Schema)
+├── notifications/       # 🔔 Notification distribution logic
+├── projects/            # 📦 Core Domain: Projects (Aggregates Endpoints, Envs)
+│   ├── endpoints/       #    - Sub-domain: API Endpoints
+│   ├── environments/    #    - Sub-domain: Env Variables
+│   ├── spec-builder/    #    - Logic to assemble DB records into OpenAPI JSON
+│   └── spec-reconcile/  #    - Logic to diff JSON against DB records
+└── main.ts              # 🚀 Application Bootstrap
+```
+
+---
+
+## 🏗️ Architectural Deep Dives
+
+### 1. Hybrid Access Control (RBAC + ABAC)
+Security is implemented in layers for defense-in-depth:
+
+1.  **Route Level (RBAC):** The `RolesGuard` protects entire controllers based on system roles.
+    ```typescript
+    @Roles(Role.admin) // Only Admins can touch this
+    @Controller('admin/users')
+    ```
+2.  **Resource Level (ABAC):** The `AccessControlService` performs logic-heavy checks. It inspects the `Project`, the `User`, and their `TeamMembership` to determine access (Owner vs. Viewer).
+    ```typescript
+    // Inside ProjectOwnerGuard
+    const canOwn = await this.accessControlService.canOwnProject(user, projectId);
+    ```
+
+### 2. The "Side-Effect" Architecture
+To keep business logic clean, we strictly separate **Actions** from **Reactions** using `EventEmitter2`.
+
+*   **Scenario:** A user updates an endpoint's status.
+*   **Service Layer:** Updates the database record. Emits `EndpointEvent.STATUS_UPDATED`. Returns the result.
+*   **Audit Listener:** Catches event -> Writes to `AuditLog` table.
+*   **Changelog Listener:** Catches event -> Formats a human-readable message ("User X changed status to Published") -> Writes to `Changelog` table.
+*   **Notification Listener:** Catches event -> Checks for watchers -> Dispatches WebSocket message.
+
+**Benefit:** If the Audit Logger fails, the User's request still succeeds. The system is loosely coupled and highly resilient.
+
+### 3. Monolithic Deployment Strategy (The `public/` folder)
+While the Frontend and Backend are developed in separate repositories for clear separation of concerns, they are designed to be deployed as a **Single Unit**.
+
+The `AppModule` is configured to serve static assets from the `public/` directory (excluding the `/api` prefix).
+
+*   **Workflow:**
+    1.  Build the [Schematica Frontend](https://github.com/Amir-Zouerami/schematica-frontend).
+    2.  Place the resulting `dist/` files into `schematica-api/public/`.
+    3.  Start the NestJS server.
+*   **Result:** The NestJS app serves the API on `/api/v2/...` and the React SPA on `/`.
+*   **Why?** This eliminates CORS issues in production, simplifies deployment (one container to manage), and allows cookies to be shared securely between the API and the UI.
+
+### 4. Smart Spec Reconciliation
+Importing an OpenAPI file isn't just a database overwrite. The `SpecReconciliationService` acts as a specialized "Diff Engine":
+
+1.  **Normalize:** It flattens the incoming JSON spec into a map of `method:path` keys.
+2.  **Compare:** It fetches existing endpoints from the DB.
+3.  **Decision Matrix:**
+    *   *Match:* Compare signatures. If different, mark for **Update**.
+    *   *New:* Mark for **Create**.
+    *   *Missing:* Mark for **Delete**.
+4.  **Execute:** Runs the calculated changes inside a single Prisma Transaction to ensure atomicity.
+
+---
 
 ## 🚀 Getting Started
 
-To get the project up and running on your local machine, follow these steps.
+Follow these steps to get the Schematica platform running locally.
 
-#### Prerequisites
-- [Bun](https://bun.sh/docs/installation) installed (`curl -fsSL https://bun.sh/install | bash`)
-- [Git](https://git-scm.com/)
+### Prerequisites
+*   **[Bun](https://bun.sh/)** (v1.1+) - The runtime and package manager.
+*   **Git** - Version control.
+*   *(Optional)* **Docker** - If you prefer running a PostgreSQL instance instead of the default SQLite dev database.
 
-#### 1. Clone the Repository
+### 1. Installation
+
 ```bash
-git clone https://github.com/amir-zouerami/schematica-api.git
+# Clone the repository
+git clone https://github.com/Amir-Zouerami/schematica-api.git
 cd schematica-api
-```
 
-#### 2. Install Dependencies```bash
+# Install dependencies using Bun
 bun install
 ```
 
-#### 3. Set Up Environment Variables
-Copy the example environment file. The default values are sufficient for local development.
+### 2. Environment Configuration
+
+Copy the example configuration file. The default settings are tuned for local development.
+
 ```bash
 cp .env.example .env
 ```
-*(For features like GitLab OAuth, you'll need to update `.env` with your own client IDs and secrets.)*
 
-#### 4. Set Up the Database
-This command creates the `dev.db` SQLite database and runs the seed script to populate it with initial data.
+> **🔑 Critical Security Note:**
+> The `.env` file contains the `ENCRYPTION_KEY`. This key is used to encrypt/decrypt sensitive Environment Secrets (API Keys) in the database. If you change this key, all previously encrypted secrets in the DB will become unreadable.
+
+### 3. Database Setup & Seeding
+
+We use **Prisma** to manage the schema and seeding. The seed script is comprehensive—it doesn't just add users; it constructs an entire mock ecosystem (Projects, Teams, Endpoints, and encrypted Secrets).
+
 ```bash
+# Run migrations and seed the database
 bun run migrate:reset
 ```
 
-#### 5. Run the Application
+**What gets seeded?**
+*   **Users:** `amir.zouerami` (Admin), `brooklyn.lee` (Member), `guest.user` (Guest).
+*   **Password:** `password123` (for all seeded users).
+*   **Projects:**
+    *   *Project Nova:* A full public-facing API spec.
+    *   *Project Apollo:* An internal microservice spec.
+*   **Teams:** Engineering hierarchy (Backend, Frontend, Leadership).
+
+### 4. Running the Server
+
 ```bash
-# Development mode with hot-reloading
+# Start in development mode (Hot Reload)
 bun run start:dev
+
+# Start in production mode
+bun run start:prod
 ```
-The application will be running on `http://localhost:3000`. The API documentation can be accessed at `http://localhost:3000/docs`.
 
-## 🙌 A Note on Contributions
+The API will be available at `http://localhost:3000/api/v2`.
+The Swagger documentation is at `http://localhost:3000/docs`.
 
-Thank you for your interest in Schematica. This project is "source-available" to serve as a professional showcase and a reference for modern backend architecture.
+---
 
-While the source is open for you to read, learn from, and adapt for your own projects (in accordance with the license), I am not actively accepting external pull requests at this time.
+## 🖥️ Frontend Integration (The "Public" Folder)
 
-However, feedback and architectural discussions are always welcome. If you have ideas, questions, or spot a potential issue, please feel free to open an issue on the [issues page](https://github.com/amir-zouerami/schematica-api/issues). I will review them as time permits.
+To experience the full platform, you need to serve the UI. This backend is configured to serve the Single Page Application (SPA) static files from the `/public` directory.
+
+1.  Clone and build the [Schematica Frontend](https://github.com/Amir-Zouerami/schematica-frontend).
+    ```bash
+    git clone https://github.com/Amir-Zouerami/schematica-frontend.git
+    cd schematica-frontend
+    bun install
+    bun run build
+    ```
+2.  Copy the contents of the frontend `dist/` folder into the backend `public/` folder.
+    ```bash
+    # From the frontend directory
+    cp -r dist/* ../schematica-api/public/
+    ```
+3.  Restart the NestJS server. Access the app at `http://localhost:3000`.
+
+*Note: The API routes are prefixed with `/api/v2`, so they do not conflict with the frontend routing.*
+
+---
+
+## 🤝 Contribution Policy
+
+**This project is provided as "Source-Available" software.**
+
+It serves three primary purposes:
+1.  **A Portfolio Piece:** Demonstrating high-level architectural decisions, strict typing, and modern backend patterns.
+2.  **Helping The Community:** It gives back to the community i hold so dearly, the open-source community. If you need such a platform for you company, feel free to use it.
+3.  **A Reference Implementation:** Helping other developers learn how to build robust, event-driven systems with NestJS and Prisma.
+
+**⚠️ I am NOT accepting Pull Requests.**
+
+This was originally an internal tool built for a specific company context and it's being actively used to this day. While I have open-sourced the code for educational purposes, I am not maintaining it as a community-driven project.
+
+**You are highly encouraged to:**
+*   🔱 **Fork** the repository.
+*   🔧 **Modify** it to fit your own needs.
+*   💡 **Use** the patterns found here in your own projects.
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0**.
+
+<br />
+
+<div align="center">
+  <sub>Built with 💙, strictly typed, and engineered to last.</sub>
+</div>

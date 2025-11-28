@@ -51,7 +51,6 @@ export class AdminUsersController {
 
 	@Post()
 	@UseInterceptors(FileInterceptor)
-	@UseInterceptors(FileInterceptor)
 	@ApiConsumes('multipart/form-data')
 	@ApiCreatedResponse({ description: 'The user has been successfully created.', type: UserDto })
 	@ApiForbiddenResponse({
