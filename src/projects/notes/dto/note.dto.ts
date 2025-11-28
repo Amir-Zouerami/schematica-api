@@ -36,6 +36,6 @@ export class NoteDto {
 		this.content = note.content;
 		this.createdAt = note.createdAt;
 		this.updatedAt = note.updatedAt;
-		this.author = new SanitizedUserDto(note.author);
+		this.author = SanitizedUserDto.from(note.author);
 	}
 }

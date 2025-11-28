@@ -32,9 +32,21 @@ const projectDetailInclude = {
 	creator: true,
 	updatedBy: true,
 	links: true,
-	userAccesses: { select: { userId: true, type: true } },
-	teamAccesses: { select: { teamId: true, type: true } },
-	deniedUsers: { select: { id: true } },
+	userAccesses: {
+		include: {
+			user: {
+				select: { id: true, username: true, profileImage: true },
+			},
+		},
+	},
+	teamAccesses: {
+		include: {
+			team: true,
+		},
+	},
+	deniedUsers: {
+		select: { id: true, username: true, profileImage: true },
+	},
 } satisfies Prisma.ProjectInclude;
 
 @Injectable()
@@ -51,7 +63,7 @@ export class ProjectsService {
 	}
 
 	async create(createProjectDto: CreateProjectDto, creator: UserDto): Promise<ProjectDetailDto> {
-		const { name, description, serverUrl, links } = createProjectDto;
+		const { name, description, servers, links } = createProjectDto;
 
 		try {
 			const newProject = await this.prisma.$transaction(async (tx) => {
@@ -60,7 +72,7 @@ export class ProjectsService {
 						name,
 						nameNormalized: name.toLowerCase(),
 						description,
-						serverUrl,
+						servers: (servers as unknown as Prisma.JsonArray) ?? Prisma.JsonNull,
 						creatorId: creator.id,
 						updatedById: creator.id,
 						links: links
@@ -172,7 +184,7 @@ export class ProjectsService {
 		updateProjectDto: UpdateProjectDto,
 		updater: UserDto,
 	): Promise<ProjectDetailDto> {
-		const { name, lastKnownUpdatedAt, links, ...otherData } = updateProjectDto;
+		const { name, lastKnownUpdatedAt, links, servers, ...otherData } = updateProjectDto;
 
 		try {
 			const updatedProject = await this.prisma.$transaction(async (tx) => {
@@ -193,6 +205,7 @@ export class ProjectsService {
 						name,
 						nameNormalized: name ? name.toLowerCase() : undefined,
 						...otherData,
+						servers: (servers as unknown as Prisma.JsonArray) ?? undefined,
 						updatedById: updater.id,
 						links:
 							links !== undefined
@@ -235,16 +248,17 @@ export class ProjectsService {
 	): Promise<ProjectDetailDto> {
 		const { owners, viewers, deniedUsers, lastKnownUpdatedAt } = updateAccessDto;
 
-		const ownerUsers = owners?.users ?? [];
-		const ownerTeams = owners?.teams ?? [];
-		const viewerUsers = viewers?.users ?? [];
-		const viewerTeams = viewers?.teams ?? [];
-		const safeDeniedUsers = deniedUsers ?? [];
+		const ownerUserIds = owners?.users?.map((user) => user.id) ?? [];
+		const ownerTeamIds = owners?.teams?.map((team) => team.id) ?? [];
+		const viewerUserIds = viewers?.users?.map((user) => user.id) ?? [];
+		const viewerTeamIds = viewers?.teams?.map((team) => team.id) ?? [];
+		const deniedUserIds = deniedUsers?.map((user) => user.id) ?? [];
 
 		const currentUserTeamIds = new Set(currentUser.teams?.map((team) => team.id) ?? []);
+
 		const stillOwner =
-			ownerUsers.includes(currentUser.id) ||
-			ownerTeams.some((teamId) => currentUserTeamIds.has(teamId));
+			ownerUserIds.includes(currentUser.id) ||
+			ownerTeamIds.some((teamId) => currentUserTeamIds.has(teamId));
 
 		if (currentUser.role !== Role.admin && !stillOwner) {
 			throw new ForbiddenException(
@@ -271,9 +285,9 @@ export class ProjectsService {
 				]);
 
 				const createOwnerUsers =
-					ownerUsers.length > 0
+					ownerUserIds.length > 0
 						? tx.userProjectAccess.createMany({
-								data: ownerUsers.map((userId) => ({
+								data: ownerUserIds.map((userId) => ({
 									projectId,
 									userId,
 									type: AccessType.OWNER,
@@ -282,9 +296,9 @@ export class ProjectsService {
 						: Promise.resolve();
 
 				const createOwnerTeams =
-					ownerTeams.length > 0
+					ownerTeamIds.length > 0
 						? tx.teamProjectAccess.createMany({
-								data: ownerTeams.map((teamId) => ({
+								data: ownerTeamIds.map((teamId) => ({
 									projectId,
 									teamId,
 									type: AccessType.OWNER,
@@ -293,9 +307,9 @@ export class ProjectsService {
 						: Promise.resolve();
 
 				const createViewerUsers =
-					viewerUsers.length > 0
+					viewerUserIds.length > 0
 						? tx.userProjectAccess.createMany({
-								data: viewerUsers.map((userId) => ({
+								data: viewerUserIds.map((userId) => ({
 									projectId,
 									userId,
 									type: AccessType.VIEWER,
@@ -304,9 +318,9 @@ export class ProjectsService {
 						: Promise.resolve();
 
 				const createViewerTeams =
-					viewerTeams.length > 0
+					viewerTeamIds.length > 0
 						? tx.teamProjectAccess.createMany({
-								data: viewerTeams.map((teamId) => ({
+								data: viewerTeamIds.map((teamId) => ({
 									projectId,
 									teamId,
 									type: AccessType.VIEWER,
@@ -324,7 +338,7 @@ export class ProjectsService {
 				return tx.project.update({
 					where: { id: projectId },
 					data: {
-						deniedUsers: { set: safeDeniedUsers.map((userId) => ({ id: userId })) },
+						deniedUsers: { set: deniedUserIds.map((userId) => ({ id: userId })) },
 						updatedById: currentUser.id,
 					},
 					include: projectDetailInclude,
@@ -467,14 +481,15 @@ export class ProjectsService {
 					);
 				}
 
-				const serverUrl = dereferencedSpec.servers?.[0]?.url ?? null;
 				return tx.project.update({
 					where: { id: projectId },
 					data: {
 						name: dereferencedSpec.info.title,
 						nameNormalized: dereferencedSpec.info.title.toLowerCase(),
 						description: dereferencedSpec.info.description,
-						serverUrl,
+						servers:
+							(dereferencedSpec.servers as unknown as Prisma.JsonArray) ??
+							Prisma.JsonNull,
 						updatedById: user.id,
 					},
 					include: projectDetailInclude,

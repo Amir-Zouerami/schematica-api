@@ -1,6 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { type OperationObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { IsDateString, IsIn, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EndpointStatus } from '@prisma/client';
+import {
+	IsDateString,
+	IsEnum,
+	IsIn,
+	IsNotEmpty,
+	IsObject,
+	IsOptional,
+	IsString,
+} from 'class-validator';
+import { OpenApiOperationDto } from './openapi-operation.dto';
 
 export class UpdateEndpointDto {
 	@ApiProperty({ example: '/users/new/{id}' })
@@ -16,13 +25,11 @@ export class UpdateEndpointDto {
 	method: string;
 
 	@ApiProperty({
-		example: {
-			summary: 'Update a specific user',
-			responses: { '200': { description: 'User updated' } },
-		},
+		description: 'A valid OpenAPI Operation Object.',
+		type: OpenApiOperationDto,
 	})
 	@IsObject()
-	operation: OperationObject;
+	operation: OpenApiOperationDto;
 
 	@ApiProperty({
 		description: 'The last `updatedAt` timestamp for optimistic concurrency control.',
@@ -30,4 +37,13 @@ export class UpdateEndpointDto {
 	@IsDateString()
 	@IsNotEmpty()
 	lastKnownUpdatedAt: string;
+
+	@ApiPropertyOptional({
+		description: 'Update the status alongside the content.',
+		enum: EndpointStatus,
+		example: EndpointStatus.IN_REVIEW,
+	})
+	@IsEnum(EndpointStatus)
+	@IsOptional()
+	status?: EndpointStatus;
 }

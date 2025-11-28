@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EndpointStatus, Prisma } from '@prisma/client';
 import { SanitizedUserDto } from 'src/users/dto/sanitized-user.dto';
+import { OpenApiOperationDto } from './openapi-operation.dto';
 
 type EndpointWithUsers = Prisma.EndpointGetPayload<{
 	include: {
@@ -24,10 +25,7 @@ export class EndpointDto {
 
 	@ApiProperty({
 		description: 'The OpenAPI Operation Object for this endpoint.',
-		example: {
-			summary: 'Get a specific user',
-			responses: { '200': { description: 'User details' } },
-		},
+		type: OpenApiOperationDto,
 	})
 	operation: Prisma.JsonValue;
 
@@ -51,7 +49,7 @@ export class EndpointDto {
 		this.operation = endpoint.operation;
 		this.createdAt = endpoint.createdAt;
 		this.updatedAt = endpoint.updatedAt;
-		this.creator = new SanitizedUserDto(endpoint.creator);
-		this.updatedBy = new SanitizedUserDto(endpoint.updatedBy);
+		this.creator = SanitizedUserDto.from(endpoint.creator);
+		this.updatedBy = SanitizedUserDto.from(endpoint.updatedBy);
 	}
 }

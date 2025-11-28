@@ -24,10 +24,10 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { CheckResourceRelations } from 'src/common/guards/check-resource-relations.decorator';
 import { ResourceRelationsGuard } from 'src/common/guards/resource-relations.guard';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
-import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateSecretDto } from './dto/create-secret.dto';
 import { SecretDto } from './dto/secret.dto';
 import { UpdateSecretDto } from './dto/update-secret.dto';
@@ -53,8 +53,14 @@ export class SecretsController {
 		description: 'The secret has been successfully created.',
 		type: SecretDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiConflictResponse({ description: 'A secret with this key already exists.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiConflictResponse({
+		description: 'A secret with this key already exists.',
+		type: ErrorResponseDto,
+	})
 	create(
 		@Param('environmentId') environmentId: string,
 		@Body() createSecretDto: CreateSecretDto,
@@ -71,12 +77,15 @@ export class SecretsController {
 		childParam: 'environmentId',
 		childModelName: 'Environment',
 	})
-	@UseGuards(ProjectViewerGuard, ResourceRelationsGuard)
+	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@ApiOkResponse({
 		description: 'A list of all decrypted secrets for the environment.',
 		type: [SecretDto],
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
+	})
 	findAll(@Param('environmentId') environmentId: string): Promise<SecretDto[]> {
 		return this.secretsService.findAllForEnvironment(environmentId);
 	}
@@ -92,8 +101,14 @@ export class SecretsController {
 	})
 	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@ApiOkResponse({ description: 'The secret has been successfully updated.', type: SecretDto })
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified secret was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified secret was not found.',
+		type: ErrorResponseDto,
+	})
 	update(
 		@Param('environmentId') environmentId: string,
 		@Param('secretId', ParseIntPipe) secretId: number,
@@ -115,8 +130,14 @@ export class SecretsController {
 	@UseGuards(ProjectOwnerGuard, ResourceRelationsGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The secret has been successfully deleted.' })
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified secret was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified secret was not found.',
+		type: ErrorResponseDto,
+	})
 	async remove(
 		@Param('environmentId') environmentId: string,
 		@Param('secretId', ParseIntPipe) secretId: number,

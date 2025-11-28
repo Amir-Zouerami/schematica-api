@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { type OperationObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { IsIn, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EndpointStatus } from '@prisma/client';
+import { IsEnum, IsIn, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { OpenApiOperationDto } from './openapi-operation.dto';
 
 export class CreateEndpointDto {
 	@ApiProperty({ example: '/users/{id}' })
@@ -18,11 +19,17 @@ export class CreateEndpointDto {
 
 	@ApiProperty({
 		description: 'A valid OpenAPI Operation Object.',
-		example: {
-			summary: 'Get a specific user',
-			responses: { '200': { description: 'User details' } },
-		},
+		type: OpenApiOperationDto,
 	})
 	@IsObject()
-	operation: OperationObject;
+	operation: OpenApiOperationDto;
+
+	@ApiPropertyOptional({
+		description: 'The initial status of the endpoint. Defaults to DRAFT if omitted.',
+		enum: EndpointStatus,
+		example: EndpointStatus.DRAFT,
+	})
+	@IsEnum(EndpointStatus)
+	@IsOptional()
+	status?: EndpointStatus;
 }

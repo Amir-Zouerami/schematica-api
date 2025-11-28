@@ -123,9 +123,9 @@ export class EndpointsService {
 		createEndpointDto: CreateEndpointDto,
 		creator: UserDto,
 	): Promise<EndpointDto> {
-		const { path, method, operation } = createEndpointDto;
-
-		await this.lintOperation(operation, path, method);
+		const { path, method, operation, status } = createEndpointDto;
+		const projectSchemas = await this.getProjectSchemas(projectId);
+		await this.lintOperation(operation as OperationObject, path, method, projectSchemas);
 
 		const now = new Date().toISOString();
 
@@ -146,6 +146,7 @@ export class EndpointsService {
 				data: {
 					path,
 					method,
+					status,
 					operation: operationWithMetadata as unknown as Prisma.JsonObject,
 					projectId,
 					creatorId: creator.id,
@@ -189,9 +190,9 @@ export class EndpointsService {
 		updateEndpointDto: UpdateEndpointDto,
 		updater: UserDto,
 	): Promise<EndpointDto> {
-		const { path, method, operation, lastKnownUpdatedAt } = updateEndpointDto;
-
-		await this.lintOperation(operation, path, method);
+		const { path, method, operation, lastKnownUpdatedAt, status } = updateEndpointDto;
+		const projectSchemas = await this.getProjectSchemas(projectId);
+		await this.lintOperation(operation as OperationObject, path, method, projectSchemas);
 
 		const now = new Date().toISOString();
 
@@ -226,6 +227,7 @@ export class EndpointsService {
 				data: {
 					path,
 					method,
+					status,
 					operation: operationWithMetadata as unknown as Prisma.JsonObject,
 					updatedById: updater.id,
 				},
@@ -271,7 +273,14 @@ export class EndpointsService {
 			});
 
 			const currentStatus = endpoint.status;
-			this.validateStatusTransition(currentStatus, newStatus);
+
+			if (currentStatus === newStatus) {
+				return new EndpointDto({
+					...endpoint,
+					creator: await this.fetchUser(endpoint.creatorId),
+					updatedBy: await this.fetchUser(endpoint.updatedById),
+				});
+			}
 
 			const updatedEndpoint = await this.prisma.$transaction(async (tx) => {
 				const result = await tx.endpoint.updateMany({
@@ -366,27 +375,13 @@ export class EndpointsService {
 		}
 	}
 
-	private validateStatusTransition(from: EndpointStatus, to: EndpointStatus): void {
-		if (from === to) {
-			throw new BadRequestException(`Endpoint is already in the '${to}' status.`);
-		}
-
-		const validTransitions: Record<EndpointStatus, EndpointStatus[]> = {
-			[EndpointStatus.DRAFT]: [EndpointStatus.IN_REVIEW],
-			[EndpointStatus.IN_REVIEW]: [EndpointStatus.DRAFT, EndpointStatus.PUBLISHED],
-			[EndpointStatus.PUBLISHED]: [EndpointStatus.DEPRECATED],
-			[EndpointStatus.DEPRECATED]: [EndpointStatus.DRAFT],
-		};
-
-		if (!validTransitions[from]?.includes(to)) {
-			throw new BadRequestException(`Cannot transition endpoint from '${from}' to '${to}'.`);
-		}
-	}
+	// --- HELPER METHODS ---
 
 	private async lintOperation(
 		operation: OperationObject,
 		path: string,
 		method: string,
+		schemas: Record<string, any>,
 	): Promise<void> {
 		type HttpMethod = keyof Omit<
 			PathItemObject,
@@ -407,9 +402,13 @@ export class EndpointsService {
 			info: {
 				title: 'Validation Spec',
 				version: '1.0.0',
+				description: 'A temporary spec for single-endpoint validation.',
 			},
 			paths: {
 				[path]: pathItem,
+			},
+			components: {
+				schemas: schemas,
 			},
 		};
 
@@ -417,5 +416,22 @@ export class EndpointsService {
 		if (issues.length > 0) {
 			throw new SpecLintingException(issues);
 		}
+	}
+
+	private async getProjectSchemas(projectId: string): Promise<Record<string, any>> {
+		const components = await this.prisma.schemaComponent.findMany({
+			where: { projectId },
+			select: { name: true, schema: true },
+		});
+
+		const schemas: Record<string, any> = {};
+		for (const c of components) {
+			schemas[c.name] = c.schema;
+		}
+		return schemas;
+	}
+
+	private fetchUser(userId: string) {
+		return this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
 	}
 }

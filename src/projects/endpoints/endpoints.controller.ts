@@ -24,6 +24,8 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { EndpointProjectMatchGuard } from 'src/locking/guards/endpoint-project-match.guard';
@@ -46,12 +48,15 @@ export class EndpointsController {
 
 	@Get()
 	@UseGuards(ProjectViewerGuard)
-	@ApiOkResponse({
-		description: 'A paginated list of endpoints for the project.',
-		type: [EndpointSummaryDto],
+	@ApiPaginatedResponse(EndpointSummaryDto)
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
-	@ApiNotFoundResponse({ description: 'Project not found or user lacks access.' })
+	@ApiNotFoundResponse({
+		description: 'Project not found or user lacks access.',
+		type: ErrorResponseDto,
+	})
 	findAll(
 		@Param('projectId') projectId: string,
 		@Query() paginationQuery: PaginationQueryDto,
@@ -65,8 +70,14 @@ export class EndpointsController {
 		description: 'The detailed information for a single endpoint.',
 		type: EndpointDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
-	@ApiNotFoundResponse({ description: 'Project or endpoint not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'Project or endpoint not found.',
+		type: ErrorResponseDto,
+	})
 	findOne(
 		@Param('projectId') projectId: string,
 		@Param('endpointId') endpointId: string,
@@ -80,9 +91,13 @@ export class EndpointsController {
 		description: 'The endpoint has been successfully added.',
 		type: EndpointDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
 	@ApiConflictResponse({
 		description: 'An endpoint with the same path and method already exists in this project.',
+		type: ErrorResponseDto,
 	})
 	create(
 		@Param('projectId') projectId: string,
@@ -98,11 +113,18 @@ export class EndpointsController {
 		description: 'The endpoint has been successfully updated.',
 		type: EndpointDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified endpoint was not found.',
+		type: ErrorResponseDto,
+	})
 	@ApiConflictResponse({
 		description:
 			'A concurrency conflict occurred, or the new path/method conflicts with an existing endpoint.',
+		type: ErrorResponseDto,
 	})
 	update(
 		@Param('projectId') projectId: string,
@@ -119,8 +141,14 @@ export class EndpointsController {
 		description: 'The endpoint status has been successfully updated.',
 		type: EndpointDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to change the status.' })
-	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to change the status.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified endpoint was not found.',
+		type: ErrorResponseDto,
+	})
 	updateStatus(
 		@Param('projectId') projectId: string,
 		@Param('endpointId') endpointId: string,
@@ -139,8 +167,14 @@ export class EndpointsController {
 	@UseGuards(EndpointProjectMatchGuard, ProjectOwnerGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The endpoint has been successfully deleted.' })
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified endpoint was not found.',
+		type: ErrorResponseDto,
+	})
 	async remove(
 		@Param('projectId') projectId: string,
 		@Param('endpointId') endpointId: string,

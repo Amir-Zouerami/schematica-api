@@ -8,43 +8,80 @@ import {
 	IsString,
 	ValidateNested,
 } from 'class-validator';
-import { ProjectAccessControlListDto } from './project-access-control-list.dto';
+
+class AccessUserValidationDto {
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	id: string;
+
+	@ApiPropertyOptional()
+	@IsString()
+	@IsOptional()
+	username?: string;
+
+	@ApiPropertyOptional({ type: String })
+	@IsOptional()
+	profileImage?: string | null;
+}
+
+class AccessTeamValidationDto {
+	@ApiProperty()
+	@IsString()
+	@IsNotEmpty()
+	id: string;
+
+	@ApiPropertyOptional()
+	@IsString()
+	@IsOptional()
+	name?: string;
+
+	@ApiPropertyOptional({ type: String })
+	@IsOptional()
+	createdAt?: Date | string;
+
+	@ApiPropertyOptional({ type: String })
+	@IsOptional()
+	updatedAt?: Date | string;
+}
+
+class ProjectAccessControlListInputDto {
+	@ApiPropertyOptional({ type: [AccessUserValidationDto] })
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => AccessUserValidationDto)
+	@IsOptional()
+	users?: AccessUserValidationDto[];
+
+	@ApiPropertyOptional({ type: [AccessTeamValidationDto] })
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => AccessTeamValidationDto)
+	@IsOptional()
+	teams?: AccessTeamValidationDto[];
+}
 
 export class UpdateAccessDto {
-	@ApiPropertyOptional({
-		description: 'The users and teams who have OWNER (write) access.',
-		type: ProjectAccessControlListDto,
-	})
+	@ApiPropertyOptional({ type: ProjectAccessControlListInputDto })
 	@ValidateNested()
-	@Type(() => ProjectAccessControlListDto)
+	@Type(() => ProjectAccessControlListInputDto)
 	@IsOptional()
-	owners: ProjectAccessControlListDto = new ProjectAccessControlListDto();
+	owners?: ProjectAccessControlListInputDto;
 
-	@ApiPropertyOptional({
-		description: 'The users and teams who have VIEWER (read) access.',
-		type: ProjectAccessControlListDto,
-	})
+	@ApiPropertyOptional({ type: ProjectAccessControlListInputDto })
 	@ValidateNested()
-	@Type(() => ProjectAccessControlListDto)
+	@Type(() => ProjectAccessControlListInputDto)
 	@IsOptional()
-	viewers: ProjectAccessControlListDto = new ProjectAccessControlListDto();
+	viewers?: ProjectAccessControlListInputDto;
 
-	@ApiPropertyOptional({
-		description:
-			'A list of user IDs who are explicitly denied access, overriding any team-based access.',
-		type: [String],
-		example: ['3'],
-	})
+	@ApiPropertyOptional({ type: [AccessUserValidationDto] })
 	@IsArray()
-	@IsString({ each: true })
+	@ValidateNested({ each: true })
+	@Type(() => AccessUserValidationDto)
 	@IsOptional()
-	deniedUsers: string[] = [];
+	deniedUsers?: AccessUserValidationDto[];
 
-	@ApiProperty({
-		description:
-			'The last `updatedAt` timestamp of the parent project, for optimistic concurrency control.',
-		example: '2025-10-29T10:00:00.000Z',
-	})
+	@ApiProperty()
 	@IsDateString()
 	@IsNotEmpty()
 	lastKnownUpdatedAt: string;

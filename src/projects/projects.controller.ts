@@ -26,6 +26,8 @@ import { Prisma } from '@prisma/client';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ApiPaginatedResponse } from 'src/common/decorators/api-paginated-response.decorator';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -51,8 +53,14 @@ export class ProjectsController {
 		description: 'The project has been successfully created.',
 		type: ProjectDetailDto,
 	})
-	@ApiConflictResponse({ description: 'A project with this name already exists.' })
-	@ApiForbiddenResponse({ description: 'You do not have permission to create a new project.' })
+	@ApiConflictResponse({
+		description: 'A project with this name already exists.',
+		type: ErrorResponseDto,
+	})
+	@ApiForbiddenResponse({
+		description: 'You do not have permission to create a new project.',
+		type: ErrorResponseDto,
+	})
 	create(
 		@Body() createProjectDto: CreateProjectDto,
 		@CurrentUser() user: UserDto,
@@ -61,9 +69,7 @@ export class ProjectsController {
 	}
 
 	@Get()
-	@ApiOkResponse({
-		description: 'A paginated list of projects visible to the user.',
-	})
+	@ApiPaginatedResponse(ProjectSummaryDto)
 	findAll(
 		@Query() paginationQuery: PaginationQueryDto,
 		@CurrentUser() user: UserDto,
@@ -78,6 +84,7 @@ export class ProjectsController {
 	})
 	@ApiNotFoundResponse({
 		description: 'Project not found or user lacks access.',
+		type: ErrorResponseDto,
 	})
 	findOne(
 		@Param('projectId') projectId: string,
@@ -94,10 +101,12 @@ export class ProjectsController {
 	})
 	@ApiForbiddenResponse({
 		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
 	})
 	@ApiConflictResponse({
 		description:
 			'A project with the new name already exists, or a concurrency conflict occurred.',
+		type: ErrorResponseDto,
 	})
 	update(
 		@Param('projectId') projectId: string,
@@ -113,8 +122,12 @@ export class ProjectsController {
 	@ApiNoContentResponse({ description: 'Project deleted successfully.' })
 	@ApiForbiddenResponse({
 		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'Project not found.' })
+	@ApiNotFoundResponse({
+		description: 'Project not found.',
+		type: ErrorResponseDto,
+	})
 	async delete(
 		@Param('projectId') projectId: string,
 		@CurrentUser() user: UserDto,
@@ -125,9 +138,18 @@ export class ProjectsController {
 	@Get(':projectId/openapi')
 	@ApiOkResponse({
 		description: 'The dynamically generated OpenAPI specification for the project.',
+		content: {
+			'application/json': {
+				schema: {
+					type: 'object',
+					description: 'A valid OpenAPI 3.0 specification object.',
+				},
+			},
+		},
 	})
 	@ApiNotFoundResponse({
 		description: 'Project not found or user lacks access.',
+		type: ErrorResponseDto,
 	})
 	getOpenApiSpec(
 		@Param('projectId') projectId: string,
@@ -143,12 +165,19 @@ export class ProjectsController {
 			'The OpenAPI specification has been successfully imported and all endpoints replaced.',
 		type: ProjectDetailDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
 	@ApiConflictResponse({
 		description:
 			'A concurrency conflict occurred. The project has been updated by someone else.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'Project not found.' })
+	@ApiNotFoundResponse({
+		description: 'Project not found.',
+		type: ErrorResponseDto,
+	})
 	@ApiBody({ type: UpdateOpenApiSpecDto })
 	importOpenApiSpec(
 		@Param('projectId') projectId: string,
@@ -166,9 +195,11 @@ export class ProjectsController {
 	})
 	@ApiForbiddenResponse({
 		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
 	})
 	@ApiConflictResponse({
 		description: 'A concurrency conflict occurred.',
+		type: ErrorResponseDto,
 	})
 	updateAccess(
 		@Param('projectId') projectId: string,

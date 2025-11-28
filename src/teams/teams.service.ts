@@ -38,7 +38,7 @@ export class TeamsService {
 		]);
 
 		return {
-			data: teams.map((team) => new TeamDto(team)),
+			data: teams.map((team) => TeamDto.from(team)),
 			meta: {
 				total,
 				page,

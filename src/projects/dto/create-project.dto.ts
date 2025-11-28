@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-	ArrayMinSize,
 	IsArray,
 	IsNotEmpty,
 	IsOptional,
@@ -12,6 +11,18 @@ import {
 } from 'class-validator';
 import { AreLinksUniqueConstraint } from '../validators/are-links-unique.validator';
 import { ProjectLinkDto } from './project-link.dto';
+
+class ServerDto {
+	@ApiProperty({ example: 'https://api.test.com' })
+	@IsUrl()
+	@IsNotEmpty()
+	url: string;
+
+	@ApiPropertyOptional({ example: 'Production Server' })
+	@IsString()
+	@IsOptional()
+	description?: string;
+}
 
 export class CreateProjectDto {
 	@ApiProperty({ example: 'Project Nova' })
@@ -25,15 +36,15 @@ export class CreateProjectDto {
 	@IsNotEmpty()
 	description?: string;
 
-	@ApiPropertyOptional({ example: 'https://api.test.com' })
-	@IsUrl()
+	@ApiPropertyOptional({ type: [ServerDto] })
+	@IsArray()
+	@ValidateNested({ each: true })
+	@Type(() => ServerDto)
 	@IsOptional()
-	@IsNotEmpty()
-	serverUrl?: string;
+	servers?: ServerDto[];
 
 	@ApiPropertyOptional({ type: [ProjectLinkDto] })
 	@IsArray()
-	@ArrayMinSize(1, { message: 'links must contain at least one item' })
 	@ValidateNested({ each: true, message: 'each link must be an object' })
 	@Type(() => ProjectLinkDto)
 	@Validate(AreLinksUniqueConstraint)

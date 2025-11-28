@@ -9,7 +9,7 @@ export class SchemaComponentDto {
 	@ApiProperty()
 	name: string;
 
-	@ApiProperty({ nullable: true })
+	@ApiProperty({ nullable: true, type: 'string' })
 	description: string | null;
 
 	@ApiProperty({ type: 'object', additionalProperties: true })

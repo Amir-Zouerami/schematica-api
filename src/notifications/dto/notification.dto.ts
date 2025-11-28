@@ -46,7 +46,7 @@ export class NotificationDto {
 		this.isRead = status.isRead;
 		this.readAt = status.readAt;
 		this.actor = status.notification.actor
-			? new SanitizedUserDto(status.notification.actor)
+			? SanitizedUserDto.from(status.notification.actor)
 			: null;
 	}
 }

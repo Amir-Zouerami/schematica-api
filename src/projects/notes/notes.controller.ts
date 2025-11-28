@@ -19,6 +19,7 @@ import {
 	ApiOkResponse,
 	ApiTags,
 } from '@nestjs/swagger';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { UserDto } from '../../auth/dto/user.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -43,8 +44,12 @@ export class NotesController {
 	})
 	@ApiForbiddenResponse({
 		description: 'User does not have permission to view notes in this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	@ApiNotFoundResponse({
+		description: 'The specified endpoint was not found.',
+		type: ErrorResponseDto,
+	})
 	findAll(@Param('endpointId') endpointId: string): Promise<NoteDto[]> {
 		return this.notesService.findAllForEndpoint(endpointId);
 	}
@@ -57,8 +62,12 @@ export class NotesController {
 	})
 	@ApiForbiddenResponse({
 		description: 'User does not have permission to add notes to this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'The specified endpoint was not found.' })
+	@ApiNotFoundResponse({
+		description: 'The specified endpoint was not found.',
+		type: ErrorResponseDto,
+	})
 	create(
 		@Param('endpointId') endpointId: string,
 		@Body() createNoteDto: CreateNoteDto,
@@ -75,8 +84,12 @@ export class NotesController {
 	})
 	@ApiForbiddenResponse({
 		description: 'User does not have permission to manage notes in this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'The specified note was not found.' })
+	@ApiNotFoundResponse({
+		description: 'The specified note was not found.',
+		type: ErrorResponseDto,
+	})
 	update(
 		@Param('noteId') noteId: string,
 		@Body() updateNoteDto: UpdateNoteDto,
@@ -91,8 +104,12 @@ export class NotesController {
 	@ApiNoContentResponse({ description: 'The note has been successfully deleted.' })
 	@ApiForbiddenResponse({
 		description: 'User does not have permission to manage notes in this project.',
+		type: ErrorResponseDto,
 	})
-	@ApiNotFoundResponse({ description: 'The specified note was not found.' })
+	@ApiNotFoundResponse({
+		description: 'The specified note was not found.',
+		type: ErrorResponseDto,
+	})
 	async remove(@Param('noteId') noteId: string): Promise<void> {
 		await this.notesService.remove(noteId);
 	}

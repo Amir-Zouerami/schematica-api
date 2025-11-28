@@ -23,6 +23,7 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { ErrorResponseDto } from 'src/common/dto/error-response.dto';
 import { ProjectOwnerGuard } from '../guards/project-owner.guard';
 import { ProjectViewerGuard } from '../guards/project-viewer.guard';
 import { CreateSchemaComponentDto } from './dto/create-schema-component.dto';
@@ -43,8 +44,14 @@ export class SchemaComponentsController {
 		description: 'The schema component has been successfully created.',
 		type: SchemaComponentDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiConflictResponse({ description: 'A schema component with this name already exists.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiConflictResponse({
+		description: 'A schema component with this name already exists.',
+		type: ErrorResponseDto,
+	})
 	create(
 		@Param('projectId') projectId: string,
 		@Body() createDto: CreateSchemaComponentDto,
@@ -59,7 +66,10 @@ export class SchemaComponentsController {
 		description: 'A list of all schema components for the project.',
 		type: [SchemaComponentDto],
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
+	})
 	findAll(
 		@Param('projectId') projectId: string,
 		@CurrentUser() user: UserDto,
@@ -73,8 +83,14 @@ export class SchemaComponentsController {
 		description: 'The details of a single schema component.',
 		type: SchemaComponentDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have permission to view this project.' })
-	@ApiNotFoundResponse({ description: 'The specified schema component was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have permission to view this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified schema component was not found.',
+		type: ErrorResponseDto,
+	})
 	findOne(
 		@Param('projectId') projectId: string,
 		@Param('name') name: string,
@@ -89,10 +105,17 @@ export class SchemaComponentsController {
 		description: 'The schema component has been successfully updated.',
 		type: SchemaComponentDto,
 	})
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified schema component was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified schema component was not found.',
+		type: ErrorResponseDto,
+	})
 	@ApiConflictResponse({
 		description: 'A schema component with the new name already exists.',
+		type: ErrorResponseDto,
 	})
 	update(
 		@Param('projectId') projectId: string,
@@ -107,8 +130,14 @@ export class SchemaComponentsController {
 	@UseGuards(ProjectOwnerGuard)
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The schema component has been successfully deleted.' })
-	@ApiForbiddenResponse({ description: 'User does not have ownership of this project.' })
-	@ApiNotFoundResponse({ description: 'The specified schema component was not found.' })
+	@ApiForbiddenResponse({
+		description: 'User does not have ownership of this project.',
+		type: ErrorResponseDto,
+	})
+	@ApiNotFoundResponse({
+		description: 'The specified schema component was not found.',
+		type: ErrorResponseDto,
+	})
 	async remove(
 		@Param('projectId') projectId: string,
 		@Param('name') name: string,

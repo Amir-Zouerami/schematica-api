@@ -4,6 +4,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { FileInterceptor, UploadedFile } from 'src/common/interceptors/file.interceptor';
+import { ImageFilePipe } from 'src/common/pipes/image-file.pipe';
 import type { UploadedFile as UploadedFileType } from 'src/types/fastify';
 import { ProfileService } from './profile.service';
 
@@ -35,7 +36,7 @@ export class ProfileController {
 	})
 	updateProfilePicture(
 		@CurrentUser() user: UserDto,
-		@UploadedFile() file?: UploadedFileType,
+		@UploadedFile(new ImageFilePipe()) file?: UploadedFileType,
 	): Promise<UserDto> {
 		if (!file) {
 			throw new BadRequestException('Profile picture file is required.');

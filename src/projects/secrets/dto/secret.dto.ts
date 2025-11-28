@@ -11,7 +11,7 @@ export class SecretDto {
 	@ApiProperty()
 	value: string; // Plaintext value
 
-	@ApiProperty({ nullable: true })
+	@ApiProperty({ nullable: true, type: 'string' })
 	description: string | null;
 
 	@ApiProperty()

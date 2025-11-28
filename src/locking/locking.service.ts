@@ -4,6 +4,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { ResourceLockedException } from 'src/common/exceptions/resource-locked.exception';
 import { AllConfigTypes } from 'src/config/config.type';
+import { LockDto } from './dto/lock.dto';
 import { LockingGateway } from './locking.gateway';
 
 export interface Lock {
@@ -47,16 +48,7 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 		this.logger.info('Lock cleanup job stopped.');
 	}
 
-	/**
-	 * Attempts to acquire or refresh a lock on a resource for a specific user.
-	 *
-	 * @param resourceId The ID of the resource to lock (e.g., an endpointId).
-	 * @param user The user attempting to acquire the lock.
-	 * @returns The current lock information. If a new lock is acquired or an existing one
-	 * is refreshed, the updated lock info is returned. If the resource is locked by another
-	 * user, the existing lock info is returned.
-	 */
-	acquireLock(resourceId: string, user: UserDto): Lock {
+	acquireLock(resourceId: string, user: UserDto): LockDto {
 		const existingLock = this.locks.get(resourceId);
 
 		if (existingLock && existingLock.expiresAt > Date.now()) {
@@ -67,7 +59,10 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 				);
 
 				this.gateway.broadcastLockUpdate(resourceId, existingLock);
-				return existingLock;
+				return {
+					...existingLock,
+					expiresAt: new Date(existingLock.expiresAt).toISOString(),
+				};
 			}
 
 			throw new ResourceLockedException(existingLock);
@@ -83,16 +78,12 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 		this.logger.info(`Lock acquired for resource ${resourceId} by user ${user.username}.`);
 		this.gateway.broadcastLockUpdate(resourceId, newLock);
 
-		return newLock;
+		return {
+			...newLock,
+			expiresAt: new Date(newLock.expiresAt).toISOString(),
+		};
 	}
 
-	/**
-	 * Releases a lock on a resource, but only if the requesting user is the one
-	 * who holds the lock.
-	 *
-	 * @param resourceId The ID of the resource to unlock.
-	 * @param userId The ID of the user attempting to release the lock.
-	 */
 	releaseLock(resourceId: string, userId: string): void {
 		const existingLock = this.locks.get(resourceId);
 
@@ -107,22 +98,11 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 		}
 	}
 
-	/**
-	 * Verifies if a resource is currently locked by a specific user.
-	 *
-	 * @param resourceId The ID of the resource to check.
-	 * @param userId The ID of the user to check against the lock.
-	 * @returns `true` if the user holds a valid lock, `false` otherwise.
-	 */
 	isLockedBy(resourceId: string, userId: string): boolean {
 		const lock = this.locks.get(resourceId);
 		return !!lock && lock.userId === userId && lock.expiresAt > Date.now();
 	}
 
-	/**
-	 * Periodically iterates through the active locks and removes any that have expired.
-	 * This is a failsafe to prevent resources from being permanently locked.
-	 */
 	private cleanupExpiredLocks(): void {
 		const now = Date.now();
 		let expiredCount = 0;
@@ -138,5 +118,19 @@ export class LockingService implements OnModuleInit, OnModuleDestroy {
 		if (expiredCount > 0) {
 			this.logger.info(`Cleaned up ${expiredCount} expired lock(s).`);
 		}
+	}
+
+	/**
+	 * Retrieves the current lock status for a resource if it exists and is not expired.
+	 *
+	 * @param resourceId The ID of the resource to check.
+	 * @returns The current lock information, or null if there is no active lock.
+	 */
+	getLockStatus(resourceId: string): Lock | null {
+		const lock = this.locks.get(resourceId);
+		if (lock && lock.expiresAt > Date.now()) {
+			return lock;
+		}
+		return null;
 	}
 }
