@@ -13,6 +13,7 @@ import { DiagnosticSeverity } from '@stoplight/types';
 import { PinoLogger } from 'nestjs-pino';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
+import { SpecCircularDependencyException } from 'src/common/exceptions/spec-circular-dependency.exception';
 
 @Injectable()
 export class ApiLintingService implements OnModuleInit {
@@ -46,13 +47,22 @@ export class ApiLintingService implements OnModuleInit {
 
 	async lintSpec(spec: OpenAPIObject): Promise<ISpectralDiagnostic[]> {
 		try {
-			const document = new Document(JSON.stringify(spec), Parsers.Json);
+			// 👇 This is where it crashes on circular refs
+			const jsonString = JSON.stringify(spec);
+			const document = new Document(jsonString, Parsers.Json);
 			const issues = await this.spectral.run(document);
 
 			return issues.filter(
 				(issue) => (issue.severity as DiagnosticSeverity) === DiagnosticSeverity.Error,
 			);
 		} catch (error: unknown) {
+			if (
+				error instanceof TypeError &&
+				error.message.includes('Converting circular structure to JSON')
+			) {
+				throw new SpecCircularDependencyException();
+			}
+
 			this.logger.error(
 				error,
 				'An unexpected error occurred during API specification linting.',

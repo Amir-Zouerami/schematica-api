@@ -1,6 +1,6 @@
 {
 	"name": "schematica-api",
-	"version": "2.1.1",
+	"version": "2.1.2",
 	"description": "A Collaborative API Documentation Platform",
 	"author": "Amir Zouerami",
 	"private": true,

@@ -14,6 +14,7 @@ import { ProjectConcurrencyException } from 'src/common/exceptions/project-concu
 import { ProjectConflictException } from 'src/common/exceptions/project-conflict.exception';
 import { ProjectCreationFailure } from 'src/common/exceptions/project-creation-failure.exception';
 import { ProjectNotFoundException } from 'src/common/exceptions/project-not-found.exception';
+import { SpecCircularDependencyException } from 'src/common/exceptions/spec-circular-dependency.exception';
 import { SpecLintingException } from 'src/common/exceptions/spec-linting.exception';
 import { SpecValidationException } from 'src/common/exceptions/spec-validation.exception';
 import { PaginatedServiceResponse } from 'src/common/interfaces/api-response.interface';
@@ -434,6 +435,10 @@ export class ProjectsService {
 				)) as OpenAPIV3.Document;
 			} catch (err) {
 				if (err instanceof Error) {
+					if (err.message.toLowerCase().includes('circular')) {
+						throw new SpecCircularDependencyException(err.message);
+					}
+
 					throw new SpecValidationException(err.message);
 				}
 
@@ -504,7 +509,11 @@ export class ProjectsService {
 
 			return new ProjectDetailDto(updatedProject);
 		} catch (error: unknown) {
-			if (error instanceof SpecValidationException || error instanceof SpecLintingException) {
+			if (
+				error instanceof SpecValidationException ||
+				error instanceof SpecLintingException ||
+				error instanceof SpecCircularDependencyException
+			) {
 				throw error;
 			}
 
