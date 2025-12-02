@@ -27,6 +27,13 @@ export class UserDto {
 	@ApiProperty()
 	updatedAt: Date;
 
+	@ApiProperty({
+		description: 'Timestamp when the user was soft-deleted, or null if active.',
+		nullable: true,
+		type: Date,
+	})
+	deletedAt: Date | null;
+
 	constructor(user: UserWithTeams) {
 		this.id = user.id;
 		this.username = user.username;
@@ -35,6 +42,7 @@ export class UserDto {
 		this.tokenVersion = user.tokenVersion;
 		this.createdAt = user.createdAt;
 		this.updatedAt = user.updatedAt;
+		this.deletedAt = user.deletedAt ?? null;
 		this.teams = user.teams.map((team) => TeamDto.from(team));
 	}
 }

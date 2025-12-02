@@ -58,10 +58,12 @@ import { UsersModule } from './users/users.module';
 			useFactory: (configService: ConfigService<AllConfigTypes, true>) => {
 				const isProduction =
 					configService.get('app.nodeEnv', { infer: true }) === 'production';
+				const forcePrettyPrint = configService.get('app.logPrettyPrint', { infer: true });
+				const usePrettyLogs = !isProduction || forcePrettyPrint;
 
 				return {
 					pinoHttp: {
-						transport: !isProduction
+						transport: usePrettyLogs
 							? {
 									target: 'pino-pretty',
 									options: {

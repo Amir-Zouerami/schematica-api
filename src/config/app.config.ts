@@ -17,6 +17,7 @@ export interface AppConfig {
 		lockDurationMs: number;
 		lockCleanupIntervalMs: number;
 		oauthRedirectUrl: string;
+		logPrettyPrint: boolean;
 	};
 }
 
@@ -38,6 +39,7 @@ export default (): AppConfig => {
 			lockDurationMs: getEnvInt('LOCK_DURATION_MS', 180000),
 			lockCleanupIntervalMs: getEnvInt('LOCK_CLEANUP_INTERVAL_MS', 60000),
 			oauthRedirectUrl: getEnv('OAUTH_REDIRECT_SUCCESS_URL'),
+			logPrettyPrint: process.env.LOG_PRETTY_PRINT === 'true',
 		},
 	};
 };

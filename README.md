@@ -3,9 +3,6 @@
 ![Schematica Backend Cover](https://github.com/user-attachments/assets/e73d72fd-3d32-4300-b8c7-b023c3e687ec)
 
 [![CI](https://github.com/amir-zouerami/schematica-api/actions/workflows/ci.yml/badge.svg?branch=main&style=for-the-badge)](https://github.com/amir-zouerami/schematica-api/actions/workflows/ci.yml)
-[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![Runtime](https://img.shields.io/badge/Runtime-Bun_v1.1-black?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
-[![Prisma](https://img.shields.io/badge/Prisma-v6-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 
 > **The high-performance, event-driven engine powering the Schematica platform.**
@@ -253,6 +250,85 @@ To experience the full platform, you need to serve the UI. This backend is confi
 3.  Restart the NestJS server. Access the app at `http://localhost:3000`.
 
 *Note: The API routes are prefixed with `/api/v2`, so they do not conflict with the frontend routing.*
+
+---
+
+## 🚢 Production Deployment
+
+This project uses **SQLite** in production. While this simplifies infrastructure, it requires specific attention to Data Persistence.
+
+### 💾 Data Persistence (Critical)
+
+**⚠️ STOP AND READ:**
+If you are deploying to **Docker**, **Kubernetes**, **Render**, **Railway**, or any containerized environment, the filesystem is **ephemeral**.
+
+You **MUST** mount a **Persistent Volume** for the database file. If you do not, your database (and all user data) will be permanently wiped every time the application restarts or re-deploys.
+
+**Example Configuration:**
+1.  Mount a volume to `/data` inside your container.
+2.  Set your `DATABASE_URL` to point to that volume.
+
+```env
+# Point to the mounted volume directory
+DATABASE_URL="file:/data/production.db"
+```
+
+### 🔑 Environment Configuration
+
+Create a specific `.env.prod` file for production. This file is automatically picked up by the production scripts (`start:prod`, `migrate:prod`).
+
+Ensure these variables are set in your production environment secrets:
+
+| Variable                 | Value                | Description                                                                          |
+| :----------------------- | :------------------- | :----------------------------------------------------------------------------------- |
+| `NODE_ENV`               | `production`         | Optimizes NestJS for performance.                                                    |
+| `DATABASE_URL`           | `file:/data/prod.db` | **Must be on a persistent volume.**                                                  |
+| `ENCRYPTION_KEY`         | *(32-byte hex)*      | **CRITICAL.** Used to encrypt Project Secrets. If lost, secrets cannot be recovered. |
+| `JWT_SECRET`             | *(Random string)*    | A strong, long random string for signing auth tokens.                                |
+| `INITIAL_ADMIN_USERNAME` | `admin`              | The username for the system super-admin.                                             |
+| `INITIAL_ADMIN_PASSWORD` | `securePass!`        | The initial password for the super-admin.                                            |
+
+### 🚀 Build & Deploy Sequence
+
+In production, we do not use the development seed. Instead, we use a specialized **Production Seed** that safely bootstraps the Root Admin without overwriting data.
+
+Run these commands in your deployment pipeline (or Docker `CMD`):
+
+```bash
+# 1. Install & Build
+bun install --frozen-lockfile
+bun run build
+
+# 2. Database Bootstrapping
+# Applies schema changes and ensures Root Admin exists.
+bun run migrate:prod
+bun run seed:prod
+
+# 3. Start the Server
+bun run start:prod
+```
+
+### 🧪 Testing Production Locally
+
+If you want to simulate the production build locally, simply create a `.env.prod` file and use the dedicated scripts:
+
+```bash
+# These scripts automatically load .env.prod
+bun run migrate:prod
+bun run seed:prod
+bun run start:prod
+```
+
+To **reset** the production database (wipes data and restores Admin user only):
+```bash
+bun run prod:danger:reset
+```
+
+### 👑 First Login
+
+1.  Navigate to your deployment URL.
+2.  Log in using the credentials you defined in `INITIAL_ADMIN_USERNAME` and `INITIAL_ADMIN_PASSWORD`.
+3.  You now have full **Admin** access to create teams, projects, and invite other users.
 
 ---
 

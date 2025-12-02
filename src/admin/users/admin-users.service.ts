@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
@@ -212,25 +212,45 @@ export class AdminUsersService {
 	}
 
 	async remove(userId: string, actor: UserDto): Promise<void> {
+		if (userId === actor.id) {
+			throw new ForbiddenException('You cannot delete your own account.');
+		}
+
 		try {
-			await this.prisma.user.delete({
+			const userToDelete = await this.prisma.user.findUniqueOrThrow({
 				where: { id: userId },
+			});
+
+			if (userToDelete.deletedAt) {
+				throw new UserNotFoundException(userId);
+			}
+			await this.prisma.$transaction(async (tx) => {
+				await tx.user.update({
+					where: { id: userId },
+					data: {
+						deletedAt: new Date(),
+						username: `${userToDelete.username}_deleted_${Date.now()}`,
+						password: null,
+						tokenVersion: { increment: 1 },
+						teamMemberships: { deleteMany: {} },
+						projectAccesses: { deleteMany: {} },
+					},
+				});
 			});
 
 			this.eventEmitter.emit(AuditEvent, {
 				actor,
 				action: AuditAction.USER_DELETED,
 				targetId: userId,
+				details: { originalUsername: userToDelete.username },
 			} satisfies AuditLogEvent);
 		} catch (error: unknown) {
-			this.logger.error({ error }, `Failed to delete user with ID ${userId}.`);
-
+			this.logger.error({ error }, `Failed to soft-delete user ${userId}.`);
 			handlePrismaError(error, {
 				[PrismaErrorCode.RecordNotFound]: new UserNotFoundException(userId),
 			});
 		}
 	}
-
 	async updateProfilePicture(
 		userId: string,
 		file: UploadedFile,

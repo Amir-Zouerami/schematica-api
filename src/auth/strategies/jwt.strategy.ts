@@ -32,9 +32,10 @@ export class JwtStrategyFastify extends PassportStrategy(JwtStrategy, 'jwt') {
 			include: { teamMemberships: { select: { team: true } } },
 		});
 
-		if (!user) {
-			throw new UnauthorizedException('User not found');
+		if (!user || user.deletedAt) {
+			throw new UnauthorizedException('User not found or has been deactivated');
 		}
+
 		if (user.tokenVersion !== payload.tokenVersion) {
 			throw new UnauthorizedException('Token is no longer valid');
 		}

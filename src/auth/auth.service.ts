@@ -33,7 +33,7 @@ export class AuthService {
 			where: { username },
 		});
 
-		if (!user || !user.password) {
+		if (!user || !user.password || user.deletedAt) {
 			return null;
 		}
 
@@ -49,8 +49,8 @@ export class AuthService {
 
 	/**
 	 * Finds a user associated with an OAuth provider or creates a new one (JIT Provisioning).
-	 * This logic is secure: it prioritizes the immutable provider ID for lookups. If a new user
-	 * must be created and their desired username is taken, it resolves the collision by
+	 * This logic is secure: it prioritizes the immutable provider ID for lookups.
+	 * If a new user must be created and their desired username is taken, it resolves the collision by
 	 * appending a thematic suffix.
 	 *
 	 * @param details The user details provided by the OAuth provider.
@@ -70,8 +70,18 @@ export class AuthService {
 			});
 
 			if (existingAuthProvider) {
-				const { password: _, ...user } = existingAuthProvider.user;
-				return { ...user, teams: user.teamMemberships.map((m) => m.team) };
+				const user = existingAuthProvider.user;
+
+				// 🔒 Security: Prevent login if the linked user is soft-deleted
+				if (user.deletedAt) {
+					this.logger.warn(
+						`Soft-deleted user '${user.username}' attempted to login via ${provider}.`,
+					);
+					return null;
+				}
+
+				const { password: _, ...result } = user;
+				return { ...result, teams: user.teamMemberships.map((m) => m.team) };
 			}
 
 			const uniqueUsername = await this.findAvailableUsername(username);
@@ -94,6 +104,7 @@ export class AuthService {
 			this.logger.info(`Provisioned new user '${uniqueUsername}' via ${provider} OAuth.`);
 
 			const { password: _, ...result } = newUser;
+
 			return { ...result, teams: [] };
 		} catch (error: unknown) {
 			this.logger.error({ error, provider, providerId }, 'OAuth user validation failed.');
