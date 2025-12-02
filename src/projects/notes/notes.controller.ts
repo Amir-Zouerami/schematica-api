@@ -83,7 +83,7 @@ export class NotesController {
 		type: NoteDto,
 	})
 	@ApiForbiddenResponse({
-		description: 'User does not have permission to manage notes in this project.',
+		description: 'User does not have permission to edit this note.',
 		type: ErrorResponseDto,
 	})
 	@ApiNotFoundResponse({
@@ -103,14 +103,14 @@ export class NotesController {
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@ApiNoContentResponse({ description: 'The note has been successfully deleted.' })
 	@ApiForbiddenResponse({
-		description: 'User does not have permission to manage notes in this project.',
+		description: 'User does not have permission to delete this note.',
 		type: ErrorResponseDto,
 	})
 	@ApiNotFoundResponse({
 		description: 'The specified note was not found.',
 		type: ErrorResponseDto,
 	})
-	async remove(@Param('noteId') noteId: string): Promise<void> {
-		await this.notesService.remove(noteId);
+	async remove(@Param('noteId') noteId: string, @CurrentUser() user: UserDto): Promise<void> {
+		await this.notesService.remove(noteId, user);
 	}
 }

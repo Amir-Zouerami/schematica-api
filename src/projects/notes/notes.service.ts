@@ -1,6 +1,5 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '@prisma/client';
 import { PinoLogger } from 'nestjs-pino';
 import { UserDto } from 'src/auth/dto/user.dto';
 import { PrismaErrorCode } from 'src/common/constants/prisma-error-codes.constants';
@@ -79,6 +78,19 @@ export class NotesService {
 	async update(noteIdStr: string, updateNoteDto: UpdateNoteDto, user: UserDto): Promise<NoteDto> {
 		const noteId = parseInt(noteIdStr, 10);
 
+		const note = await this.prisma.note.findUnique({
+			where: { id: noteId },
+			select: { authorId: true },
+		});
+
+		if (!note) {
+			throw new NoteNotFoundException(noteIdStr);
+		}
+
+		if (note.authorId !== user.id) {
+			throw new ForbiddenException('You can only edit your own notes.');
+		}
+
 		try {
 			const updatedNote = await this.prisma.note.update({
 				where: { id: noteId },
@@ -108,23 +120,29 @@ export class NotesService {
 		}
 	}
 
-	async remove(noteIdStr: string): Promise<void> {
+	async remove(noteIdStr: string, user: UserDto): Promise<void> {
 		const noteId = parseInt(noteIdStr, 10);
+
+		const note = await this.prisma.note.findUnique({
+			where: { id: noteId },
+			select: { authorId: true },
+		});
+
+		if (!note) {
+			throw new NoteNotFoundException(noteIdStr);
+		}
+
+		if (user.role !== 'admin' && note.authorId !== user.id) {
+			throw new ForbiddenException('You can only delete your own notes.');
+		}
 
 		try {
 			await this.prisma.note.delete({
 				where: { id: noteId },
 			});
 		} catch (error: unknown) {
-			if (
-				error instanceof Prisma.PrismaClientKnownRequestError &&
-				(error.code as PrismaErrorCode) === PrismaErrorCode.RecordNotFound
-			) {
-				throw new NoteNotFoundException(noteIdStr);
-			}
-
 			this.logger.error({ error }, 'Failed to delete note.');
-			throw new InternalServerErrorException('Failed to delete note.');
+			handlePrismaError(error);
 		}
 	}
 }
